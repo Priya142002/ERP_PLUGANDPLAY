@@ -1,0 +1,9 @@
+export { default as DashboardPage } from './DashboardPage';
+export { default as CompanyManagementPage } from './CompanyManagementPage';
+export { default as AdminManagementPage } from './AdminManagementPage';
+export { default as SubscriptionManagementPage } from './SubscriptionManagementPage';
+export { default as AnalyticsPage } from './AnalyticsPage';
+export { default as AuditLogsPage } from './AuditLogsPage';
+export { default as SettingsPage } from './SettingsPage';
+export { default as ModulesManagementPage } from './ModulesManagementPage';
+export { default as SystemPage } from './SystemPage';
