@@ -7,6 +7,7 @@ import {
   ExternalLink, AlertTriangle
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
+import { TableFilters, DataTableWrapper } from "../../../components/common";
 
 /* ─────────────────────────────────────────
    Types
@@ -308,8 +309,6 @@ const DeleteModal: React.FC<{ dispatchNo: string; onClose: () => void; onConfirm
 /* ─────────────────────────────────────────
    Main Page
 ───────────────────────────────────────── */
-const selCls = "h-9 px-3 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-slate-600";
-
 export const MaterialDispatchPage: React.FC = () => {
   const navigate = useNavigate();
   const [dispatches, setDispatches]         = useState<Dispatch[]>(MOCK_DISPATCHES);
@@ -331,6 +330,50 @@ export const MaterialDispatchPage: React.FC = () => {
     (!filterDate     || d.date === filterDate)
   ), [dispatches, search, filterCustomer, filterDate]);
 
+  const handleClearFilters = () => {
+    setSearch('');
+    setFilterCustomer('');
+    setFilterDate('');
+  };
+
+  const columns = [
+    {
+      key: 'dispatchNo' as const,
+      label: 'Dispatch No',
+      render: (value: string) => (
+        <span className="font-semibold text-slate-800">{value}</span>
+      )
+    },
+    {
+      key: 'date' as const,
+      label: 'Date',
+      render: (value: string) => (
+        <div className="flex items-center gap-2 text-slate-600 text-sm">
+          <Calendar size={13} className="text-slate-400" />
+          {value}
+        </div>
+      )
+    },
+    {
+      key: 'customer' as const,
+      label: 'Customer',
+      render: (value: string) => (
+        <div className="flex items-center gap-2 text-slate-600 text-sm">
+          <User size={13} className="text-slate-400" />
+          {value}
+        </div>
+      )
+    },
+    {
+      key: 'itemCount' as const,
+      label: 'Items Qty',
+      align: 'center' as const,
+      render: (value: number) => (
+        <span className="font-medium text-slate-700">{value} units</span>
+      )
+    }
+  ];
+
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -349,82 +392,55 @@ export const MaterialDispatchPage: React.FC = () => {
         </div>
 
         {/* Search + Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dispatch no or customer…"
-              className="w-full h-9 pl-8 pr-3 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white" />
-          </div>
-          <select value={filterCustomer} onChange={e => setFilterCustomer(e.target.value)} className={selCls}>
-            <option value="">Filter by Customer</option>
-            {customerOptions.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+        <TableFilters
+          searchValue={search}
+          searchPlaceholder="Search dispatch no or customer…"
+          onSearchChange={setSearch}
+          filters={[
+            {
+              label: 'Filter by Customer',
+              value: filterCustomer,
+              options: customerOptions,
+              onChange: setFilterCustomer
+            }
+          ]}
+          onClearAll={handleClearFilters}
+          showClearButton={!!(search || filterCustomer || filterDate)}
+        >
+          {/* Custom Date Filter */}
           <div className="relative">
             <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
-              className="h-9 pl-8 pr-3 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-slate-600" />
+            <input 
+              type="date" 
+              value={filterDate} 
+              onChange={e => setFilterDate(e.target.value)}
+              className="h-9 pl-8 pr-3 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-slate-600" 
+            />
           </div>
-          {(search || filterCustomer || filterDate) && (
-            <button onClick={() => { setSearch(''); setFilterCustomer(''); setFilterDate(''); }}
-              className="h-9 px-3 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition flex items-center gap-1.5">
-              <X size={12} /> Clear
-            </button>
-          )}
-        </div>
+        </TableFilters>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="overflow-auto" style={{ maxHeight: '60vh', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-            <table className="w-full text-sm border-collapse">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-[#002147] text-white">
-                  {['Dispatch No','Date','Customer','Items Qty','Actions'].map(h => (
-                    <th key={h} className={`px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-left ${h === 'Actions' ? 'text-right' : ''} ${h === 'Items Qty' ? 'text-center' : ''}`}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {displayed.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-16 text-slate-400 text-sm">No dispatches found</td></tr>
-                ) : displayed.map((d, i) => (
-                  <tr key={d.id} className={`group transition-colors hover:bg-slate-50/70 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                    <td className="px-5 py-3.5 font-semibold text-slate-800">{d.dispatchNo}</td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2 text-slate-600 text-sm">
-                        <Calendar size={13} className="text-slate-400" />{d.date}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2 text-slate-600 text-sm">
-                        <User size={13} className="text-slate-400" />{d.customer}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-center">
-                      <span className="font-medium text-slate-700">{d.itemCount} units</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => setEditDispatch(d)}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-[#002147] hover:bg-[#003366] text-white border border-[#002147] transition" title="Edit">
-                          <Edit size={14} stroke="currentColor" strokeWidth={2} />
-                        </button>
-                        <button onClick={() => setDeleteDispatch(d)}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600 hover:bg-red-700 text-white border border-red-600 transition" title="Delete">
-                          <Trash2 size={14} stroke="currentColor" strokeWidth={2} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50">
-            <span className="text-xs text-slate-400 font-medium">{displayed.length} dispatch{displayed.length !== 1 ? 'es' : ''} shown</span>
-          </div>
-        </div>
+        <DataTableWrapper
+          data={displayed}
+          columns={columns}
+          actions={[
+            {
+              label: 'Edit',
+              icon: <Edit size={14} stroke="currentColor" strokeWidth={2} />,
+              onClick: (item) => setEditDispatch(item),
+              variant: 'primary',
+              title: 'Edit'
+            },
+            {
+              label: 'Delete',
+              icon: <Trash2 size={14} stroke="currentColor" strokeWidth={2} />,
+              onClick: (item) => setDeleteDispatch(item),
+              variant: 'danger',
+              title: 'Delete'
+            }
+          ]}
+          emptyMessage="No dispatches found"
+        />
       </motion.div>
 
       <AnimatePresence>

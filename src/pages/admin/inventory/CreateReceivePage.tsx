@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -17,8 +17,41 @@ import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import Textarea from "../../../components/ui/Textarea";
 
+interface ReceiveItem {
+  id: string;
+  product: string;
+  sku: string;
+  expectedQty: number;
+  receivedQty: number;
+}
+
 export const CreateReceivePage: React.FC = () => {
   const navigate = useNavigate();
+  const [items, setItems] = useState<ReceiveItem[]>([
+    { id: '1', product: '', sku: 'whp-001', expectedQty: 0, receivedQty: 0 }
+  ]);
+
+  const addItem = () => {
+    setItems([...items, { 
+      id: Date.now().toString(), 
+      product: '', 
+      sku: '', 
+      expectedQty: 0, 
+      receivedQty: 0 
+    }]);
+  };
+
+  const removeItem = (id: string) => {
+    if (items.length > 1) {
+      setItems(items.filter(item => item.id !== id));
+    }
+  };
+
+  const updateItem = (id: string, field: keyof ReceiveItem, value: any) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
 
   return (
     <motion.div 
@@ -104,7 +137,7 @@ export const CreateReceivePage: React.FC = () => {
                 </div>
                 <h3 className="font-bold text-slate-900 tracking-tight text-sm uppercase tracking-wider">Received Items</h3>
               </div>
-              <Button variant="secondary" size="sm" leftIcon={<Plus size={16} />}>
+              <Button variant="secondary" size="sm" leftIcon={<Plus size={16} />} onClick={addItem}>
                 Add Item
               </Button>
             </div>
@@ -120,31 +153,51 @@ export const CreateReceivePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  <tr className="group">
-                    <td className="px-6 py-4">
-                      <Select 
-                        placeholder="Search Product"
-                        options={[
-                          { label: 'Premium Wireless Headphones', value: '1' },
-                          { label: 'Smart Fitness Tracker', value: '2' }
-                        ]}
-                      />
-                    </td>
-                    <td className="px-6 py-4 lowercase tracking-tight">
-                      <span className="text-slate-400 text-xs">whp-001</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Input type="number" placeholder="0" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <Input type="number" placeholder="0" />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="text-slate-300 hover:text-red-500 transition-colors">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
+                  {items.map((item) => (
+                    <tr key={item.id} className="group">
+                      <td className="px-6 py-4">
+                        <Select 
+                          placeholder="Search Product"
+                          value={item.product}
+                          onChange={(e) => updateItem(item.id, 'product', e.target.value)}
+                          options={[
+                            { label: 'Premium Wireless Headphones', value: '1' },
+                            { label: 'Smart Fitness Tracker', value: '2' },
+                            { label: '4K Ultra HD Monitor', value: '3' },
+                            { label: 'Ergonomic Office Chair', value: '4' }
+                          ]}
+                        />
+                      </td>
+                      <td className="px-6 py-4 lowercase tracking-tight">
+                        <span className="text-slate-400 text-xs">{item.sku || 'whp-001'}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          value={item.expectedQty || ''}
+                          onChange={(e) => updateItem(item.id, 'expectedQty', parseInt(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          value={item.receivedQty || ''}
+                          onChange={(e) => updateItem(item.id, 'receivedQty', parseInt(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          onClick={() => removeItem(item.id)}
+                          disabled={items.length === 1}
+                          className="text-slate-300 hover:text-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

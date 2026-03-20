@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, Eye, FileText, BarChart, Users, DollarSign, ShoppingBag, PieChart, TrendingUp } from "lucide-react";
+import "../../../pages/admin/reports/InventoryReportsPage.css";
 
 interface FilterField { key:string; label:string; type:"text"|"date"|"select"; options?:string[]; }
 interface Report { id:string; name:string; icon:React.ReactNode; filters:FilterField[]; }
@@ -175,19 +176,24 @@ export const PurchaseReportsPage: React.FC = () => {
         <button className="flex items-center gap-2 h-9 px-4 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition"><Download size={14}/> Export Summary</button>
       </div>
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex min-h-[600px]">
-        <div className="w-64 flex-shrink-0 border-r border-slate-100 bg-slate-50/50 flex flex-col">
-          <div className="px-4 py-3 border-b border-slate-100">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Report Type</p>
+        <div className="report-sidebar">
+          <div className="report-sidebar-header">
+            <p className="report-sidebar-title">Report Type</p>
           </div>
-          <nav className="flex-1 py-2 overflow-y-auto">
-            {REPORTS.map(r=>(
-              <button key={r.id} onClick={()=>setActiveId(r.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-all ${activeId===r.id?"bg-[#002147] text-white font-semibold":"text-slate-600 hover:bg-slate-100 font-medium"}`}>
-                <span className={activeId===r.id?"text-white":"text-slate-400"}>{r.icon}</span>
-                <span className="leading-tight">{r.name}</span>
-              </button>
-            ))}
-          </nav>
+          <div className="report-nav">
+            <nav className="report-nav-list">
+              {REPORTS.map(r => {
+                const isActive = activeId === r.id;
+                return (
+                  <button key={r.id} onClick={() => setActiveId(r.id)}
+                    className={`report-item ${isActive ? 'report-item-active' : ''}`}>
+                    <span className="report-item-icon">{r.icon}</span>
+                    <span className="report-item-text">{r.name}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
         <AnimatePresence mode="wait">
           <ReportPanel key={activeId} report={active}/>

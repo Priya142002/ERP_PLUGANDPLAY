@@ -1037,3 +1037,44 @@ aside svg {
   fill: none !important;
   stroke-width: 2 !important;
 }
+
+/* ── Inventory Reports sidebar – override global admin-mode color rules ── */
+.report-item,
+.admin-mode .report-item,
+.admin-mode[data-theme="light"] .report-item,
+.admin-mode[data-theme="dark"] .report-item {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+.report-item .report-item-text,
+.admin-mode .report-item .report-item-text {
+  color: #0f172a !important;
+}
+
+.report-item .report-item-icon,
+.admin-mode .report-item .report-item-icon,
+.admin-mode .report-item svg {
+  color: #475569 !important;
+  stroke: #475569 !important;
+}
+
+.report-item-active,
+.admin-mode .report-item-active,
+.admin-mode[data-theme="light"] .report-item-active,
+.admin-mode[data-theme="dark"] .report-item-active {
+  background-color: #002147 !important;
+  color: #ffffff !important;
+}
+
+.report-item-active .report-item-text,
+.admin-mode .report-item-active .report-item-text {
+  color: #ffffff !important;
+}
+
+.report-item-active .report-item-icon,
+.admin-mode .report-item-active .report-item-icon,
+.admin-mode .report-item-active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
