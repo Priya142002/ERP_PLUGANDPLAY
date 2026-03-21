@@ -53,7 +53,7 @@ export const EditCustomerPaymentPage: React.FC = () => {
             <ArrowLeft size={18} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit Payment: {formData.paymentNo}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Modify Customer Payment: {formData.paymentNo}</h1>
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@ export const EditCustomerPaymentPage: React.FC = () => {
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <FileText size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Remittance Identification</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Payment Information</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -75,9 +75,11 @@ export const EditCustomerPaymentPage: React.FC = () => {
 
             <Select 
               label="Customer" 
-              options={[{ label: 'Nexus Enterprises', value: 'Nexus Enterprises' }, { label: 'Sarah Johnson', value: 'Sarah Johnson' }]} 
+              options={[{ label: 'Alex Johnson', value: '1' }, { label: 'Sarah Williams', value: '2' }, { label: 'Pure Water Co.', value: '3' }]} 
               value={formData.customer}
               onChange={(e: any) => setFormData({...formData, customer: e.target.value})}
+              onAddNew={() => navigate('/admin/sales/customers/add')}
+              addNewLabel="Add New Customer"
               leftIcon={<Building2 size={14} />}
             />
           </div>
@@ -87,7 +89,7 @@ export const EditCustomerPaymentPage: React.FC = () => {
               <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                 <CreditCard size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Transaction Logistics</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Transaction Details</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -121,7 +123,7 @@ export const EditCustomerPaymentPage: React.FC = () => {
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <AlertCircle size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Operational Narrative</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Notes & Remarks</h3>
             </div>
             <Textarea 
               label="Internal Remarks" 
@@ -140,7 +142,7 @@ export const EditCustomerPaymentPage: React.FC = () => {
               onClick={() => navigate('/admin/sales/payments')}
               className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
-              Update Remittance
+              Update Payment Record
             </Button>
             <Button 
               variant="secondary" 

@@ -19,6 +19,26 @@ import Textarea from "../../../components/ui/Textarea";
 
 export const CreateSalesReturnPage: React.FC = () => {
   const navigate = useNavigate();
+  const [items, setItems] = React.useState<any[]>([]);
+
+  const addItem = () => {
+    setItems([...items, { id: Date.now().toString(), name: '', qty: 1, rate: 0, amount: 0 }]);
+  };
+
+  const updateItem = (idx: number, field: string, value: any) => {
+    const newItems = [...items];
+    newItems[idx][field] = value;
+    if (field === 'qty' || field === 'rate') {
+      newItems[idx].amount = (newItems[idx].qty || 0) * (newItems[idx].rate || 0);
+    }
+    setItems(newItems);
+  };
+
+  const removeItem = (idx: number) => {
+    setItems(items.filter((_, i) => i !== idx));
+  };
+
+  const subtotal = React.useMemo(() => items.reduce((acc, item) => acc + (item.amount || 0), 0), [items]);
 
   return (
     <motion.div 
@@ -36,7 +56,7 @@ export const CreateSalesReturnPage: React.FC = () => {
             <ArrowLeft size={18} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 line-clamp-1">Sales Restitution</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 line-clamp-1">New Sales Return</h1>
           </div>
         </div>
       </div>
@@ -50,7 +70,7 @@ export const CreateSalesReturnPage: React.FC = () => {
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <FileText size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Return Framework</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Return Details</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -79,6 +99,8 @@ export const CreateSalesReturnPage: React.FC = () => {
                   { label: 'Tech Solutions Inc', value: '3' }
                 ]} 
                 required
+                onAddNew={() => navigate('/admin/sales/customers/add')}
+                addNewLabel="Add New Customer"
               />
               <Input 
                 label="Ref Sales Invoice" 
@@ -94,9 +116,15 @@ export const CreateSalesReturnPage: React.FC = () => {
                 <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                   <PackageX size={18} />
                 </div>
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Asset Restitution</h3>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Add Items</h3>
               </div>
-              <Button variant="primary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" leftIcon={<Plus size={14} />}>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" 
+                leftIcon={<Plus size={14} />}
+                onClick={addItem}
+              >
                 Add Item
               </Button>
             </div>
@@ -112,31 +140,63 @@ export const CreateSalesReturnPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                   <tr>
-                    <td className="px-6 py-4">
-                      <Select 
-                        placeholder="Select Product"
-                        options={[
-                          { label: 'Ultra-Wide Monitor 34"', value: '1' },
-                          { label: 'Mechanical Keyboard RGB', value: '2' }
-                        ]}
-                      />
-                    </td>
-                    <td className="px-4 py-4">
-                      <Input type="number" placeholder="0" className="text-center" />
-                    </td>
-                    <td className="px-4 py-4">
-                      <Input type="number" placeholder="0.00" leftIcon={<span className="text-[10px]">Rs.</span>} />
-                    </td>
-                    <td className="px-4 py-4 text-orange-600 font-bold">
-                      Rs. 0.00
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="text-slate-300 hover:text-red-500">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
+                  {items.length === 0 ? (
+                    <tr 
+                      className="cursor-pointer hover:bg-slate-50 transition-colors group h-[150px]"
+                      onClick={addItem}
+                    >
+                      <td colSpan={5} className="px-6 h-[150px] text-center text-slate-400 italic">
+                        <div className="flex flex-col items-center gap-2">
+                          <span>No items added yet.</span>
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest group-hover:scale-110 transition-transform">
+                            Click to add first item
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((item, idx) => (
+                      <tr key={item.id}>
+                        <td className="px-6 py-4">
+                          <Select 
+                            placeholder="Select Product"
+                            value={item.name}
+                            onChange={(e: any) => updateItem(idx, 'name', e.target.value)}
+                            options={[
+                              { label: 'Ultra-Wide Monitor 34"', value: 'Ultra-Wide Monitor 34"' },
+                              { label: 'Mechanical Keyboard RGB', value: 'Mechanical Keyboard RGB' }
+                            ]}
+                          />
+                        </td>
+                        <td className="px-4 py-4">
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            className="text-center" 
+                            value={item.qty}
+                            onChange={(e) => updateItem(idx, 'qty', parseInt(e.target.value) || 0)}
+                          />
+                        </td>
+                        <td className="px-4 py-4">
+                          <Input 
+                            type="number" 
+                            placeholder="0.00" 
+                            leftIcon={<span className="text-[10px]">Rs.</span>} 
+                            value={item.rate}
+                            onChange={(e) => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)}
+                          />
+                        </td>
+                        <td className="px-4 py-4 text-orange-600 font-bold">
+                          Rs. {item.amount.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button className="text-slate-300 hover:text-red-500" onClick={() => removeItem(idx)}>
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -149,7 +209,7 @@ export const CreateSalesReturnPage: React.FC = () => {
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <AlertCircle size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Operational Logistics</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Return Options</h3>
             </div>
             <Select 
               label="Reason for Return" 
@@ -179,7 +239,7 @@ export const CreateSalesReturnPage: React.FC = () => {
           <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl flex gap-3">
              <AlertCircle size={18} className="text-orange-500 shrink-0" />
              <p className="text-xs text-orange-700 leading-relaxed">
-               This return will increase your warehouse stock and create a credit for the customer.
+               This return will increase your warehouse stock and create a credit for the customer (Total: Rs. {subtotal.toLocaleString()}).
              </p>
           </div>
 
@@ -190,7 +250,7 @@ export const CreateSalesReturnPage: React.FC = () => {
               leftIcon={<Save size={14} />} 
               className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
-              Confirm Restitution
+              Save Return
             </Button>
             <Button 
               variant="secondary" 
@@ -198,7 +258,7 @@ export const CreateSalesReturnPage: React.FC = () => {
               leftIcon={<RotateCcw size={14} />} 
               className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
-              Reset Interface
+              Reset Form
             </Button>
           </div>
         </div>

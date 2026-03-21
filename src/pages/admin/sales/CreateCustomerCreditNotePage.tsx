@@ -18,6 +18,23 @@ import Textarea from "../../../components/ui/Textarea";
 
 export const CreateCustomerCreditNotePage: React.FC = () => {
   const navigate = useNavigate();
+  const [lines, setLines] = React.useState<any[]>([]);
+
+  const addLine = () => {
+    setLines([...lines, { id: Date.now().toString(), description: '', amount: 0 }]);
+  };
+
+  const updateLine = (idx: number, field: string, value: any) => {
+    const newLines = [...lines];
+    newLines[idx][field] = value;
+    setLines(newLines);
+  };
+
+  const removeLine = (idx: number) => {
+    setLines(lines.filter((_, i) => i !== idx));
+  };
+
+  const totalAdjustment = React.useMemo(() => lines.reduce((acc, line) => acc + (line.amount || 0), 0), [lines]);
 
   return (
     <motion.div 
@@ -29,7 +46,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => navigate('/admin/sales/credit-note')}
+            onClick={() => navigate('/admin/sales/credit-notes')}
             className="group flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-all active:scale-90"
           >
             <ArrowLeft size={18} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
@@ -77,6 +94,8 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
                   { label: 'Tech Solutions Inc', value: '3' }
                 ]} 
                 required
+                onAddNew={() => navigate('/admin/sales/customers/add')}
+                addNewLabel="Add New Customer"
               />
               <Input 
                 label="Ref Invoice" 
@@ -94,7 +113,13 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
                 </div>
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Asset Calibration</h3>
               </div>
-              <Button variant="primary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" leftIcon={<Plus size={14} />}>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" 
+                leftIcon={<Plus size={14} />}
+                onClick={addLine}
+              >
                 Add Line
               </Button>
             </div>
@@ -108,29 +133,53 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  <tr>
-                    <td className="px-6 py-4">
-                      <Input placeholder="Enter reason for credit" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
-                        className="text-right"
-                        leftIcon={<span className="text-[10px] uppercase">$</span>}
-                      />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="text-slate-300 hover:text-red-500">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
+                  {lines.length === 0 ? (
+                    <tr 
+                      className="cursor-pointer hover:bg-slate-50 transition-colors group h-[150px]"
+                      onClick={addLine}
+                    >
+                      <td colSpan={3} className="px-6 h-[150px] text-center text-slate-400 italic">
+                        <div className="flex flex-col items-center gap-2">
+                          <span>No adjustments added yet.</span>
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest group-hover:scale-110 transition-transform">
+                            Click to add first line
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    lines.map((line, idx) => (
+                      <tr key={line.id}>
+                        <td className="px-6 py-4">
+                          <Input 
+                            placeholder="Enter reason for credit" 
+                            value={line.description}
+                            onChange={(e) => updateLine(idx, 'description', e.target.value)}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <Input 
+                            type="number" 
+                            placeholder="0.00" 
+                            className="text-right"
+                            value={line.amount}
+                            leftIcon={<span className="text-[10px] uppercase">$</span>}
+                            onChange={(e) => updateLine(idx, 'amount', parseFloat(e.target.value) || 0)}
+                          />
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button className="text-slate-300 hover:text-red-500" onClick={() => removeLine(idx)}>
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
                 <tfoot>
                    <tr className="bg-slate-50/50 text-sm font-bold">
                     <td className="px-6 py-4 text-right text-slate-500 uppercase tracking-tighter">Total Adjustment</td>
-                    <td className="px-6 py-4 text-right text-teal-600">$0.00</td>
+                    <td className="px-6 py-4 text-right text-teal-600">${totalAdjustment.toLocaleString()}</td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -172,6 +221,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
               variant="primary" 
               fullWidth 
               leftIcon={<Save size={14} />} 
+              onClick={() => navigate('/admin/sales/credit-notes')}
               className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
               Commit Alignment
@@ -180,6 +230,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
               variant="secondary" 
               fullWidth 
               leftIcon={<RotateCcw size={14} />} 
+              onClick={() => window.location.reload()}
               className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
               Reset Interface

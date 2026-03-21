@@ -34,7 +34,7 @@ export const EditCustomerDebitNotePage: React.FC = () => {
     return (
       <div className="p-8 text-center">
         <h2 className="text-xl font-bold">Debit Note not found</h2>
-        <Button onClick={() => navigate('/admin/sales/debit-note')} className="mt-4">Go Back</Button>
+        <Button onClick={() => navigate('/admin/sales/debit-notes')} className="mt-4">Go Back</Button>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export const EditCustomerDebitNotePage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => navigate('/admin/sales/debit-note')}
+            onClick={() => navigate('/admin/sales/debit-notes')}
             className="group flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-all active:scale-90"
           >
             <ArrowLeft size={18} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
@@ -82,6 +82,8 @@ export const EditCustomerDebitNotePage: React.FC = () => {
                 options={[{ label: 'Nexus Enterprises', value: 'Nexus Enterprises' }, { label: 'Sarah Johnson', value: 'Sarah Johnson' }]} 
                 value={formData.customer}
                 onChange={(e: any) => setFormData({...formData, customer: e.target.value})}
+                onAddNew={() => navigate('/admin/sales/customers/add')}
+                addNewLabel="Add New Customer"
               />
               <Input label="Ref Invoice" value={formData.invoiceRef} onChange={(e) => setFormData({...formData, invoiceRef: e.target.value})} />
             </div>
@@ -115,39 +117,55 @@ export const EditCustomerDebitNotePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {charges.map((charge: any, idx: number) => (
-                    <tr key={charge.id}>
-                      <td className="px-6 py-4">
-                        <Input 
-                          placeholder="Extra shipping, undercharged item, etc." 
-                          value={charge.description} 
-                          onChange={(e) => {
-                            const newCharges = [...charges];
-                            newCharges[idx].description = e.target.value;
-                            setCharges(newCharges);
-                          }}
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <Input 
-                          type="number" 
-                          value={charge.amount} 
-                          className="text-right"
-                          leftIcon={<span className="text-[10px] uppercase font-bold">$</span>}
-                          onChange={(e) => {
-                            const newCharges = [...charges];
-                            newCharges[idx].amount = parseFloat(e.target.value) || 0;
-                            setCharges(newCharges);
-                          }}
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button className="text-slate-300 hover:text-red-500" onClick={() => setCharges(charges.filter((_: any, i: number) => i !== idx))}>
-                          <Trash2 size={18} />
-                        </button>
+                  {charges.length === 0 ? (
+                    <tr 
+                      className="cursor-pointer hover:bg-slate-50 transition-colors group h-[150px]"
+                      onClick={() => setCharges([...charges, { id: Date.now().toString(), description: '', amount: 0 }])}
+                    >
+                      <td colSpan={3} className="px-6 h-[150px] text-center text-slate-400 italic">
+                        <div className="flex flex-col items-center gap-2">
+                          <span>No charges added yet.</span>
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest group-hover:scale-110 transition-transform">
+                            Click to add first charge
+                          </span>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    charges.map((charge: any, idx: number) => (
+                      <tr key={charge.id}>
+                        <td className="px-6 py-4">
+                          <Input 
+                            placeholder="Extra shipping, undercharged item, etc." 
+                            value={charge.description} 
+                            onChange={(e) => {
+                              const newCharges = [...charges];
+                              newCharges[idx].description = e.target.value;
+                              setCharges(newCharges);
+                            }}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <Input 
+                            type="number" 
+                            value={charge.amount} 
+                            className="text-right"
+                            leftIcon={<span className="text-[10px] uppercase font-bold">$</span>}
+                            onChange={(e) => {
+                              const newCharges = [...charges];
+                              newCharges[idx].amount = parseFloat(e.target.value) || 0;
+                              setCharges(newCharges);
+                            }}
+                          />
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button className="text-slate-300 hover:text-red-500" onClick={() => setCharges(charges.filter((_: any, i: number) => i !== idx))}>
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -185,7 +203,7 @@ export const EditCustomerDebitNotePage: React.FC = () => {
               variant="primary" 
               fullWidth 
               leftIcon={<Save size={14} />} 
-              onClick={() => navigate('/admin/sales/debit-note')}
+              onClick={() => navigate('/admin/sales/debit-notes')}
               className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
               Commit Ingestion
@@ -194,7 +212,7 @@ export const EditCustomerDebitNotePage: React.FC = () => {
               variant="secondary" 
               fullWidth 
               leftIcon={<RotateCcw size={14} />} 
-              onClick={() => navigate('/admin/sales/debit-note')}
+              onClick={() => navigate('/admin/sales/debit-notes')}
               className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
               Cancel Edit

@@ -90,8 +90,8 @@ export const adminNavigation: NavigationItem[] = [
       { id: 'sal-invoices', label: 'Sales Invoice', path: '/admin/sales/invoices', roles: ['admin'], icon: 'receipt-tax' },
       { id: 'sal-returns', label: 'Sales Return', path: '/admin/sales/returns', roles: ['admin'], icon: 'refresh' },
       { id: 'sal-payments', label: 'Customer Payment', path: '/admin/sales/payments', roles: ['admin'], icon: 'cash' },
-      { id: 'sal-credit-note', label: 'Customer Credit Note', path: '/admin/sales/credit-note', roles: ['admin'], icon: 'file-text' },
-      { id: 'sal-debit-note', label: 'Customer Debit Note', path: '/admin/sales/debit-note', roles: ['admin'], icon: 'file-text' },
+      { id: 'sal-credit-note', label: 'Customer Credit Note', path: '/admin/sales/credit-notes', roles: ['admin'], icon: 'file-text' },
+      { id: 'sal-debit-note', label: 'Customer Debit Note', path: '/admin/sales/debit-notes', roles: ['admin'], icon: 'file-text' },
       { id: 'sal-reports', label: 'Sales Reports', path: '/admin/reports/sales', roles: ['admin'], icon: 'chart-pie' },
     ]
   },

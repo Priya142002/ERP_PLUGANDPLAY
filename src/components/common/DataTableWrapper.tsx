@@ -21,6 +21,7 @@ interface DataTableWrapperProps<T> {
   actions?: Action<T>[];
   emptyMessage?: string;
   maxHeight?: string;
+  onEmptyClick?: () => void;
 }
 
 export function DataTableWrapper<T extends { id: string }>({
@@ -28,7 +29,8 @@ export function DataTableWrapper<T extends { id: string }>({
   columns,
   actions = [],
   emptyMessage = "No data found",
-  maxHeight = "60vh"
+  maxHeight = "60vh",
+  onEmptyClick
 }: DataTableWrapperProps<T>) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -59,12 +61,22 @@ export function DataTableWrapper<T extends { id: string }>({
           </thead>
           <tbody className="divide-y divide-slate-50">
             {data.length === 0 ? (
-              <tr>
+              <tr 
+                onClick={onEmptyClick}
+                className={onEmptyClick ? 'cursor-pointer hover:bg-slate-50 transition-colors group' : ''}
+              >
                 <td 
                   colSpan={columns.length + (actions.length > 0 ? 1 : 0)} 
                   className="text-center py-16 text-slate-400 text-sm"
                 >
-                  {emptyMessage}
+                  <div className="flex flex-col items-center gap-2">
+                    <span>{emptyMessage}</span>
+                    {onEmptyClick && (
+                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                        Click to add new record
+                      </span>
+                    )}
+                  </div>
                 </td>
               </tr>
             ) : (

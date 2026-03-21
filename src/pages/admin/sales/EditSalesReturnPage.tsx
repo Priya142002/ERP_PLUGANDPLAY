@@ -83,6 +83,8 @@ export const EditSalesReturnPage: React.FC = () => {
                 options={[{ label: 'Nexus Enterprises', value: 'Nexus Enterprises' }, { label: 'Sarah Johnson', value: 'Sarah Johnson' }]} 
                 value={formData.customer}
                 onChange={(e: any) => setFormData({...formData, customer: e.target.value})}
+                onAddNew={() => navigate('/admin/sales/customers/add')}
+                addNewLabel="Add New Customer"
               />
               <Input label="Ref Sales Invoice" value={formData.invoiceRef} onChange={(e) => setFormData({...formData, invoiceRef: e.target.value})} />
             </div>
@@ -118,55 +120,71 @@ export const EditSalesReturnPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {items.map((item: any, idx: number) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4">
-                        <Input 
-                          placeholder="Select Product" 
-                          value={item.name} 
-                          onChange={(e) => {
-                            const newItems = [...items];
-                            newItems[idx].name = e.target.value;
-                            setItems(newItems);
-                          }}
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <Input 
-                          type="number" 
-                          value={item.qty} 
-                          className="text-center"
-                          onChange={(e) => {
-                            const newItems = [...items];
-                            newItems[idx].qty = parseInt(e.target.value) || 0;
-                            newItems[idx].amount = newItems[idx].qty * newItems[idx].rate;
-                            setItems(newItems);
-                          }}
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <Input 
-                          type="number" 
-                          value={item.rate} 
-                          leftIcon={<span className="text-[10px] uppercase font-bold">$</span>}
-                          onChange={(e) => {
-                            const newItems = [...items];
-                            newItems[idx].rate = parseFloat(e.target.value) || 0;
-                            newItems[idx].amount = newItems[idx].qty * newItems[idx].rate;
-                            setItems(newItems);
-                          }}
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-bold text-slate-700">${item.amount.toLocaleString()}</div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button className="text-slate-300 hover:text-red-500" onClick={() => setItems(items.filter((_: any, i: number) => i !== idx))}>
-                          <Trash2 size={18} />
-                        </button>
+                  {items.length === 0 ? (
+                    <tr 
+                      className="cursor-pointer hover:bg-slate-50 transition-colors group h-[150px]"
+                      onClick={() => setItems([...items, { id: Date.now().toString(), name: '', qty: 1, rate: 0, amount: 0 }])}
+                    >
+                      <td colSpan={5} className="px-6 h-[150px] text-center text-slate-400 italic">
+                        <div className="flex flex-col items-center gap-2">
+                          <span>No items added yet.</span>
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest group-hover:scale-110 transition-transform">
+                            Click to add first item
+                          </span>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    items.map((item: any, idx: number) => (
+                      <tr key={item.id}>
+                        <td className="px-6 py-4">
+                          <Input 
+                            placeholder="Select Product" 
+                            value={item.name} 
+                            onChange={(e) => {
+                              const newItems = [...items];
+                              newItems[idx].name = e.target.value;
+                              setItems(newItems);
+                            }}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <Input 
+                            type="number" 
+                            value={item.qty} 
+                            className="text-center"
+                            onChange={(e) => {
+                              const newItems = [...items];
+                              newItems[idx].qty = parseInt(e.target.value) || 0;
+                              newItems[idx].amount = newItems[idx].qty * newItems[idx].rate;
+                              setItems(newItems);
+                            }}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <Input 
+                            type="number" 
+                            value={item.rate} 
+                            leftIcon={<span className="text-[10px] uppercase font-bold">$</span>}
+                            onChange={(e) => {
+                              const newItems = [...items];
+                              newItems[idx].rate = parseFloat(e.target.value) || 0;
+                              newItems[idx].amount = newItems[idx].qty * newItems[idx].rate;
+                              setItems(newItems);
+                            }}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-bold text-slate-700">${item.amount.toLocaleString()}</div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button className="text-slate-300 hover:text-red-500" onClick={() => setItems(items.filter((_: any, i: number) => i !== idx))}>
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

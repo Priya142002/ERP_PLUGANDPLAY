@@ -139,16 +139,16 @@ export const CustomersPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Customers</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />}>
             Export
           </Button>
           <Button 
             variant="primary" 
-            className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+            className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent px-6 h-10 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             leftIcon={<Plus size={14} />}
             onClick={() => navigate('/admin/sales/customers/add')}
           >
-            New Customer
+            Add New Customer
           </Button>
         </div>
       </div>
@@ -183,6 +183,7 @@ export const CustomersPage: React.FC = () => {
       <DataTableWrapper 
         data={displayed}
         columns={columns}
+        onEmptyClick={() => navigate('/admin/sales/customers/add')}
         actions={[
           {
             label: 'Edit',

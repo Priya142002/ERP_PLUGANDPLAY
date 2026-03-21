@@ -117,15 +117,15 @@ export const SalesInvoicesPage: React.FC = () => {
       {/* Page Title Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Voucher Extraction</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Invoice</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="rounded-xl border-slate-200 h-10 text-xs font-bold px-4" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="rounded-xl border-slate-200 h-10 text-xs font-bold px-4 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />}>
             Export
           </Button>
           <Button 
             variant="primary" 
-            className="bg-[#002147] hover:bg-[#003366] text-white h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all px-6"
+            className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-10 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all px-6"
             leftIcon={<Plus size={14} />}
             onClick={() => navigate('/admin/sales/invoices/create')}
           >
@@ -149,6 +149,7 @@ export const SalesInvoicesPage: React.FC = () => {
       <DataTableWrapper 
         data={displayed}
         columns={columns}
+        onEmptyClick={() => navigate('/admin/sales/invoices/create')}
         actions={[
           {
             label: 'Edit',

@@ -119,14 +119,14 @@ export const CustomerCreditNotePage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Equity Realignment</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" leftIcon={<Download size={14} />} className="rounded-xl border-slate-200 h-10 text-xs font-bold px-4">
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />}>
             Export
           </Button>
           <Button 
             variant="primary" 
+            className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent px-6 h-10 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             leftIcon={<Plus size={14} />}
-            onClick={() => navigate('/admin/sales/credit-note/new')}
-            className="bg-[#002147] hover:bg-[#003366] text-white h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all px-6"
+            onClick={() => navigate('/admin/sales/credit-notes/create')}
           >
             New Credit Note
           </Button>
@@ -148,6 +148,7 @@ export const CustomerCreditNotePage: React.FC = () => {
       <DataTableWrapper 
         data={displayed}
         columns={columns}
+        onEmptyClick={() => navigate('/admin/sales/credit-notes/create')}
         actions={[
           {
             label: 'Edit',

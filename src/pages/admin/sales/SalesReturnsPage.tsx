@@ -29,13 +29,13 @@ const MOCK_RETURNS = [
   },
 ];
 
-const TABS = ['All Restitutions', 'Fully Processed', 'Intake Pending', 'Disputed Claims'] as const;
+const TABS = ['All Returns', 'Completed', 'Processing', 'Disputed'] as const;
 type Tab = typeof TABS[number];
 
 export const SalesReturnsPage: React.FC = () => {
   const navigate = useNavigate();
   const [returns, setReturns] = useState(MOCK_RETURNS);
-  const [activeTab, setActiveTab] = useState<Tab>('All Restitutions');
+  const [activeTab, setActiveTab] = useState<Tab>('All Returns');
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
@@ -46,8 +46,8 @@ export const SalesReturnsPage: React.FC = () => {
     let list = [...returns];
 
     // Static tab filtering
-    if (activeTab === 'Fully Processed') list = list.filter(r => r.status === 'Completed');
-    if (activeTab === 'Intake Pending') list = list.filter(r => r.status === 'Processing');
+    if (activeTab === 'Completed') list = list.filter(r => r.status === 'Completed');
+    if (activeTab === 'Processing') list = list.filter(r => r.status === 'Processing');
 
     // Search
     if (search) {
@@ -138,17 +138,17 @@ export const SalesReturnsPage: React.FC = () => {
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Restitution</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Return</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />}>
             Export
           </Button>
-          <Button
-            variant="primary"
-            className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+          <Button 
+            variant="primary" 
+            className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent px-6 h-10 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             leftIcon={<Plus size={14} />}
-            onClick={() => navigate('/admin/sales/returns/new')}
+            onClick={() => navigate('/admin/sales/returns/create')}
           >
             New Return
           </Button>
@@ -179,13 +179,14 @@ export const SalesReturnsPage: React.FC = () => {
           { label: 'Filter by Customer', value: filterCustomer, options: customerOptions, onChange: setFilterCustomer },
           { label: 'Filter by Month', value: filterMonth, options: MONTHS, onChange: setFilterMonth }
         ]}
-        onClearAll={() => { setSearch(''); setFilterCustomer(''); setFilterMonth(''); }}
-        showClearButton={!!(search || filterCustomer || filterMonth || activeTab !== 'All Restitutions')}
+        onClearAll={() => { setSearch(''); setFilterCustomer(''); setFilterMonth(''); setActiveTab('All Returns'); }}
+        showClearButton={!!(search || filterCustomer || filterMonth || activeTab !== 'All Returns')}
       />
 
       <DataTableWrapper
         data={displayed}
         columns={columns}
+        onEmptyClick={() => navigate('/admin/sales/returns/create')}
         actions={[
           {
             label: 'Edit',

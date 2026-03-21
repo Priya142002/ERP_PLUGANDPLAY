@@ -20,6 +20,26 @@ import Textarea from "../../../components/ui/Textarea";
 
 export const CreateQuotationPage: React.FC = () => {
   const navigate = useNavigate();
+  const [items, setItems] = React.useState<any[]>([]);
+
+  const addItem = () => {
+    setItems([...items, { id: Date.now().toString(), name: '', qty: 1, rate: 0, amount: 0 }]);
+  };
+
+  const updateItem = (idx: number, field: string, value: any) => {
+    const newItems = [...items];
+    newItems[idx][field] = value;
+    if (field === 'qty' || field === 'rate') {
+      newItems[idx].amount = (newItems[idx].qty || 0) * (newItems[idx].rate || 0);
+    }
+    setItems(newItems);
+  };
+
+  const removeItem = (idx: number) => {
+    setItems(items.filter((_, i) => i !== idx));
+  };
+
+  const subtotal = React.useMemo(() => items.reduce((acc, item) => acc + (item.amount || 0), 0), [items]);
 
   return (
     <motion.div 
@@ -37,7 +57,7 @@ export const CreateQuotationPage: React.FC = () => {
             <ArrowLeft size={18} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 line-clamp-1">Pro-forma Proposition</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 line-clamp-1">New Quotation</h1>
           </div>
         </div>
       </div>
@@ -51,7 +71,7 @@ export const CreateQuotationPage: React.FC = () => {
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <FileText size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Quotation Architecture</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Quotation Details</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -65,6 +85,8 @@ export const CreateQuotationPage: React.FC = () => {
                     { label: 'Tech Solutions Inc', value: '3' }
                   ]} 
                   required
+                  onAddNew={() => navigate('/admin/sales/customers/add')}
+                  addNewLabel="Add New Customer"
                 />
                 <Input 
                   label="Quotation Number" 
@@ -99,9 +121,15 @@ export const CreateQuotationPage: React.FC = () => {
                 <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                   <PlusCircle size={18} />
                 </div>
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Inventory Selection</h3>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Add Items</h3>
               </div>
-              <Button variant="primary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" leftIcon={<Plus size={14} />}>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" 
+                leftIcon={<Plus size={14} />}
+                onClick={addItem}
+              >
                 Add Line
               </Button>
             </div>
@@ -117,29 +145,60 @@ export const CreateQuotationPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  <tr>
-                    <td className="px-6 py-4">
-                      <Select 
-                        placeholder="Choose Item"
-                        options={[
-                          { label: 'Ultra-Wide Monitor 34"', value: '1' },
-                          { label: 'Mechanical Keyboard RGB', value: '2' }
-                        ]}
-                      />
-                    </td>
-                    <td className="px-4 py-4">
-                      <Input type="number" value="1" className="text-center" />
-                    </td>
-                    <td className="px-4 py-4">
-                      <Input type="number" placeholder="0.00" leftIcon={<span className="text-[10px]">Rs.</span>} />
-                    </td>
-                    <td className="px-4 py-4 font-bold text-slate-900 py-2">Rs. 0.00</td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="text-slate-300 hover:text-red-500 transition-colors p-1">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
+                  {items.length === 0 ? (
+                    <tr 
+                      className="cursor-pointer hover:bg-slate-50 transition-colors group h-[150px]"
+                      onClick={addItem}
+                    >
+                      <td colSpan={5} className="px-6 h-[150px] text-center text-slate-400 italic">
+                        <div className="flex flex-col items-center gap-2">
+                          <span>No items added yet.</span>
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest group-hover:scale-110 transition-transform">
+                            Click to add first item
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((item, idx) => (
+                      <tr key={item.id}>
+                        <td className="px-6 py-4">
+                          <Select 
+                            placeholder="Choose Item"
+                            value={item.name}
+                            onChange={(e: any) => updateItem(idx, 'name', e.target.value)}
+                            options={[
+                              { label: 'Ultra-Wide Monitor 34"', value: 'Ultra-Wide Monitor 34"' },
+                              { label: 'Mechanical Keyboard RGB', value: 'Mechanical Keyboard RGB' }
+                            ]}
+                          />
+                        </td>
+                        <td className="px-4 py-4">
+                          <Input 
+                            type="number" 
+                            value={item.qty} 
+                            className="text-center" 
+                            onChange={(e) => updateItem(idx, 'qty', parseInt(e.target.value) || 0)}
+                          />
+                        </td>
+                        <td className="px-4 py-4">
+                          <Input 
+                            type="number" 
+                            value={item.rate}
+                            placeholder="0.00" 
+                            leftIcon={<span className="text-[10px]">Rs.</span>} 
+                            onChange={(e) => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)}
+                          />
+                        </td>
+                        <td className="px-4 py-4 font-bold text-slate-900 py-2">Rs. {item.amount.toLocaleString()}</td>
+                        <td className="px-6 py-4 text-center">
+                          <button className="text-slate-300 hover:text-red-500 transition-colors p-1" onClick={() => removeItem(idx)}>
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -154,21 +213,21 @@ export const CreateQuotationPage: React.FC = () => {
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <Calculator size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Financial Computation</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Summary</h3>
             </div>
             
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Sub Total</span>
-                <span className="font-bold text-slate-900">Rs. 0.00</span>
+                <span className="font-bold text-slate-900">Rs. {subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Tax (15%)</span>
-                <span className="font-bold text-slate-900">Rs. 0.00</span>
+                <span className="font-bold text-slate-900">Rs. {(subtotal * 0.15).toLocaleString()}</span>
               </div>
               <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-lg">
                 <span className="font-bold text-slate-900">Grand Total</span>
-                <span className="font-bold text-blue-600">Rs. 0.00</span>
+                <span className="font-bold text-blue-600">Rs. {(subtotal * 1.15).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -179,7 +238,7 @@ export const CreateQuotationPage: React.FC = () => {
               <div className="p-2 bg-rose-50 rounded-lg text-rose-600">
                 <Clock size={18} />
               </div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Legal Provisions</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Terms & Notes</h3>
             </div>
             <Textarea 
               label="Public Notes" 
@@ -195,7 +254,7 @@ export const CreateQuotationPage: React.FC = () => {
               leftIcon={<Save size={14} />} 
               className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
-              Issue Proposition
+              Save Quotation
             </Button>
             <Button 
               variant="secondary" 
@@ -203,7 +262,7 @@ export const CreateQuotationPage: React.FC = () => {
               leftIcon={<RotateCcw size={14} />} 
               className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
-              Reset Interface
+              Reset Form
             </Button>
           </div>
         </div>

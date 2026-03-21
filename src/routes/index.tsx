@@ -274,17 +274,17 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route path="invoices/create" element={<CreateSalesInvoicePage />} />
           <Route path="invoices/:id/edit" element={<EditSalesInvoicePage />} />
           <Route path="returns" element={<SalesReturnsPage />} />
-          <Route path="returns/new" element={<CreateSalesReturnPage />} />
+          <Route path="returns/create" element={<CreateSalesReturnPage />} />
           <Route path="returns/:id/edit" element={<EditSalesReturnPage />} />
           <Route path="payments" element={<CustomerPaymentsPage />} />
-          <Route path="payments/new" element={<CreateCustomerPaymentPage />} />
+          <Route path="payments/create" element={<CreateCustomerPaymentPage />} />
           <Route path="payments/:id/edit" element={<EditCustomerPaymentPage />} />
-          <Route path="credit-note" element={<CustomerCreditNotePage />} />
-          <Route path="credit-note/new" element={<CreateCustomerCreditNotePage />} />
-          <Route path="credit-note/:id/edit" element={<EditCustomerCreditNotePage />} />
-          <Route path="debit-note" element={<CustomerDebitNotePage />} />
-          <Route path="debit-note/new" element={<CreateCustomerDebitNotePage />} />
-          <Route path="debit-note/:id/edit" element={<EditCustomerDebitNotePage />} />
+          <Route path="credit-notes" element={<CustomerCreditNotePage />} />
+          <Route path="credit-notes/create" element={<CreateCustomerCreditNotePage />} />
+          <Route path="credit-notes/:id/edit" element={<EditCustomerCreditNotePage />} />
+          <Route path="debit-notes" element={<CustomerDebitNotePage />} />
+          <Route path="debit-notes/create" element={<CreateCustomerDebitNotePage />} />
+          <Route path="debit-notes/:id/edit" element={<EditCustomerDebitNotePage />} />
         </Route>
 
         {/* Accounts */}
