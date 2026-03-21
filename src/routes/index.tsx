@@ -47,6 +47,9 @@ import {
   CreateVendorPaymentPage,
   CreateVendorCreditNotePage,
   CreateVendorDebitNotePage,
+  EditPurchaseReturnPage,
+  EditPurchaseInvoicePage,
+  EditVendorPaymentPage,
   SalesDashboard,
   CustomersPage,
   QuotationsPage,
@@ -238,10 +241,13 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route path="vendors/add" element={<AddVendorPage />} />
           <Route path="invoices" element={<PurchaseInvoicesPage />} />
           <Route path="invoices/create" element={<CreatePurchaseInvoicePage />} />
+          <Route path="invoices/:id/edit" element={<EditPurchaseInvoicePage />} />
           <Route path="returns" element={<PurchaseReturnsPage />} />
           <Route path="returns/new" element={<CreatePurchaseReturnPage />} />
+          <Route path="returns/:id/edit" element={<EditPurchaseReturnPage />} />
           <Route path="payments" element={<VendorPaymentsPage />} />
           <Route path="payments/new" element={<CreateVendorPaymentPage />} />
+          <Route path="payments/:id/edit" element={<EditVendorPaymentPage />} />
           <Route path="credit-note" element={<VendorCreditNotePage />} />
           <Route path="credit-note/new" element={<CreateVendorCreditNotePage />} />
           <Route path="debit-note" element={<VendorDebitNotePage />} />
