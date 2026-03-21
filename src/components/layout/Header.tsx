@@ -90,8 +90,14 @@ export const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onLogout, onS
       style={{ backgroundColor: user.role === 'super_admin' ? "var(--sa-header)" : "var(--admin-header)" }}
     >
       <div className="flex items-center justify-between h-20 px-6 lg:px-8 mx-auto w-full">
-        {/* LEFT SECTION */}
-        <div className="flex items-center flex-1">
+        <div className="flex items-center flex-1 gap-4">
+          {/* Mobile Menu Button - NEW */}
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-all active:scale-95"
+          >
+            <Icon name="menu" size="sm" />
+          </button>
           {/* Greeting - ONLY for Super Admin side */}
           {user.role === 'super_admin' && (
             <div className="flex items-center">

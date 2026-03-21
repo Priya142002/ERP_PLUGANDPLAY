@@ -65,7 +65,7 @@ export const CreateSalesReturnPage: React.FC = () => {
         {/* Main Form Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* General Details */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <FileText size={18} />
@@ -204,7 +204,7 @@ export const CreateSalesReturnPage: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <AlertCircle size={18} />

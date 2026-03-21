@@ -7,8 +7,8 @@ import {
   Calendar, 
   Save, 
   RotateCcw,
-  Plus,
-  Trash2,
+  Plus, 
+  Trash2, 
   AlertTriangle
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
@@ -34,7 +34,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
     setLines(lines.filter((_, i) => i !== idx));
   };
 
-  const totalAdjustment = React.useMemo(() => lines.reduce((acc, line) => acc + (line.amount || 0), 0), [lines]);
+  const totalCredit = React.useMemo(() => lines.reduce((acc, line) => acc + (line.amount || 0), 0), [lines]);
 
   return (
     <motion.div 
@@ -52,7 +52,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
             <ArrowLeft size={18} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 line-clamp-1">Equity Realignment</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 line-clamp-1">New Customer Credit Note</h1>
           </div>
         </div>
       </div>
@@ -60,7 +60,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Details */}
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <FileText size={18} />
@@ -68,7 +68,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Credit Configuration</h3>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input 
                 label="Credit Note #" 
                 placeholder="CCN-2026-004" 
@@ -84,7 +84,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select 
                 label="Customer" 
                 placeholder="Select Customer"
@@ -99,12 +99,12 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
               />
               <Input 
                 label="Ref Invoice" 
-                placeholder="SINV-2026-001" 
+                placeholder="SINV-2026-002" 
               />
             </div>
           </div>
 
-          {/* Lines Table */}
+          {/* Table Area */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
               <div className="flex items-center gap-3">
@@ -127,7 +127,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-                    <th className="px-6 py-4">Description / Reason</th>
+                    <th className="px-6 py-4">Adjustment Description</th>
                     <th className="px-6 py-4 w-40 text-right">Credit Amount</th>
                     <th className="px-6 py-4 text-center w-20"></th>
                   </tr>
@@ -152,7 +152,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
                       <tr key={line.id}>
                         <td className="px-6 py-4">
                           <Input 
-                            placeholder="Enter reason for credit" 
+                            placeholder="Return, discount, price adjustment, etc." 
                             value={line.description}
                             onChange={(e) => updateLine(idx, 'description', e.target.value)}
                           />
@@ -163,7 +163,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
                             placeholder="0.00" 
                             className="text-right"
                             value={line.amount}
-                            leftIcon={<span className="text-[10px] uppercase">$</span>}
+                            leftIcon={<span className="text-[10px] uppercase font-bold">$</span>}
                             onChange={(e) => updateLine(idx, 'amount', parseFloat(e.target.value) || 0)}
                           />
                         </td>
@@ -178,8 +178,8 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
                 </tbody>
                 <tfoot>
                    <tr className="bg-slate-50/50 text-sm font-bold">
-                    <td className="px-6 py-4 text-right text-slate-500 uppercase tracking-tighter">Total Adjustment</td>
-                    <td className="px-6 py-4 text-right text-teal-600">${totalAdjustment.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right text-slate-500">Decreased Balance</td>
+                    <td className="px-6 py-4 text-right text-emerald-600">${totalCredit.toLocaleString()}</td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -189,7 +189,7 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <AlertTriangle size={18} />
@@ -197,22 +197,21 @@ export const CreateCustomerCreditNotePage: React.FC = () => {
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Operational Directives</h3>
             </div>
             <Select 
-              label="Standard Reason"
               options={[
                 { label: 'Sales Return', value: 'return' },
-                { label: 'Price Correction', value: 'price' },
                 { label: 'Damaged Goods', value: 'damaged' },
-                { label: 'Late Delivery Discount', value: 'late' }
+                { label: 'Price Correction', value: 'price' },
+                { label: 'Bulk Discount', value: 'discount' }
               ]} 
               placeholder="Select Reason"
             />
             <Textarea label="Remarks" placeholder="Internal notes for accounting..." rows={4} />
           </div>
 
-          <div className="bg-teal-50 border border-teal-100 p-4 rounded-xl flex gap-3">
-             <AlertTriangle size={18} className="text-teal-500 shrink-0" />
-             <p className="text-xs text-teal-700 leading-relaxed">
-               Issuing a credit note will reduce the customer's total debt to your company.
+          <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex gap-3">
+             <AlertTriangle size={18} className="text-emerald-500 shrink-0" />
+             <p className="text-xs text-emerald-700 leading-relaxed">
+               Providing a credit note will decrease the amount that the customer owes to your company.
              </p>
           </div>
 

@@ -41,7 +41,7 @@ export const CreateCustomerPaymentPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Payment Main Info */}
         <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6 h-full">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6 h-full">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <CreditCard size={18} />
@@ -89,7 +89,7 @@ export const CreateCustomerPaymentPage: React.FC = () => {
 
         {/* Payment Collection */}
         <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                 <Building2 size={18} />

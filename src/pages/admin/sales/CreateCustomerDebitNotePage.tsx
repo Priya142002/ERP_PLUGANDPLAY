@@ -60,7 +60,7 @@ export const CreateCustomerDebitNotePage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Details */}
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <FileText size={18} />
@@ -68,7 +68,7 @@ export const CreateCustomerDebitNotePage: React.FC = () => {
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Debit Note Details</h3>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input 
                 label="Debit Note #" 
                 placeholder="CDN-2026-004" 
@@ -84,7 +84,7 @@ export const CreateCustomerDebitNotePage: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select 
                 label="Customer" 
                 placeholder="Select Customer"
@@ -189,7 +189,7 @@ export const CreateCustomerDebitNotePage: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <AlertCircle size={18} />

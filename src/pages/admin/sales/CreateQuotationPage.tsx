@@ -66,7 +66,7 @@ export const CreateQuotationPage: React.FC = () => {
         {/* Main Form Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <FileText size={18} />
@@ -208,7 +208,7 @@ export const CreateQuotationPage: React.FC = () => {
         {/* Totals & Options */}
         <div className="space-y-6">
           {/* Summary */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <Calculator size={18} />
@@ -233,7 +233,7 @@ export const CreateQuotationPage: React.FC = () => {
           </div>
 
           {/* Terms */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
             <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
               <div className="p-2 bg-rose-50 rounded-lg text-rose-600">
                 <Clock size={18} />
