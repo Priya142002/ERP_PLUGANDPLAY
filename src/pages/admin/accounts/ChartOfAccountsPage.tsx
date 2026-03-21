@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Download, Edit, ChevronDown, X } from "lucide-react";
+import { Plus, Download, Edit, ChevronDown, X, Trash2, MoreVertical } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Modal from "../../../components/ui/Modal";
@@ -42,8 +42,9 @@ const MOCK_COA = [
   }
 ];
 
-const TreeNode: React.FC<{ node: any; depth: number }> = ({ node, depth }) => {
+const TreeNode: React.FC<{ node: any; depth: number; onEdit?: (node: any) => void; onAdd?: (node: any) => void; onDelete?: (node: any) => void }> = ({ node, depth, onEdit, onAdd, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(depth === 0);
+  const [showMenu, setShowMenu] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
 
   return (
@@ -88,9 +89,55 @@ const TreeNode: React.FC<{ node: any; depth: number }> = ({ node, depth }) => {
             </Badge>
             <span className="text-sm font-bold text-slate-900 min-w-[100px] text-right">{node.balance}</span>
             
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md"><Edit size={14} /></button>
-              <button className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md"><Plus size={14} /></button>
+            <div className="relative flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => setShowMenu(!showMenu)} 
+                className="p-1.5 text-slate-400 hover:text-[#002147] rounded-md"
+                title="More options"
+              >
+                <MoreVertical size={16} />
+              </button>
+              
+              {showMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setShowMenu(false)}
+                  />
+                  <div className="absolute right-0 top-8 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[140px]">
+                    <button 
+                      onClick={() => {
+                        setShowMenu(false);
+                        onAdd?.(node);
+                      }} 
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <Plus size={14} />
+                      Add Group
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowMenu(false);
+                        onEdit?.(node);
+                      }} 
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <Edit size={14} />
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowMenu(false);
+                        onDelete?.(node);
+                      }} 
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -99,7 +146,7 @@ const TreeNode: React.FC<{ node: any; depth: number }> = ({ node, depth }) => {
       {hasChildren && isExpanded && (
         <div className="relative">
           {node.children.map((child: any) => (
-            <TreeNode key={child.id} node={child} depth={depth + 1} />
+            <TreeNode key={child.id} node={child} depth={depth + 1} onEdit={onEdit} onAdd={onAdd} onDelete={onDelete} />
           ))}
         </div>
       )}
@@ -109,6 +156,40 @@ const TreeNode: React.FC<{ node: any; depth: number }> = ({ node, depth }) => {
 
 export const ChartOfAccountsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNode, setEditingNode] = useState<any>(null);
+  const [isAddingSubAccount, setIsAddingSubAccount] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState<any>(null);
+
+  const handleEdit = (node: any) => {
+    setEditingNode(node);
+    setIsAddingSubAccount(false);
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = (node: any) => {
+    setEditingNode(node);
+    setIsAddingSubAccount(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (node: any) => {
+    setNodeToDelete(node);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    // TODO: Implement actual delete logic here
+    console.log('Deleting node:', nodeToDelete);
+    setIsDeleteModalOpen(false);
+    setNodeToDelete(null);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingNode(null);
+    setIsAddingSubAccount(false);
+  };
 
   return (
     <motion.div 
@@ -139,28 +220,37 @@ export const ChartOfAccountsPage: React.FC = () => {
       {/* Account Group Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         title="Account Group"
         size="lg"
         showCloseButton={false} 
         contentClassName="p-0 overflow-hidden rounded-xl border-none shadow-2xl"
       >
         <div className="bg-[#002147] px-6 py-4 flex items-center justify-between">
-          <h3 className="text-white font-semibold text-base">Account Group</h3>
+          <h3 className="text-white font-semibold text-base">
+            {isAddingSubAccount ? 'Add Sub-Account' : editingNode ? 'Edit Account' : 'New Account'}
+          </h3>
           <button 
-            onClick={() => setIsModalOpen(false)}
+            onClick={handleCloseModal}
             className="text-white/80 hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
         </div>
         <div className="p-8 space-y-6">
+          {isAddingSubAccount && editingNode && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+              <p className="text-xs text-slate-600 mb-1">Parent Account:</p>
+              <p className="text-sm font-semibold text-slate-900">{editingNode.code} - {editingNode.name}</p>
+            </div>
+          )}
+          
           <Input 
             label="Group Code" 
             placeholder="e.g. 109" 
             className="border-slate-200 text-xs py-1.5"
             labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
-            value="109"
+            value={editingNode && !isAddingSubAccount ? editingNode.code : ""}
           />
           <Input 
             label="Group Name" 
@@ -168,6 +258,7 @@ export const ChartOfAccountsPage: React.FC = () => {
             required 
             className="border-slate-200 text-xs py-1.5"
             labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
+            value={editingNode && !isAddingSubAccount ? editingNode.name : ""}
           />
           <Input 
             label="Description" 
@@ -197,13 +288,13 @@ export const ChartOfAccountsPage: React.FC = () => {
           
           <div className="flex items-center justify-center gap-3 pt-2">
             <button 
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseModal}
               className="bg-[#002147] hover:bg-[#003366] text-white h-11 px-8 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
-              Post Group
+              {editingNode && !isAddingSubAccount ? 'Update Account' : 'Post Group'}
             </button>
             <button 
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseModal}
               className="h-11 px-8 text-xs font-bold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all"
             >
               Cancel
@@ -214,10 +305,63 @@ export const ChartOfAccountsPage: React.FC = () => {
 
 
 
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Account"
+        size="sm"
+        showCloseButton={false}
+        contentClassName="p-0 overflow-hidden rounded-xl border-none shadow-2xl"
+      >
+        <div className="bg-[#002147] px-6 py-4 flex items-center justify-between">
+          <h3 className="text-white font-semibold text-base">Confirm Delete</h3>
+          <button 
+            onClick={() => setIsDeleteModalOpen(false)}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-8 space-y-6">
+          <div className="text-center">
+            <div className="mx-auto w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="text-slate-600" size={24} />
+            </div>
+            <p className="text-slate-700 text-sm mb-2">
+              Are you sure you want to delete this account?
+            </p>
+            {nodeToDelete && (
+              <p className="text-slate-900 font-semibold text-sm">
+                {nodeToDelete.code} - {nodeToDelete.name}
+              </p>
+            )}
+            <p className="text-slate-500 text-xs mt-4">
+              This action cannot be undone.
+            </p>
+          </div>
+          
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button 
+              onClick={confirmDelete}
+              className="bg-[#002147] hover:bg-[#003366] text-white h-11 px-8 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+            >
+              Delete Account
+            </button>
+            <button 
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="h-11 px-8 text-xs font-bold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px] p-4 md:p-8 mt-6">
         <div className="max-w-4xl mx-auto space-y-2">
           {MOCK_COA.map(account => (
-            <TreeNode key={account.id} node={account} depth={0} />
+            <TreeNode key={account.id} node={account} depth={0} onEdit={handleEdit} onAdd={handleAdd} onDelete={handleDelete} />
           ))}
         </div>
 

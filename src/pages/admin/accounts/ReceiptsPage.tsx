@@ -1,42 +1,81 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Download, Edit, Trash2, Calendar, User } from "lucide-react";
+import { Plus, Download, Edit, Trash2, Calendar, User, AlertTriangle } from "lucide-react";
 import Button from "../../../components/ui/Button";
-import DataTable from "../../../components/ui/DataTable";
+import { TableFilters, DataTableWrapper } from "../../../components/common";
 
 const MOCK_RECEIPTS = [
-  { id: '1', date: '2026-03-16', voucherNo: 'RV-10201', receivedFrom: 'Nexus Enterprises', account: 'Accounts Receivable', amount: 13020.00, method: 'Bank Transfer', status: 'Approved' },
-  { id: '2', date: '2026-03-16', voucherNo: 'RV-10202', receivedFrom: 'Sarah Johnson', account: 'Accounts Receivable', amount: 893.03, method: 'Online Payment', status: 'Pending' },
-  { id: '3', date: '2026-03-15', voucherNo: 'RV-10203', receivedFrom: 'Urban Styles', account: 'Accounts Receivable', amount: 3045.00, method: 'Cash', status: 'Approved' },
-  { id: '4', date: '2026-03-14', voucherNo: 'RV-10204', receivedFrom: 'Global Trade Corp', account: 'Accounts Receivable', amount: 4410.00, method: 'Cheque', status: 'Approved' },
+  { id: '1', date: '2026-03-16', voucherNo: 'RV-10201', receivedFrom: 'Nexus Enterprises', account: 'Accounts Receivable', amount: 13020.00, method: 'Bank Transfer', status: 'Recognized' },
+  { id: '2', date: '2026-03-16', voucherNo: 'RV-10202', receivedFrom: 'Sarah Johnson', account: 'Accounts Receivable', amount: 893.03, method: 'Online Payment', status: 'Uncleared' },
+  { id: '3', date: '2026-03-15', voucherNo: 'RV-10203', receivedFrom: 'Urban Styles', account: 'Accounts Receivable', amount: 3045.00, method: 'Cash', status: 'Recognized' },
+  { id: '4', date: '2026-03-14', voucherNo: 'RV-10204', receivedFrom: 'Global Trade Corp', account: 'Accounts Receivable', amount: 4410.00, method: 'Cheque', status: 'Recognized' },
 ];
+
+const TABS = ['All Receipts', 'Recognized', 'Uncleared', 'Returned'] as const;
+type Tab = typeof TABS[number];
+
+/* ── Delete Modal ── */
+const DeleteModal: React.FC<{ voucherNo: string; onClose: () => void; onConfirm: () => void }> = ({ voucherNo, onClose, onConfirm }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+    onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" style={{ backgroundColor: '#ffffff' }}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-rose-50 rounded-lg text-rose-500"><AlertTriangle size={18} /></div>
+        <h3 className="font-bold text-slate-800">Delete Receipt Voucher</h3>
+      </div>
+      <p className="text-sm text-slate-500 mb-6">
+        Are you sure you want to delete <span className="font-semibold text-slate-700">"{voucherNo}"</span>? This cannot be undone.
+      </p>
+      <div className="flex gap-3">
+        <button onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-slate-50 transition">Cancel</button>
+        <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 h-11 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition">Delete</button>
+      </div>
+    </motion.div>
+  </div>
+);
 
 export const ReceiptsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [receipts] = useState(MOCK_RECEIPTS);
+  const [receipts, setReceipts] = useState(MOCK_RECEIPTS);
+  const [activeTab, setActiveTab] = useState<Tab>('All Receipts');
+  const [search, setSearch] = useState('');
+  const [filterFrom, setFilterFrom] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [deleteReceipt, setDeleteReceipt] = useState<typeof MOCK_RECEIPTS[0] | null>(null);
+
+  const fromOptions = useMemo(() => Array.from(new Set(receipts.map(r => r.receivedFrom))), [receipts]);
+
+  const displayed = useMemo(() => {
+    let list = [...receipts];
+    if (activeTab === 'Recognized') list = list.filter(r => r.status === 'Recognized');
+    if (activeTab === 'Uncleared') list = list.filter(r => r.status === 'Uncleared');
+    if (search) list = list.filter(r =>
+      r.voucherNo.toLowerCase().includes(search.toLowerCase()) ||
+      r.receivedFrom.toLowerCase().includes(search.toLowerCase())
+    );
+    if (filterFrom) list = list.filter(r => r.receivedFrom === filterFrom);
+    if (filterStatus) list = list.filter(r => r.status === filterStatus);
+    return list;
+  }, [receipts, activeTab, search, filterFrom, filterStatus]);
+
+  const handleDelete = (id: string) => {
+    setReceipts(prev => prev.filter(r => r.id !== id));
+  };
 
   const columns = [
     {
       key: 'voucherNo' as const,
       label: 'Voucher #',
-      sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
-            <ReceiptRefund size={20} />
-          </div>
-          <div className="font-semibold text-slate-900">{value}</div>
-        </div>
-      )
+      render: (value: string) => <span className="font-bold text-slate-800 text-sm">{value}</span>
     },
     {
       key: 'date' as const,
       label: 'Date',
-      sortable: true,
       render: (value: string) => (
         <div className="flex items-center gap-2 text-slate-600 text-sm">
-          <Calendar size={14} className="text-slate-400" />
+          <Calendar size={13} className="text-slate-400" />
           {value}
         </div>
       )
@@ -44,10 +83,9 @@ export const ReceiptsPage: React.FC = () => {
     {
       key: 'receivedFrom' as const,
       label: 'From',
-      filterable: true,
       render: (value: string) => (
         <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
-          <User size={14} className="text-slate-400" />
+          <User size={13} className="text-slate-400" />
           {value}
         </div>
       )
@@ -66,18 +104,17 @@ export const ReceiptsPage: React.FC = () => {
     {
       key: 'status' as const,
       label: 'Status',
-      filterable: true,
       render: (value: string) => {
-        if (value === 'Approved') return (
+        if (value === 'Recognized') return (
           <div className="flex items-center gap-1.5 text-emerald-600">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <span className="text-[11px] font-bold uppercase tracking-widest">Recognized</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Recognized</span>
           </div>
         );
         return (
           <div className="flex items-center gap-1.5 text-amber-600">
             <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[11px] font-bold uppercase tracking-widest">Uncleared</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Uncleared</span>
           </div>
         );
       }
@@ -88,7 +125,7 @@ export const ReceiptsPage: React.FC = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="space-y-5"
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -109,38 +146,49 @@ export const ReceiptsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-1">
-        {['All Receipts', 'Recognized', 'Uncleared', 'Returned'].map((chip, idx) => (
-          <button key={chip} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition-all border ${idx === 0 ? 'bg-[#002147] text-white border-[#002147] shadow-md shadow-blue-900/10' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>
-            {chip}
+      <div className="flex items-center gap-1.5">
+        {TABS.map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-tight transition-all border ${
+              activeTab === tab ? 'bg-[#002147] text-white border-[#002147] shadow-md shadow-blue-900/10' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+            }`}>
+            {tab}
           </button>
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <DataTable 
-          data={receipts}
-          columns={columns}
-          searchable
-          filterable
-          paginated
-          pageSize={10}
-          actions={[
-            {
-              label: 'Edit',
-              icon: <Edit size={16} />,
-              onClick: (item) => console.log('Edit', item),
-              variant: 'secondary'
-            },
-            {
-              label: 'Void',
-              icon: <Trash2 size={16} />,
-              onClick: (item) => console.log('Delete', item),
-              variant: 'danger'
-            }
-          ]}
-        />
-      </div>
+      <TableFilters
+        searchValue={search}
+        searchPlaceholder="Search..."
+        onSearchChange={setSearch}
+        filters={[
+          { label: 'Filter From', value: filterFrom, options: fromOptions, onChange: setFilterFrom },
+          { label: 'Filter Status', value: filterStatus, options: ['Recognized', 'Uncleared'], onChange: setFilterStatus }
+        ]}
+        onClearAll={() => { setSearch(''); setFilterFrom(''); setFilterStatus(''); }}
+        showClearButton={!!(search || filterFrom || filterStatus)}
+      />
+
+      <DataTableWrapper
+        data={displayed}
+        columns={columns}
+        actions={[
+          { label: 'Edit', icon: <Edit size={14} />, onClick: (item) => navigate('/admin/accounts/receipts/create'), variant: 'primary', title: 'Edit' },
+          { label: 'Void', icon: <Trash2 size={14} />, onClick: (item) => setDeleteReceipt(item), variant: 'danger', title: 'Void' }
+        ]}
+        emptyMessage="No receipt vouchers found"
+      />
+
+      <AnimatePresence>
+        {deleteReceipt && (
+          <DeleteModal 
+            key="delete" 
+            voucherNo={deleteReceipt.voucherNo} 
+            onClose={() => setDeleteReceipt(null)} 
+            onConfirm={() => handleDelete(deleteReceipt.id)} 
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

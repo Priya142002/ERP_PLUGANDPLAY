@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -16,8 +16,44 @@ import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import Textarea from "../../../components/ui/Textarea";
 
+interface JournalEntry {
+  id: number;
+  account: string;
+  narration: string;
+  debit: number;
+  credit: number;
+}
+
 export const CreateJournalVoucherPage: React.FC = () => {
   const navigate = useNavigate();
+  const [entries, setEntries] = useState<JournalEntry[]>([
+    { id: 1, account: '', narration: '', debit: 0, credit: 0 },
+    { id: 2, account: '', narration: '', debit: 0, credit: 0 }
+  ]);
+
+  const addEntry = () => {
+    setEntries([...entries, { id: Date.now(), account: '', narration: '', debit: 0, credit: 0 }]);
+  };
+
+  const removeEntry = (id: number) => {
+    if (entries.length > 2) {
+      setEntries(entries.filter(entry => entry.id !== id));
+    }
+  };
+
+  const updateEntry = (id: number, field: keyof JournalEntry, value: string | number) => {
+    setEntries(entries.map(entry => 
+      entry.id === id ? { ...entry, [field]: value } : entry
+    ));
+  };
+
+  const totalDebit = useMemo(() => {
+    return entries.reduce((sum, entry) => sum + (Number(entry.debit) || 0), 0);
+  }, [entries]);
+
+  const totalCredit = useMemo(() => {
+    return entries.reduce((sum, entry) => sum + (Number(entry.credit) || 0), 0);
+  }, [entries]);
 
   return (
     <motion.div 
@@ -81,7 +117,12 @@ export const CreateJournalVoucherPage: React.FC = () => {
               </div>
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Ledger Synchronicity</h3>
             </div>
-            <Button variant="secondary" size="sm" leftIcon={<Plus size={16} />}>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              leftIcon={<Plus size={16} />}
+              onClick={addEntry}
+            >
               Add Entry
             </Button>
           </div>
@@ -97,57 +138,58 @@ export const CreateJournalVoucherPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                 <tr>
-                  <td className="px-6 py-4 min-w-[280px]">
-                    <Select 
-                      placeholder="Account"
-                      options={[
-                        { label: 'Inventory Assets', value: '1' },
-                        { label: 'Cost of Goods Sold', value: '2' },
-                        { label: 'Prepaid Expenses', value: '3' }
-                      ]}
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <Input placeholder="Line specific notes..." />
-                  </td>
-                  <td className="px-4 py-4">
-                    <Input type="number" placeholder="0.00" className="text-right" />
-                  </td>
-                  <td className="px-4 py-4">
-                    <Input type="number" placeholder="0.00" className="text-right font-medium text-slate-400" disabled />
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <button className="text-slate-300 hover:text-red-500">
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 min-w-[280px]">
-                    <Select 
-                      placeholder="Account"
-                      options={[
-                        { label: 'Trade Payables', value: '4' },
-                        { label: 'Accrued Liabilities', value: '5' }
-                      ]}
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <Input placeholder="Line specific notes..." />
-                  </td>
-                  <td className="px-4 py-4">
-                    <Input type="number" placeholder="0.00" className="text-right font-medium text-slate-400" disabled />
-                  </td>
-                  <td className="px-4 py-4">
-                    <Input type="number" placeholder="0.00" className="text-right" />
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <button className="text-slate-300 hover:text-red-500">
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
+                {entries.map((entry) => (
+                  <tr key={entry.id}>
+                    <td className="px-6 py-4 min-w-[280px]">
+                      <Select 
+                        placeholder="Account"
+                        options={[
+                          { label: 'Inventory Assets', value: '1' },
+                          { label: 'Cost of Goods Sold', value: '2' },
+                          { label: 'Prepaid Expenses', value: '3' },
+                          { label: 'Trade Payables', value: '4' },
+                          { label: 'Accrued Liabilities', value: '5' }
+                        ]}
+                        value={entry.account}
+                        onChange={(e) => updateEntry(entry.id, 'account', e.target.value)}
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Input 
+                        placeholder="Line specific notes..." 
+                        value={entry.narration}
+                        onChange={(e) => updateEntry(entry.id, 'narration', e.target.value)}
+                      />
+                    </td>
+                    <td className="px-4 py-4">
+                      <Input 
+                        type="number" 
+                        placeholder="0.00" 
+                        className="text-right" 
+                        value={entry.debit || ''}
+                        onChange={(e) => updateEntry(entry.id, 'debit', Number(e.target.value))}
+                      />
+                    </td>
+                    <td className="px-4 py-4">
+                      <Input 
+                        type="number" 
+                        placeholder="0.00" 
+                        className="text-right" 
+                        value={entry.credit || ''}
+                        onChange={(e) => updateEntry(entry.id, 'credit', Number(e.target.value))}
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button 
+                        className={`${entries.length <= 2 ? 'text-slate-200 cursor-not-allowed' : 'text-slate-300 hover:text-red-500'}`}
+                        onClick={() => removeEntry(entry.id)}
+                        disabled={entries.length <= 2}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
               <tfoot>
                 <tr className="bg-slate-50/50 font-bold border-t border-slate-200">
@@ -157,8 +199,8 @@ export const CreateJournalVoucherPage: React.FC = () => {
                        Sum of Entries
                     </div>
                   </td>
-                  <td className="px-4 py-5 text-right text-indigo-600">$0.00</td>
-                  <td className="px-4 py-5 text-right text-indigo-600">$0.00</td>
+                  <td className="px-4 py-5 text-right text-indigo-600">${totalDebit.toFixed(2)}</td>
+                  <td className="px-4 py-5 text-right text-indigo-600">${totalCredit.toFixed(2)}</td>
                   <td></td>
                 </tr>
               </tfoot>

@@ -71,7 +71,7 @@ export const AccountsDashboard: React.FC = () => {
       {/* Page Title Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Fiscal Ecosystem</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Account Dashboard</h1>
         </div>
         <div className="flex flex-row items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-2.5 bg-white border border-slate-200 px-3 md:px-4 py-1.5 md:py-2 rounded-xl shadow-sm">
@@ -93,11 +93,11 @@ export const AccountsDashboard: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
-            className={`p-4 md:p-5 rounded-xl md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden ${stat.color.replace('bg-', 'bg-')}/5 bg-white`}
+            className={`p-4 md:p-5 rounded-xl md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden bg-white`}
           >
             <div className={`absolute top-0 left-0 right-0 h-1.5 ${stat.color} opacity-100`} />
             <div className="flex items-center justify-between mb-4">
-              <div className={`w-10 h-10 ${stat.color}/10 flex items-center justify-center ${stat.color.replace('bg-', 'text-')} rounded-lg md:rounded-xl shadow-sm border border-current/10 group-hover:scale-110 transition-transform`}>
+              <div className={`w-10 h-10 bg-slate-50 flex items-center justify-center ${stat.color.replace('bg-', 'text-')} rounded-lg md:rounded-xl shadow-sm border border-slate-200 group-hover:scale-110 transition-transform`}>
                 {React.cloneElement(stat.icon as React.ReactElement, { size: 20 })}
               </div>
               <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase bg-white/80 backdrop-blur-sm shadow-sm ${stat.trendColor} border border-slate-100 transition-colors`}>
@@ -215,13 +215,13 @@ export const AccountsDashboard: React.FC = () => {
             ))}
           </div>
           
-          <div className="mt-10 p-5 bg-emerald-50/30 rounded-2xl border border-emerald-100/50 relative overflow-hidden group">
+          <div className="mt-10 p-5 bg-white rounded-2xl border border-slate-200 relative overflow-hidden group shadow-sm">
             <div className="relative z-10 flex items-center gap-4">
-              <div className="p-3 bg-white rounded-xl text-emerald-600 shadow-sm border border-emerald-50 group-hover:rotate-6 transition-transform">
+              <div className="p-3 bg-slate-50 rounded-xl text-emerald-600 shadow-sm border border-slate-200 group-hover:rotate-6 transition-transform">
                 <CreditCard size={20} />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 leading-tight border-b border-emerald-100/50 pb-1 mb-1">Budget Status</p>
+                <p className="text-sm font-bold text-slate-900 leading-tight border-b border-slate-200 pb-1 mb-1">Budget Status</p>
                 <p className="text-[11px] text-emerald-600 font-bold">In-Compliance Range</p>
                 <p className="text-[10px] text-slate-500 leading-relaxed font-medium mt-1">Operational burn rate is within the seasonal projection.</p>
               </div>

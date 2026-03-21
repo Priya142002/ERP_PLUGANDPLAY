@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -17,8 +17,38 @@ import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import Textarea from "../../../components/ui/Textarea";
 
+interface LineItem {
+  id: number;
+  account: string;
+  description: string;
+  amount: number;
+}
+
 export const CreatePaymentVoucherPage: React.FC = () => {
   const navigate = useNavigate();
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { id: 1, account: '', description: '', amount: 0 }
+  ]);
+
+  const addLine = () => {
+    setLineItems([...lineItems, { id: Date.now(), account: '', description: '', amount: 0 }]);
+  };
+
+  const removeLine = (id: number) => {
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter(item => item.id !== id));
+    }
+  };
+
+  const updateLine = (id: number, field: keyof LineItem, value: string | number) => {
+    setLineItems(lineItems.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const totalAmount = useMemo(() => {
+    return lineItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  }, [lineItems]);
 
   return (
     <motion.div 
@@ -103,7 +133,12 @@ export const CreatePaymentVoucherPage: React.FC = () => {
                 </div>
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Accounts & Ledger</h3>
               </div>
-              <Button variant="secondary" size="sm" leftIcon={<Plus size={16} />}>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                leftIcon={<Plus size={16} />}
+                onClick={addLine}
+              >
                 Add Line
               </Button>
             </div>
@@ -118,34 +153,53 @@ export const CreatePaymentVoucherPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                   <tr>
-                    <td className="px-6 py-4 min-w-[250px]">
-                      <Select 
-                        placeholder="Choose Account"
-                        options={[
-                          { label: 'Office Supplies Expense', value: '1' },
-                          { label: 'Utility Bills', value: '2' },
-                          { label: 'Staff Salaries', value: '3' }
-                        ]}
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <Input placeholder="Line particulars..." />
-                    </td>
-                    <td className="px-4 py-4">
-                      <Input type="number" placeholder="0.00" className="text-right" leftIcon={<span className="text-[10px]">$</span>} />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="text-slate-300 hover:text-red-500">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
+                  {lineItems.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4 min-w-[250px]">
+                        <Select 
+                          placeholder="Choose Account"
+                          options={[
+                            { label: 'Office Supplies Expense', value: '1' },
+                            { label: 'Utility Bills', value: '2' },
+                            { label: 'Staff Salaries', value: '3' }
+                          ]}
+                          value={item.account}
+                          onChange={(e) => updateLine(item.id, 'account', e.target.value)}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <Input 
+                          placeholder="Line particulars..." 
+                          value={item.description}
+                          onChange={(e) => updateLine(item.id, 'description', e.target.value)}
+                        />
+                      </td>
+                      <td className="px-4 py-4">
+                        <Input 
+                          type="number" 
+                          placeholder="0.00" 
+                          className="text-right" 
+                          leftIcon={<span className="text-[10px]">$</span>}
+                          value={item.amount || ''}
+                          onChange={(e) => updateLine(item.id, 'amount', Number(e.target.value))}
+                        />
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          className={`${lineItems.length === 1 ? 'text-slate-200 cursor-not-allowed' : 'text-slate-300 hover:text-red-500'}`}
+                          onClick={() => removeLine(item.id)}
+                          disabled={lineItems.length === 1}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
                 <tfoot>
                   <tr className="bg-slate-50/50 font-bold">
                     <td colSpan={2} className="px-6 py-4 text-right text-slate-500 text-xs uppercase tracking-wider">Total Payment</td>
-                    <td className="px-4 py-4 text-right text-rose-600">$0.00</td>
+                    <td className="px-4 py-4 text-right text-rose-600">${totalAmount.toFixed(2)}</td>
                     <td></td>
                   </tr>
                 </tfoot>
