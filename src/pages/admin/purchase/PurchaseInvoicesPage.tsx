@@ -256,12 +256,11 @@ const RecordPaymentModal: React.FC<{ invoice: Invoice; onClose: () => void; onSa
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: -16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
-        style={{ backgroundColor: '#ffffff' }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]"
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 rounded-t-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><DollarSign size={16} /></div>
             <div>
@@ -273,7 +272,7 @@ const RecordPaymentModal: React.FC<{ invoice: Invoice; onClose: () => void; onSa
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
+        <div className="overflow-y-auto flex-1 p-6 space-y-4 bg-white">
           {/* Invoice summary */}
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex justify-between items-center">
             <div>
@@ -331,7 +330,7 @@ const RecordPaymentModal: React.FC<{ invoice: Invoice; onClose: () => void; onSa
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-slate-100 rounded-b-2xl">
+        <div className="flex gap-3 px-6 py-4 border-t border-slate-100 bg-white flex-shrink-0">
           <button onClick={onClose}
             className="flex-1 h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-slate-50 transition">
             Cancel

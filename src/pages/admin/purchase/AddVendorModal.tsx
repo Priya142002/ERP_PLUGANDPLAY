@@ -74,15 +74,14 @@ export const AddVendorModal: React.FC<AddVendorModalProps> = ({ onClose, onSave 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm overflow-y-auto"
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="min-h-full flex items-start justify-center p-4 py-8">
-        <motion.div initial={{ opacity: 0, scale: 0.96, y: -16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col border border-slate-200"
-          onClick={e => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: -16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col border border-slate-200 max-h-[90vh]"
+        onClick={e => e.stopPropagation()}>
 
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white rounded-t-2xl sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Building2 size={16} /></div>
               <h3 className="font-bold text-slate-800 text-base">New Vendor</h3>
@@ -91,7 +90,7 @@ export const AddVendorModal: React.FC<AddVendorModalProps> = ({ onClose, onSave 
           </div>
 
           {/* Body */}
-          <div className="overflow-y-auto p-6 max-h-[75vh] bg-slate-50">
+          <div className="overflow-y-auto flex-1 p-6 bg-slate-50">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
               {/* Main */}
@@ -262,7 +261,7 @@ export const AddVendorModal: React.FC<AddVendorModalProps> = ({ onClose, onSave 
           </div>
 
           {/* Footer */}
-          <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-white rounded-b-2xl sticky bottom-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-white flex-shrink-0">
             <button onClick={onClose}
               className="flex-1 h-11 rounded-xl border border-slate-300 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
               Cancel
@@ -273,7 +272,6 @@ export const AddVendorModal: React.FC<AddVendorModalProps> = ({ onClose, onSave 
             </button>
           </div>
         </motion.div>
-      </div>
     </div>
   );
 };

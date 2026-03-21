@@ -128,7 +128,7 @@ export const VendorDebitNotePage: React.FC = () => {
         data={displayed}
         columns={columns}
         actions={[
-          { label: 'Edit', icon: <Edit size={14} />, onClick: () => {}, variant: 'primary', title: 'Edit' },
+          { label: 'Edit', icon: <Edit size={14} />, onClick: () => navigate('/admin/purchase/debit-note/new'), variant: 'primary', title: 'Edit' },
           { label: 'Delete', icon: <Trash2 size={14} />, onClick: () => {}, variant: 'danger', title: 'Delete' }
         ]}
         emptyMessage="No debit notes found"

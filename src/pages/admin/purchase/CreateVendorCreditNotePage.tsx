@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -15,11 +15,63 @@ import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import Textarea from "../../../components/ui/Textarea";
+import { AddVendorModal } from "./AddVendorModal";
+
+interface LineItem {
+  id: string;
+  description: string;
+  amount: number;
+}
 
 export const CreateVendorCreditNotePage: React.FC = () => {
   const navigate = useNavigate();
+  const [showAddVendorModal, setShowAddVendorModal] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState('');
+  const [vendors, setVendors] = useState([
+    { label: 'TechNova Solutions', value: '1' },
+    { label: 'Vertex Industries', value: '2' },
+    { label: 'Global Logistics', value: '3' }
+  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { id: '1', description: '', amount: 0 }
+  ]);
+
+  const handleAddVendor = (vendorName: string) => {
+    const newVendor = {
+      label: vendorName,
+      value: (vendors.length + 1).toString()
+    };
+    setVendors([...vendors, newVendor]);
+    setSelectedVendor(newVendor.value);
+  };
+
+  const addLine = () => {
+    const newLine: LineItem = {
+      id: Date.now().toString(),
+      description: '',
+      amount: 0
+    };
+    setLineItems([...lineItems, newLine]);
+  };
+
+  const removeLine = (id: string) => {
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter(item => item.id !== id));
+    }
+  };
+
+  const updateLine = (id: string, field: 'description' | 'amount', value: string | number) => {
+    setLineItems(lineItems.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const totalAmount = useMemo(() => {
+    return lineItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  }, [lineItems]);
 
   return (
+    <>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -71,11 +123,11 @@ export const CreateVendorCreditNotePage: React.FC = () => {
               <Select 
                 label="Vendor" 
                 placeholder="Select Vendor"
-                options={[
-                  { label: 'TechNova Solutions', value: '1' },
-                  { label: 'Vertex Industries', value: '2' },
-                  { label: 'Global Logistics', value: '3' }
-                ]} 
+                value={selectedVendor}
+                onChange={(e) => setSelectedVendor(e.target.value)}
+                options={vendors}
+                onAddNew={() => setShowAddVendorModal(true)}
+                addNewLabel="Add new vendor"
                 required
               />
               <Input 
@@ -93,7 +145,7 @@ export const CreateVendorCreditNotePage: React.FC = () => {
                 </div>
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Adjustment Ledger</h3>
               </div>
-              <Button variant="secondary" size="sm" leftIcon={<Plus size={16} />}>
+              <Button variant="secondary" size="sm" leftIcon={<Plus size={16} />} onClick={addLine}>
                 Add Line
               </Button>
             </div>
@@ -107,30 +159,50 @@ export const CreateVendorCreditNotePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  <tr>
-                    <td className="px-6 py-4">
-                      <Input placeholder="Enter reason or item description" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
-                        className="text-right"
-                        leftIcon={<span className="text-[10px]">$</span>}
-                      />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="text-slate-300 hover:text-red-500">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
+                  {lineItems.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4">
+                        <Input 
+                          placeholder="Enter reason or item description" 
+                          value={item.description}
+                          onChange={(e) => updateLine(item.id, 'description', e.target.value)}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <Input 
+                          type="number" 
+                          placeholder="0.00" 
+                          className="text-right"
+                          value={item.amount || ''}
+                          onChange={(e) => updateLine(item.id, 'amount', parseFloat(e.target.value) || 0)}
+                          leftIcon={<span className="text-[10px]">$</span>}
+                        />
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          onClick={() => removeLine(item.id)}
+                          disabled={lineItems.length === 1}
+                          className={`transition ${
+                            lineItems.length === 1 
+                              ? 'text-slate-200 cursor-not-allowed' 
+                              : 'text-slate-300 hover:text-red-500'
+                          }`}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
                 <tfoot>
-                   <tr className="bg-slate-50/50">
-                    <td className="px-6 py-4 text-right font-bold text-slate-500 text-sm">Total Credit Amount</td>
-                    <td className="px-6 py-4 text-right font-bold text-teal-600">$0.00</td>
-                    <td></td>
+                   <tr className="bg-slate-50/50 border-t-2 border-slate-200">
+                    <td className="px-6 py-5 text-right font-bold text-slate-700 text-sm">Total Credit Amount</td>
+                    <td className="px-6 py-5 text-right bg-transparent">
+                      <span className="font-bold text-slate-800 text-lg bg-transparent">
+                        ${totalAmount.toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="bg-transparent"></td>
                   </tr>
                 </tfoot>
               </table>
@@ -187,5 +259,14 @@ export const CreateVendorCreditNotePage: React.FC = () => {
         </div>
       </div>
     </motion.div>
+
+    {/* Add Vendor Modal */}
+    {showAddVendorModal && (
+      <AddVendorModal
+        onClose={() => setShowAddVendorModal(false)}
+        onSave={handleAddVendor}
+      />
+    )}
+    </>
   );
 };
