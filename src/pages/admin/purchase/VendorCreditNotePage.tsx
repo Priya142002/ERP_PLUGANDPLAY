@@ -64,8 +64,10 @@ export const VendorCreditNotePage: React.FC = () => {
     {
       key: 'amount' as const,
       label: 'Credit Amount',
-      align: 'right' as const,
-      render: (val: number) => <span className="font-bold text-teal-600">${val.toLocaleString()}</span>
+      align: 'center' as const,
+      render: (val: number) => (
+        <span className="font-bold text-slate-700 text-sm">${val.toLocaleString()}</span>
+      )
     },
     {
       key: 'status' as const,
@@ -128,7 +130,7 @@ export const VendorCreditNotePage: React.FC = () => {
         data={displayed}
         columns={columns}
         actions={[
-          { label: 'Edit', icon: <Edit size={14} />, onClick: () => {}, variant: 'primary', title: 'Edit' },
+          { label: 'Edit', icon: <Edit size={14} />, onClick: () => navigate('/admin/purchase/credit-note/new'), variant: 'primary', title: 'Edit' },
           { label: 'Delete', icon: <Trash2 size={14} />, onClick: () => {}, variant: 'danger', title: 'Delete' }
         ]}
         emptyMessage="No credit notes found"

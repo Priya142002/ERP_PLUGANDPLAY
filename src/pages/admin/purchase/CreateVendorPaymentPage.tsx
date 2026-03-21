@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -14,11 +14,29 @@ import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import Textarea from "../../../components/ui/Textarea";
+import { AddVendorModal } from "./AddVendorModal";
 
 export const CreateVendorPaymentPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showAddVendorModal, setShowAddVendorModal] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState('');
+  const [vendors, setVendors] = useState([
+    { label: 'TechNova Solutions', value: '1' },
+    { label: 'Global Logistics', value: '2' },
+    { label: 'Office Essentials', value: '3' }
+  ]);
+
+  const handleAddVendor = (vendorName: string) => {
+    const newVendor = {
+      label: vendorName,
+      value: (vendors.length + 1).toString()
+    };
+    setVendors([...vendors, newVendor]);
+    setSelectedVendor(newVendor.value);
+  };
 
   return (
+    <>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -68,11 +86,11 @@ export const CreateVendorPaymentPage: React.FC = () => {
             <Select 
               label="Vendor" 
               placeholder="Select Vendor"
-              options={[
-                { label: 'TechNova Solutions', value: '1' },
-                { label: 'Global Logistics', value: '2' },
-                { label: 'Office Essentials', value: '3' }
-              ]} 
+              value={selectedVendor}
+              onChange={(e) => setSelectedVendor(e.target.value)}
+              options={vendors}
+              onAddNew={() => setShowAddVendorModal(true)}
+              addNewLabel="Add new vendor"
               required
             />
 
@@ -160,5 +178,14 @@ export const CreateVendorPaymentPage: React.FC = () => {
         </div>
       </div>
     </motion.div>
+      
+      {/* Add Vendor Modal */}
+      {showAddVendorModal && (
+        <AddVendorModal
+          onClose={() => setShowAddVendorModal(false)}
+          onSave={handleAddVendor}
+        />
+      )}
+    </>
   );
 };
