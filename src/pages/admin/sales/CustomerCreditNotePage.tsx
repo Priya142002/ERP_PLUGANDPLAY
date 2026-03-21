@@ -1,30 +1,79 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileMinus, Download, Edit, Trash2, Calendar } from "lucide-react";
+import { Plus, Download, Edit, Trash2, Calendar, FileText } from "lucide-react";
 import Button from "../../../components/ui/Button";
-import DataTable from "../../../components/ui/DataTable";
+import { DataTableWrapper, TableFilters } from "../../../components/common";
 import Badge from "../../../components/ui/Badge";
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
 const MOCK_CREDIT_NOTES = [
-  { id: '1', date: '2026-03-14', noteNo: 'CCN-3001', customer: 'Nexus Enterprises', amount: 450.00, reason: 'Returned Goods', status: 'Approved' },
-  { id: '2', date: '2026-03-12', noteNo: 'CCN-3002', customer: 'Global Trade Corp', amount: 120.00, reason: 'Overcharge Correction', status: 'Pending' },
-  { id: '3', date: '2026-03-08', noteNo: 'CCN-3003', customer: 'Urban Styles', amount: 85.00, reason: 'Sales Return', status: 'Approved' },
+  { 
+    id: '1', creditNo: 'CN-1001', date: '2026-03-12', customer: 'Nexus Enterprises', amount: 850.00, status: 'Draft', invoiceRef: 'INV-2026-001',
+    lines: [{ id: '1', description: 'Price Correction - Bulk Discount', amount: 850.00 }],
+    reason: 'Price Correction'
+  },
+  { 
+    id: '2', creditNo: 'CN-1002', date: '2026-03-10', customer: 'Sarah Johnson', amount: 120.00, status: 'Issued', invoiceRef: 'INV-2026-002',
+    lines: [{ id: '1', description: 'Damaged Goods Return', amount: 120.00 }],
+    reason: 'Damaged Goods'
+  },
 ];
 
 export const CustomerCreditNotePage: React.FC = () => {
   const navigate = useNavigate();
-  const [notes] = useState(MOCK_CREDIT_NOTES);
+  const [creditNotes, setCreditNotes] = useState(MOCK_CREDIT_NOTES);
+  const [search, setSearch] = useState('');
+  const [filterCustomer, setFilterCustomer] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
+
+  const customerOptions = useMemo(() => Array.from(new Set(creditNotes.map(c => c.customer))), [creditNotes]);
+
+  const displayed = useMemo(() => {
+    let list = [...creditNotes];
+    
+    // Search
+    if (search) {
+      list = list.filter(c => 
+        c.creditNo.toLowerCase().includes(search.toLowerCase()) || 
+        c.customer.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    // Filters
+    if (filterCustomer) list = list.filter(c => c.customer === filterCustomer);
+    if (filterMonth) {
+      list = list.filter(c => {
+        const date = new Date(c.date);
+        return MONTHS[date.getMonth()] === filterMonth;
+      });
+    }
+    
+    return list;
+  }, [creditNotes, search, filterCustomer, filterMonth]);
+
+  const handleEditClick = (item: any) => {
+    navigate(`/admin/sales/credit-note/${item.id}/edit`);
+  };
+
+  const handleDeleteClick = (item: any) => {
+    if (window.confirm(`Are you sure you want to delete ${item.creditNo}?`)) {
+      setCreditNotes(creditNotes.filter(c => c.id !== item.id));
+    }
+  };
 
   const columns = [
     {
-      key: 'noteNo' as const,
+      key: 'creditNo' as const,
       label: 'Credit Note #',
-      sortable: true,
       render: (value: string) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 shadow-sm border border-teal-100">
-            <FileMinus size={20} />
+            <FileText size={20} />
           </div>
           <div className="font-semibold text-slate-900">{value}</div>
         </div>
@@ -33,7 +82,6 @@ export const CustomerCreditNotePage: React.FC = () => {
     {
       key: 'date' as const,
       label: 'Date',
-      sortable: true,
       render: (value: string) => (
         <div className="flex items-center gap-2 text-slate-600 text-sm">
           <Calendar size={14} className="text-slate-400" />
@@ -44,20 +92,18 @@ export const CustomerCreditNotePage: React.FC = () => {
     {
       key: 'customer' as const,
       label: 'Customer',
-      filterable: true,
     },
     {
       key: 'amount' as const,
-      label: 'Credit Amount',
+      label: 'Amount',
       align: 'right' as const,
-      render: (val: number) => <span className="font-bold text-teal-600">${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+      render: (val: number) => <span className="font-bold text-slate-900">Rs. {val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
     },
     {
       key: 'status' as const,
       label: 'Status',
-      filterable: true,
       render: (value: string) => (
-        <Badge variant={value === 'Approved' ? 'success' : 'warning'}>{value}</Badge>
+        <Badge variant={value === 'Issued' ? 'success' : 'warning'}>{value}</Badge>
       )
     }
   ];
@@ -87,30 +133,38 @@ export const CustomerCreditNotePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <DataTable 
-          data={notes}
-          columns={columns}
-          searchable
-          filterable
-          paginated
-          pageSize={10}
-          actions={[
-            {
-              label: 'Edit',
-              icon: <Edit size={16} />,
-              onClick: (item) => console.log('Edit', item),
-              variant: 'secondary'
-            },
-            {
-              label: 'Delete',
-              icon: <Trash2 size={16} />,
-              onClick: (item) => console.log('Delete', item),
-              variant: 'danger'
-            }
-          ]}
-        />
-      </div>
+      <TableFilters
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search credit notes..."
+        filters={[
+          { label: 'Filter by Customer', value: filterCustomer, options: customerOptions, onChange: setFilterCustomer },
+          { label: 'Filter by Month', value: filterMonth, options: MONTHS, onChange: setFilterMonth }
+        ]}
+        onClearAll={() => { setSearch(''); setFilterCustomer(''); setFilterMonth(''); }}
+        showClearButton={!!(search || filterCustomer || filterMonth)}
+      />
+
+      <DataTableWrapper 
+        data={displayed}
+        columns={columns}
+        actions={[
+          {
+            label: 'Edit',
+            icon: <Edit size={14} />,
+            onClick: (item) => handleEditClick(item),
+            variant: 'primary'
+          },
+          {
+            label: 'Delete',
+            icon: <Trash2 size={14} />,
+            onClick: (item) => handleDeleteClick(item),
+            variant: 'danger'
+          }
+        ]}
+      />
     </motion.div>
   );
 };
+
+export default CustomerCreditNotePage;

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -17,8 +17,63 @@ import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import Textarea from "../../../components/ui/Textarea";
 
-export const AddCustomerPage: React.FC = () => {
+// Mock data for demonstration
+const MOCK_CUSTOMERS: Record<string, any> = {
+  '1': {
+    name: 'Nexus Enterprises',
+    code: 'CUST-001',
+    type: 'business',
+    email: 'contact@nexus.com',
+    phone: '+1 555-0123',
+    contactPerson: 'John Smith',
+    taxId: 'TX-99881',
+    website: 'https://nexus.com',
+    address: '123 Business Loop',
+    city: 'San Francisco',
+    state: 'CA',
+    postalCode: '94103',
+    country: 'us',
+    terms: 'net30',
+    currency: 'usd',
+    priceList: 'std',
+    status: 'active'
+  },
+  '2': {
+    name: 'Tech Solutions Inc',
+    code: 'CUST-002',
+    type: 'business',
+    email: 'billing@techsolutions.com',
+    phone: '+1 555-0124',
+    contactPerson: 'Sarah Johnson',
+    taxId: 'TX-99882',
+    website: 'https://techsolutions.com',
+    address: '456 Tech Park',
+    city: 'Austin',
+    state: 'TX',
+    postalCode: '73301',
+    country: 'us',
+    terms: 'net15',
+    currency: 'usd',
+    priceList: 'wholesale',
+    status: 'active'
+  }
+};
+
+export const EditCustomerPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const customer = id ? MOCK_CUSTOMERS[id] : null;
+
+  const [formData, setFormData] = useState(customer || {});
+
+  if (!customer) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-xl font-bold">Customer not found</h2>
+        <Button onClick={() => navigate('/admin/sales/customers')} className="mt-4">Go Back</Button>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -36,7 +91,7 @@ export const AddCustomerPage: React.FC = () => {
             <ArrowLeft size={16} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 line-clamp-1">New Customer</h1>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 line-clamp-1">Edit Customer: {formData.name}</h1>
           </div>
         </div>
       </div>
@@ -57,15 +112,17 @@ export const AddCustomerPage: React.FC = () => {
                <Select 
                 label="Customer Type" 
                 options={[
-                   { label: 'Business', value: 'business' },
-                   { label: 'Individual', value: 'individual' }
+                  { label: 'Business', value: 'business' },
+                  { label: 'Individual', value: 'individual' }
                 ]} 
-                value="business"
+                value={formData.type}
+                onChange={(e: any) => setFormData({ ...formData, type: e.target.value })}
               />
               <Input 
                 label="Customer Code" 
                 placeholder="CUST-006" 
-                value="CUST-006"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                 required 
               />
             </div>
@@ -73,6 +130,8 @@ export const AddCustomerPage: React.FC = () => {
             <Input 
               label="Customer Name" 
               placeholder="e.g. Acme Corp" 
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required 
             />
             
@@ -80,10 +139,14 @@ export const AddCustomerPage: React.FC = () => {
               <Input 
                 label="Tax ID / VAT Number" 
                 placeholder="TAX-998877" 
+                value={formData.taxId}
+                onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
               />
               <Input 
                 label="Website" 
                 placeholder="https://example.com" 
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 leftIcon={<Globe size={14} />} 
               />
             </div>
@@ -102,10 +165,14 @@ export const AddCustomerPage: React.FC = () => {
               <Input 
                 label="Contact Person" 
                 placeholder="Manager Name" 
+                value={formData.contactPerson}
+                onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
               />
               <Input 
                 label="Phone Number" 
                 placeholder="+1 234 567 890" 
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 leftIcon={<Phone size={14} />} 
                 required 
               />
@@ -115,6 +182,8 @@ export const AddCustomerPage: React.FC = () => {
               label="Email Address" 
               type="email" 
               placeholder="billing@customer.com" 
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               leftIcon={<Mail size={14} />} 
               required 
             />
@@ -131,21 +200,25 @@ export const AddCustomerPage: React.FC = () => {
             <Textarea 
               label="Street Address" 
               placeholder="456 Avenue, Building A" 
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               rows={2} 
             />
             <div className="grid grid-cols-2 gap-3">
-              <Input label="City" placeholder="City" />
-              <Input label="State / Province" placeholder="State" />
+              <Input label="City" placeholder="City" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+              <Input label="State / Province" placeholder="State" value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Input label="Postal Code" placeholder="Postal Code" />
+              <Input label="Postal Code" placeholder="Postal Code" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} />
               <Select 
                 label="Country" 
                 options={[
-                   { label: 'United States', value: 'us' },
-                   { label: 'United Kingdom', value: 'uk' },
-                   { label: 'Canada', value: 'ca' }
+                  { label: 'United States', value: 'us' },
+                  { label: 'United Kingdom', value: 'uk' },
+                  { label: 'Canada', value: 'ca' }
                 ]} 
+                value={formData.country}
+                onChange={(e: any) => setFormData({ ...formData, country: e.target.value })}
               />
             </div>
           </div>
@@ -168,12 +241,14 @@ export const AddCustomerPage: React.FC = () => {
                 { label: 'Net 30', value: 'net30' },
                 { label: 'Due on Receipt', value: 'due_receipt' }
               ]} 
-              value="net30"
+              value={formData.terms}
+              onChange={(e: any) => setFormData({ ...formData, terms: e.target.value })}
             />
             <Select 
               label="Currency" 
               options={[{ label: 'USD ($)', value: 'usd' }, { label: 'EUR (€)', value: 'eur' }]} 
-              value="usd"
+              value={formData.currency}
+              onChange={(e: any) => setFormData({ ...formData, currency: e.target.value })}
             />
              <Select 
               label="Price List" 
@@ -181,7 +256,8 @@ export const AddCustomerPage: React.FC = () => {
                 { label: 'Standard Price', value: 'std' },
                 { label: 'Wholesale Price', value: 'wholesale' }
               ]} 
-              value="std"
+              value={formData.priceList}
+              onChange={(e: any) => setFormData({ ...formData, priceList: e.target.value })}
             />
           </div>
 
@@ -193,7 +269,8 @@ export const AddCustomerPage: React.FC = () => {
                 { label: 'Active', value: 'active' },
                 { label: 'Inactive', value: 'inactive' }
               ]} 
-              value="active"
+              value={formData.status}
+              onChange={(e: any) => setFormData({ ...formData, status: e.target.value })}
             />
           </div>
 
@@ -202,14 +279,16 @@ export const AddCustomerPage: React.FC = () => {
               variant="primary" 
               fullWidth 
               leftIcon={<Save size={14} />} 
+              onClick={() => navigate('/admin/sales/customers')}
               className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
-              Save Customer
+              Update Customer
             </Button>
             <Button 
               variant="secondary" 
               fullWidth 
               leftIcon={<RotateCcw size={14} />} 
+              onClick={() => setFormData(customer)}
               className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
               Reset Interface
@@ -217,7 +296,6 @@ export const AddCustomerPage: React.FC = () => {
           </div>
         </div>
       </div>
-
     </motion.div>
   );
 };

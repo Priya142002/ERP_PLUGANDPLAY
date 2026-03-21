@@ -42,13 +42,13 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   const variantClasses = {
-    primary: 'text-white bg-[#002147] hover:bg-[#003366] focus:ring-[#002147] shadow-sm',
-    secondary: 'text-gray-700 bg-white border border-gray-300 focus:ring-primary-500 shadow-sm',
+    primary: 'text-white bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent focus:ring-[#002147] shadow-sm transition-all text-xs font-bold rounded-xl',
+    secondary: 'text-slate-600 bg-white border border-slate-200 focus:ring-primary-500 shadow-sm hover:text-black hover:bg-slate-50 transition-all text-xs font-bold rounded-xl',
     danger: 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-sm',
     success: 'text-white bg-success-600 hover:bg-success-700 focus:ring-success-500 shadow-sm',
     warning: 'text-white bg-warning-600 hover:bg-warning-700 focus:ring-warning-500 shadow-sm',
     info: 'text-white bg-info-600 hover:bg-info-700 focus:ring-info-500 shadow-sm',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-primary-500'
+    ghost: 'text-gray-700 hover:bg-gray-100 hover:text-black focus:ring-primary-500'
   };
 
   const widthClass = fullWidth ? 'w-full' : '';

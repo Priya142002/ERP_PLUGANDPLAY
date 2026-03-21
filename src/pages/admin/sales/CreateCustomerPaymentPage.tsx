@@ -79,7 +79,7 @@ export const CreateCustomerPaymentPage: React.FC = () => {
               label="Amount Received" 
               type="number" 
               placeholder="0.00" 
-              leftIcon={<span className="text-[10px]">$</span>}
+              leftIcon={<span className="text-[10px]">Rs.</span>}
               required 
             />
           </div>
@@ -148,14 +148,14 @@ export const CreateCustomerPaymentPage: React.FC = () => {
           <Button 
             variant="secondary" 
             onClick={() => navigate('/admin/sales/payments')}
-            className="h-11 px-8 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+            className="h-11 px-8 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-95 transition-all"
           >
             Terminal Return
           </Button>
           <Button 
             variant="primary" 
             leftIcon={<Save size={14} />}
-            className="bg-[#002147] hover:bg-[#003366] text-white h-11 px-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-95 transition-all"
+            className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 px-10 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-95 transition-all"
           >
             Commit Ingestion
           </Button>

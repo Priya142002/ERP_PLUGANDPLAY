@@ -96,7 +96,7 @@ export const CreateSalesReturnPage: React.FC = () => {
                 </div>
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Asset Restitution</h3>
               </div>
-              <Button variant="secondary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4" leftIcon={<Plus size={14} />}>
+              <Button variant="primary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" leftIcon={<Plus size={14} />}>
                 Add Item
               </Button>
             </div>
@@ -126,10 +126,10 @@ export const CreateSalesReturnPage: React.FC = () => {
                       <Input type="number" placeholder="0" className="text-center" />
                     </td>
                     <td className="px-4 py-4">
-                      <Input type="number" placeholder="0.00" leftIcon={<span className="text-[10px]">$</span>} />
+                      <Input type="number" placeholder="0.00" leftIcon={<span className="text-[10px]">Rs.</span>} />
                     </td>
                     <td className="px-4 py-4 text-orange-600 font-bold">
-                      $0.00
+                      Rs. 0.00
                     </td>
                     <td className="px-6 py-4 text-center">
                       <button className="text-slate-300 hover:text-red-500">
@@ -188,7 +188,7 @@ export const CreateSalesReturnPage: React.FC = () => {
               variant="primary" 
               fullWidth 
               leftIcon={<Save size={14} />} 
-              className="bg-[#002147] hover:bg-[#003366] text-white h-11 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+              className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
               Confirm Restitution
             </Button>
@@ -196,7 +196,7 @@ export const CreateSalesReturnPage: React.FC = () => {
               variant="secondary" 
               fullWidth 
               leftIcon={<RotateCcw size={14} />} 
-              className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all"
+              className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
               Reset Interface
             </Button>
