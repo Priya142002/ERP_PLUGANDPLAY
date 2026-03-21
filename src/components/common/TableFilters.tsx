@@ -76,7 +76,7 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
       {showClearButton && onClearAll && (
         <button 
           onClick={onClearAll}
-          className="h-9 px-3 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition flex items-center gap-1.5"
+          className="h-9 px-3 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-black transition flex items-center gap-1.5"
         >
           <X size={12} /> Clear
         </button>

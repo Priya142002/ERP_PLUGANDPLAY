@@ -62,11 +62,11 @@ const STAT_CARDS = [
 ];
 
 const TOP_SELLING_TODAY = [
-  { id: '1', name: 'Premium Headphones', category: 'Electronics', amount: '$4,299.00', count: 15, trend: '+12%' },
-  { id: '2', name: 'Smart Watch v2', category: 'Wearables', amount: '$2,850.50', count: 12, trend: '+8%' },
-  { id: '3', name: 'Coffee Maker', category: 'Appliances', amount: '$1,599.00', count: 8, trend: '+5%' },
-  { id: '4', name: 'Wireless Mouse', category: 'Accessories', amount: '$950.00', count: 20, trend: '+15%' },
-  { id: '5', name: 'Laptop Stand', category: 'Accessories', amount: '$850.00', count: 10, trend: '+3%' },
+  { id: '1', name: 'Premium Headphones', category: 'Electronics', amount: 'Rs. 4,299.00', count: 15, trend: '+12%' },
+  { id: '2', name: 'Smart Watch v2', category: 'Wearables', amount: 'Rs. 2,850.50', count: 12, trend: '+8%' },
+  { id: '3', name: 'Coffee Maker', category: 'Appliances', amount: 'Rs. 1,599.00', count: 8, trend: '+5%' },
+  { id: '4', name: 'Wireless Mouse', category: 'Accessories', amount: 'Rs. 950.00', count: 20, trend: '+15%' },
+  { id: '5', name: 'Laptop Stand', category: 'Accessories', amount: 'Rs. 850.00', count: 10, trend: '+3%' },
 ];
 
 const RECENT_ACTIVITIES = [

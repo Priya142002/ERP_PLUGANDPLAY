@@ -94,7 +94,7 @@ export const CreateCustomerDebitNotePage: React.FC = () => {
                 </div>
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Asset Calibration</h3>
               </div>
-              <Button variant="secondary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4" leftIcon={<Plus size={14} />}>
+              <Button variant="primary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" leftIcon={<Plus size={14} />}>
                 Add Charge
               </Button>
             </div>
@@ -171,7 +171,7 @@ export const CreateCustomerDebitNotePage: React.FC = () => {
               variant="primary" 
               fullWidth 
               leftIcon={<Save size={14} />} 
-              className="bg-[#002147] hover:bg-[#003366] text-white h-11 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+              className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
               Commit Ingestion
             </Button>
@@ -179,7 +179,7 @@ export const CreateCustomerDebitNotePage: React.FC = () => {
               variant="secondary" 
               fullWidth 
               leftIcon={<RotateCcw size={14} />} 
-              className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all"
+              className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
               Reset Interface
             </Button>

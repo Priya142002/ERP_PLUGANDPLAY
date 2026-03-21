@@ -101,7 +101,7 @@ export const CreateQuotationPage: React.FC = () => {
                 </div>
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Inventory Selection</h3>
               </div>
-              <Button variant="secondary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4" leftIcon={<Plus size={14} />}>
+              <Button variant="primary" size="sm" className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" leftIcon={<Plus size={14} />}>
                 Add Line
               </Button>
             </div>
@@ -131,9 +131,9 @@ export const CreateQuotationPage: React.FC = () => {
                       <Input type="number" value="1" className="text-center" />
                     </td>
                     <td className="px-4 py-4">
-                      <Input type="number" placeholder="0.00" leftIcon={<span className="text-[10px]">$</span>} />
+                      <Input type="number" placeholder="0.00" leftIcon={<span className="text-[10px]">Rs.</span>} />
                     </td>
-                    <td className="px-4 py-4 font-bold text-slate-900 py-2">$0.00</td>
+                    <td className="px-4 py-4 font-bold text-slate-900 py-2">Rs. 0.00</td>
                     <td className="px-6 py-4 text-center">
                       <button className="text-slate-300 hover:text-red-500 transition-colors p-1">
                         <Trash2 size={18} />
@@ -160,15 +160,15 @@ export const CreateQuotationPage: React.FC = () => {
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Sub Total</span>
-                <span className="font-bold text-slate-900">$0.00</span>
+                <span className="font-bold text-slate-900">Rs. 0.00</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Tax (15%)</span>
-                <span className="font-bold text-slate-900">$0.00</span>
+                <span className="font-bold text-slate-900">Rs. 0.00</span>
               </div>
               <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-lg">
                 <span className="font-bold text-slate-900">Grand Total</span>
-                <span className="font-bold text-blue-600">$0.00</span>
+                <span className="font-bold text-blue-600">Rs. 0.00</span>
               </div>
             </div>
           </div>
@@ -193,7 +193,7 @@ export const CreateQuotationPage: React.FC = () => {
               variant="primary" 
               fullWidth 
               leftIcon={<Save size={14} />} 
-              className="bg-[#002147] hover:bg-[#003366] text-white h-11 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+              className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
             >
               Issue Proposition
             </Button>
@@ -201,7 +201,7 @@ export const CreateQuotationPage: React.FC = () => {
               variant="secondary" 
               fullWidth 
               leftIcon={<RotateCcw size={14} />} 
-              className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all"
+              className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
             >
               Reset Interface
             </Button>

@@ -44,18 +44,25 @@ export * from './purchase/CreateVendorDebitNotePage';
 export * from './sales/SalesDashboard';
 export * from './sales/CustomersPage';
 export * from './sales/AddCustomerPage';
+export * from './sales/EditCustomerPage';
 export * from './sales/QuotationsPage';
 export * from './sales/CreateQuotationPage';
+export * from './sales/EditQuotationPage';
 export * from './sales/SalesInvoicesPage';
 export * from './sales/CreateSalesInvoicePage';
+export * from './sales/EditSalesInvoicePage';
 export * from './sales/SalesReturnsPage';
 export * from './sales/CreateSalesReturnPage';
+export * from './sales/EditSalesReturnPage';
 export * from './sales/CustomerPaymentsPage';
 export * from './sales/CreateCustomerPaymentPage';
+export * from './sales/EditCustomerPaymentPage';
 export * from './sales/CustomerCreditNotePage';
 export * from './sales/CreateCustomerCreditNotePage';
+export * from './sales/EditCustomerCreditNotePage';
 export * from './sales/CustomerDebitNotePage';
 export * from './sales/CreateCustomerDebitNotePage';
+export * from './sales/EditCustomerDebitNotePage';
 
 // Accounts
 export * from './accounts/AccountsDashboard';

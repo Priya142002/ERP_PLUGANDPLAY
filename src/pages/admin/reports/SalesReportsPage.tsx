@@ -8,7 +8,6 @@ interface Report { id:string; name:string; icon:React.ReactNode; filters:FilterF
 
 const CUSTOMERS = ["Global Tech Solutions","Vertex Industries","Apex Manufacturing","Blue Horizon Ltd","Metropulse Corp"];
 const CATEGORIES= ["Electronics","Apparel","Furniture","Accessories","Appliances"];
-const PRODUCTS  = ["Premium Wireless Headphones","Smart Fitness Tracker","4K Ultra HD Monitor","Ergonomic Office Chair"];
 const SALESPERSONS = ["John Carter","Sarah Doe","Mike Ross","Rachel Green"];
 
 const REPORTS: Report[] = [
@@ -108,7 +107,7 @@ const REPORTS: Report[] = [
 const fieldCls = "w-full h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition bg-white";
 
 const ReportPanel: React.FC<{report:Report}> = ({report}) => {
-  const init = () => Object.fromEntries(report.filters.flatMap(f=>[[f.key,""], [`${f.key}_to`,""]]));
+  const init = () => Object.fromEntries(report.filters.flatMap(f=>[[f.key,""]]));
   const [values, setValues] = useState<Record<string,string>>(init);
   const set = (k:string,v:string) => setValues(p=>({...p,[k]:v}));
   const hasFilters = Object.values(values).some(v=>v!=="");
@@ -127,9 +126,8 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
         </div>
       </div>
       <div className="p-6 flex-1">
-        <div className="grid grid-cols-2 gap-x-6 mb-2">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Value (From)</p>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Value (To)</p>
+        <div className="grid grid-cols-1 mb-2">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Report Filters & Parameters</p>
         </div>
         <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
           {report.filters.map((f,idx)=>{
@@ -140,12 +138,9 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
               ? <input type="date" className={fieldCls} value={values[key]} onChange={e=>set(key,e.target.value)}/>
               : <input type="text" className={fieldCls} placeholder={`Enter ${f.label.toLowerCase()}…`} value={values[key]} onChange={e=>set(key,e.target.value)}/>;
             return (
-              <div key={f.key} className={`grid grid-cols-2 gap-0 ${!isLast?"border-b border-slate-100":""}`}>
-                <div className="flex items-center gap-3 px-5 py-3 border-r border-slate-100 bg-slate-50/40">
-                  <span className="text-xs font-semibold text-slate-700 min-w-[120px]">{f.label}</span>
-                  <div className="flex-1">{renderField(f.key)}</div>
-                </div>
-                <div className="flex items-center px-5 py-3">{renderField(`${f.key}_to`)}</div>
+              <div key={f.key} className={`flex items-center gap-3 px-5 py-3 ${!isLast?"border-b border-slate-100":""} bg-slate-50/20`}>
+                <span className="text-xs font-semibold text-slate-700 min-w-[150px]">{f.label}</span>
+                <div className="flex-1 max-w-md">{renderField(f.key)}</div>
               </div>
             );
           })}

@@ -17,9 +17,9 @@ import Badge from "../../../components/ui/Badge";
 const SALES_STATS = [
   {
     title: "Projected Revenue",
-    value: "$425,800",
+    value: "Rs. 425,800",
     icon: <DollarSign size={24} />,
-    color: "bg-blue-600",
+    color: "bg-emerald-600",
     trend: "+12.5% High",
     trendColor: "text-emerald-500",
     description: "Total invoice throughput"
@@ -28,37 +28,37 @@ const SALES_STATS = [
     title: "Processed Orders",
     value: "1,240",
     icon: <ShoppingCart size={24} />,
-    color: "bg-indigo-600",
+    color: "bg-teal-600",
     trend: "+5.2% Yield",
-    trendColor: "text-indigo-500",
+    trendColor: "text-teal-500",
     description: "Order fulfillment volume"
   },
   {
     title: "Market Expansion",
     value: "+85",
     icon: <Users size={24} />,
-    color: "bg-emerald-600",
+    color: "bg-emerald-500",
     trend: "+18% Alpha",
     trendColor: "text-emerald-500",
     description: "Unique new client entities"
   },
   {
     title: "Avg. Transaction",
-    value: "$2,450",
+    value: "Rs. 2,450",
     icon: <Briefcase size={24} />,
-    color: "bg-amber-500",
-    trend: "-2.1% Swing",
-    trendColor: "text-rose-500",
+    color: "bg-cyan-600",
+    trend: "+2.1% Alpha",
+    trendColor: "text-cyan-500",
     description: "Average gross deal value"
   }
 ];
 
 const RECENT_SALES = [
-  { id: '1', invoice: 'SINV-2026-001', customer: 'Nexus Enterprises', date: '2026-03-16', amount: '$12,400.00', status: 'Settled' },
-  { id: '2', invoice: 'SINV-2026-002', customer: 'Sarah Johnson', date: '2026-03-16', amount: '$850.50', status: 'Pending' },
-  { id: '3', invoice: 'SINV-2026-003', customer: 'Global Trade Corp', date: '2026-03-15', amount: '$4,200.00', status: 'Settled' },
-  { id: '4', invoice: 'SINV-2026-004', customer: 'David Smith', date: '2026-03-15', amount: '$1,120.00', status: 'Partial' },
-  { id: '5', invoice: 'SINV-2026-005', customer: 'Urban Styles', date: '2026-03-14', amount: '$2,900.00', status: 'Settled' },
+  { id: '1', invoice: 'SINV-2026-001', customer: 'Nexus Enterprises', date: '2026-03-16', amount: 'Rs. 12,400.00', status: 'Settled' },
+  { id: '2', invoice: 'SINV-2026-002', customer: 'Sarah Johnson', date: '2026-03-16', amount: 'Rs. 850.50', status: 'Pending' },
+  { id: '3', invoice: 'SINV-2026-003', customer: 'Global Trade Corp', date: '2026-03-15', amount: 'Rs. 4,200.00', status: 'Settled' },
+  { id: '4', invoice: 'SINV-2026-004', customer: 'David Smith', date: '2026-03-15', amount: 'Rs. 1,120.00', status: 'Partial' },
+  { id: '5', invoice: 'SINV-2026-005', customer: 'Urban Styles', date: '2026-03-14', amount: 'Rs. 2,900.00', status: 'Settled' },
 ];
 
 export const SalesDashboard: React.FC = () => {
@@ -87,31 +87,36 @@ export const SalesDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-        {SALES_STATS.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
-            className={`p-4 md:p-5 rounded-xl md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden ${stat.color.replace('bg-', 'bg-')}/5 bg-white`}
-          >
-            <div className={`absolute top-0 left-0 right-0 h-1.5 ${stat.color} opacity-100`} />
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-10 h-10 ${stat.color}/10 flex items-center justify-center ${stat.color.replace('bg-', 'text-')} rounded-lg md:rounded-xl shadow-sm border border-current/10 group-hover:scale-110 transition-transform`}>
-                {React.cloneElement(stat.icon as React.ReactElement, { size: 20 })}
+        {SALES_STATS.map((stat, index) => {
+          const colorClass = stat.color.replace('bg-', 'text-');
+          const bgColorClass = stat.color.replace('bg-', 'bg-');
+
+          return (
+            <motion.div
+              key={stat.title}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className={`p-4 md:p-5 rounded-xl md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden bg-white`}
+            >
+              <div className={`absolute top-0 left-0 right-0 h-1.5 ${stat.color} opacity-100`} />
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-10 h-10 ${bgColorClass}/10 flex items-center justify-center ${colorClass} rounded-lg md:rounded-xl shadow-sm border border-current/10 group-hover:scale-110 transition-transform`}>
+                  {React.cloneElement(stat.icon as React.ReactElement, { size: 20 })}
+                </div>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase bg-white/80 backdrop-blur-sm shadow-sm ${stat.trendColor} border border-slate-100 transition-colors`}>
+                  {stat.trend}
+                </span>
               </div>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase bg-white/80 backdrop-blur-sm shadow-sm ${stat.trendColor} border border-slate-100 transition-colors`}>
-                {stat.trend}
-              </span>
-            </div>
-            <div>
-              <h3 className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-1 group-hover:text-slate-700 transition-colors">{stat.title}</h3>
-              <p className="text-2xl font-bold text-slate-900 tracking-tight group-hover:text-[#002147] transition-colors">{stat.value}</p>
-              <p className="text-[9px] text-slate-400 mt-2 font-medium italic opacity-60 group-hover:opacity-100 transition-opacity leading-relaxed">"{stat.description}"</p>
-            </div>
-            <div className={`absolute bottom-0 right-0 w-24 h-24 ${stat.color} opacity-[0.03] rounded-full translate-x-8 translate-y-8 group-hover:scale-150 transition-transform duration-500`} />
-          </motion.div>
-        ))}
+              <div>
+                <h3 className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-1 group-hover:text-slate-700 transition-colors">{stat.title}</h3>
+                <p className="text-2xl font-bold text-slate-900 tracking-tight group-hover:text-[#002147] transition-colors">{stat.value}</p>
+                <p className="text-[9px] text-slate-400 mt-2 font-medium italic opacity-60 group-hover:opacity-100 transition-opacity leading-relaxed">"{stat.description}"</p>
+              </div>
+              <div className={`absolute bottom-0 right-0 w-24 h-24 ${stat.color} opacity-[0.03] rounded-full translate-x-8 translate-y-8 group-hover:scale-150 transition-transform duration-500`} />
+            </motion.div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -184,10 +189,10 @@ export const SalesDashboard: React.FC = () => {
           </div>
           <div className="p-6 md:p-8 space-y-8">
             {[
-              { label: 'Direct Enterprise', percentage: 55, color: 'bg-blue-500', value: '$234,190' },
-              { label: 'B2B Partners', percentage: 30, color: 'bg-indigo-500', value: '$127,740' },
-              { label: 'Retail Agents', percentage: 10, color: 'bg-emerald-500', value: '$42,580' },
-              { label: 'Others', percentage: 5, color: 'bg-slate-400', value: '$21,290' },
+              { label: 'Direct Enterprise', percentage: 55, color: 'bg-blue-500', value: 'Rs. 234,190' },
+              { label: 'B2B Partners', percentage: 30, color: 'bg-indigo-500', value: 'Rs. 127,740' },
+              { label: 'Retail Agents', percentage: 10, color: 'bg-emerald-500', value: 'Rs. 42,580' },
+              { label: 'Others', percentage: 5, color: 'bg-slate-400', value: 'Rs. 21,290' },
             ].map((channel) => (
               <div key={channel.label} className="space-y-3">
                 <div className="flex justify-between items-end">

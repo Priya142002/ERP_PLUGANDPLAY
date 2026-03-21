@@ -1,0 +1,235 @@
+import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, useParams } from "react-router-dom";
+import { 
+  ArrowLeft, FileText, Calendar, Plus, Trash2, Save, 
+  RotateCcw, PlusCircle, Calculator
+} from "lucide-react";
+import Button from "../../../components/ui/Button";
+import Input from "../../../components/ui/Input";
+import Select from "../../../components/ui/Select";
+
+const MOCK_QUOTATIONS: Record<string, any> = {
+  '1': {
+    quoteNo: 'QTN-2026-001',
+    date: '2026-03-20',
+    expiryDate: '2026-04-20',
+    customer: 'Nexus Enterprises',
+    status: 'Draft',
+    items: [
+      { id: '1', name: 'Premium Wireless Headphones', qty: 2, rate: 150.00, amount: 300.00 }
+    ],
+    amount: 300.00
+  },
+  '2': {
+    quoteNo: 'QTN-2026-002',
+    date: '2026-03-18',
+    expiryDate: '2026-04-18',
+    customer: 'Sarah Johnson',
+    status: 'Sent',
+    items: [
+      { id: '1', name: 'Smart Fitness Tracker', qty: 5, rate: 85.00, amount: 425.00 }
+    ],
+    amount: 425.00
+  }
+};
+
+export const EditQuotationPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const quotation = id ? MOCK_QUOTATIONS[id] : null;
+
+  const [formData, setFormData] = useState(quotation || {});
+  const [items, setItems] = useState(quotation?.items || [{ id: '1', name: '', qty: 1, rate: 0, amount: 0 }]);
+
+  if (!quotation) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-xl font-bold">Quotation not found</h2>
+        <Button onClick={() => navigate('/admin/sales/quotations')} className="mt-4">Go Back</Button>
+      </div>
+    );
+  }
+
+  const subtotal = useMemo(() => items.reduce((acc: number, item: any) => acc + (item.qty * item.rate), 0), [items]);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-5xl mx-auto space-y-6 pb-12"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/sales/quotations')}
+            className="group flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm border border-slate-200 hover:bg-slate-50 transition-all active:scale-90"
+          >
+            <ArrowLeft size={18} className="text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit Quotation: {formData.quoteNo}</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+            <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
+              <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                <FileText size={18} />
+              </div>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Quote Configuration</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Quote Number" value={formData.quoteNo} onChange={(e) => setFormData({...formData, quoteNo: e.target.value})} />
+              <Input label="Date" type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} leftIcon={<Calendar size={14} />} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Select 
+                label="Customer" 
+                options={[{ label: 'Nexus Enterprises', value: 'Nexus Enterprises' }, { label: 'Sarah Johnson', value: 'Sarah Johnson' }]} 
+                value={formData.customer}
+                onChange={(e: any) => setFormData({...formData, customer: e.target.value})}
+              />
+              <Input label="Expiry Date" type="date" value={formData.expiryDate} onChange={(e) => setFormData({...formData, expiryDate: e.target.value})} leftIcon={<Calendar size={14} />} />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                  <PlusCircle size={18} />
+                </div>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Line Items</h3>
+              </div>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                className="rounded-xl h-9 text-[10px] font-bold px-4 hover:bg-white hover:text-black hover:border-[#002147] border border-transparent shadow-sm" 
+                leftIcon={<Plus size={14} />}
+                onClick={() => setItems([...items, { id: Date.now().toString(), name: '', qty: 1, rate: 0, amount: 0 }])}
+              >
+                Add Product
+              </Button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
+                    <th className="px-6 py-4">Product Details</th>
+                    <th className="px-6 py-4 w-24 text-center">Qty</th>
+                    <th className="px-6 py-4 w-32">Rate</th>
+                    <th className="px-6 py-4 w-32">Amount</th>
+                    <th className="px-6 py-4 text-center w-20"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {items.map((item: any, idx: number) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4">
+                        <Input 
+                          placeholder="Select Product" 
+                          value={item.name} 
+                          onChange={(e) => {
+                            const newItems = [...items];
+                            newItems[idx].name = e.target.value;
+                            setItems(newItems);
+                          }}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <Input 
+                          type="number" 
+                          value={item.qty} 
+                          className="text-center"
+                          onChange={(e) => {
+                            const newItems = [...items];
+                            newItems[idx].qty = parseInt(e.target.value) || 0;
+                            newItems[idx].amount = newItems[idx].qty * newItems[idx].rate;
+                            setItems(newItems);
+                          }}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <Input 
+                          type="number" 
+                          value={item.rate} 
+                          leftIcon={<span className="text-[10px] uppercase font-bold">$</span>}
+                          onChange={(e) => {
+                            const newItems = [...items];
+                            newItems[idx].rate = parseFloat(e.target.value) || 0;
+                            newItems[idx].amount = newItems[idx].qty * newItems[idx].rate;
+                            setItems(newItems);
+                          }}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-slate-700">${item.amount.toLocaleString()}</div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button className="text-slate-300 hover:text-red-500" onClick={() => setItems(items.filter((_: any, i: number) => i !== idx))}>
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+            <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-50">
+              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                <Calculator size={18} />
+              </div>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Financial Summary</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Sub Total</span>
+                <span className="font-semibold">${subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Tax Total</span>
+                <span className="font-semibold">$0.00</span>
+              </div>
+              <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                <span className="font-bold text-slate-900">Total Amount</span>
+                <span className="text-xl font-bold text-blue-600">${subtotal.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Button 
+              variant="primary" 
+              fullWidth 
+              leftIcon={<Save size={14} />} 
+              onClick={() => navigate('/admin/sales/quotations')}
+              className="bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent h-11 text-xs font-bold rounded-xl shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+            >
+              Update Quotation
+            </Button>
+            <Button 
+              variant="secondary" 
+              fullWidth 
+              leftIcon={<RotateCcw size={14} />} 
+              onClick={() => navigate('/admin/sales/quotations')}
+              className="h-11 text-xs font-bold rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black active:scale-[0.98] transition-all"
+            >
+              Cancel Edit
+            </Button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};

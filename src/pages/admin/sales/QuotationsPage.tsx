@@ -1,31 +1,100 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Download, Trash2, Calendar, User, FileText } from "lucide-react";
+import { Plus, Download, Edit, Trash2, Calendar, User, FileText } from "lucide-react";
 import Button from "../../../components/ui/Button";
-import DataTable from "../../../components/ui/DataTable";
+import { DataTableWrapper, TableFilters } from "../../../components/common";
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
 const MOCK_QUOTATIONS = [
-  { id: '1', date: '2026-03-16', quoteNo: 'QTN-2026-001', customer: 'Nexus Enterprises', amount: 12400.00, validUntil: '2026-04-16', status: 'Pending' },
-  { id: '2', date: '2026-03-15', quoteNo: 'QTN-2026-002', customer: 'Sarah Johnson', amount: 850.50, validUntil: '2026-04-15', status: 'Accepted' },
-  { id: '3', date: '2026-03-14', quoteNo: 'QTN-2026-003', customer: 'Global Trade Corp', amount: 4200.00, validUntil: '2026-03-30', status: 'Expired' },
-  { id: '4', date: '2026-03-14', quoteNo: 'QTN-2026-004', customer: 'David Smith', amount: 1120.00, validUntil: '2026-04-14', status: 'Converted' },
-  { id: '5', date: '2026-03-13', quoteNo: 'QTN-2026-005', customer: 'Urban Styles', amount: 2900.00, validUntil: '2026-04-20', status: 'Declined' },
+  { 
+    id: '1', date: '2026-03-16', quoteNo: 'QTN-2026-001', customer: 'Nexus Enterprises', amount: 12400.00, validUntil: '2026-04-16', status: 'Pending',
+    items: [{ id: '1', name: 'Ultra-Wide Monitor 34"', qty: 10, rate: 1240.00, amount: 12400.00 }],
+    notes: 'Standard bulk discount applied.'
+  },
+  { 
+    id: '2', date: '2026-03-15', quoteNo: 'QTN-2026-002', customer: 'Sarah Johnson', amount: 850.50, validUntil: '2026-04-15', status: 'Accepted',
+    items: [{ id: '1', name: 'Mechanical Keyboard RGB', qty: 5, rate: 170.10, amount: 850.50 }],
+    notes: ''
+  },
+  { 
+    id: '3', date: '2026-03-14', quoteNo: 'QTN-2026-003', customer: 'Global Trade Corp', amount: 4200.00, validUntil: '2026-03-30', status: 'Expired',
+    items: [{ id: '1', name: 'Office Chair Pro', qty: 6, rate: 700.00, amount: 4200.00 }],
+    notes: 'Expired proposal.'
+  },
+  { id: '4', date: '2026-03-14', quoteNo: 'QTN-2026-004', customer: 'David Smith', amount: 1120.00, validUntil: '2026-04-14', status: 'Converted',
+    items: [{ id: '1', name: 'Wireless Mouse', qty: 10, rate: 50.00, amount: 500.00 }, { id: '2', name: 'Ergonomic Keyboard', qty: 2, rate: 310.00, amount: 620.00 }],
+    notes: 'Converted to invoice #INV-2026-001.'
+  },
+  { id: '5', date: '2026-03-13', quoteNo: 'QTN-2026-005', customer: 'Urban Styles', amount: 2900.00, validUntil: '2026-04-20', status: 'Declined',
+    items: [{ id: '1', name: 'Designer Desk Lamp', qty: 4, rate: 725.00, amount: 2900.00 }],
+    notes: 'Customer found a cheaper alternative.'
+  },
 ];
+
+const TABS = ['All Proposals', 'Accepted', 'Pending Intake', 'Expired Vouchers'] as const;
+type Tab = typeof TABS[number];
 
 export const QuotationsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [quotations] = useState(MOCK_QUOTATIONS);
+  const [quotations, setQuotations] = useState(MOCK_QUOTATIONS);
+  const [activeTab, setActiveTab] = useState<Tab>('All Proposals');
+  const [search, setSearch] = useState('');
+  const [filterCustomer, setFilterCustomer] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
+
+  const customerOptions = useMemo(() => Array.from(new Set(quotations.map(q => q.customer))), [quotations]);
+
+  const displayed = useMemo(() => {
+    let list = [...quotations];
+    
+    // Static tab filtering
+    if (activeTab === 'Accepted') list = list.filter(q => q.status === 'Accepted');
+    if (activeTab === 'Pending Intake') list = list.filter(q => q.status === 'Pending');
+    if (activeTab === 'Expired Vouchers') list = list.filter(q => q.status === 'Expired');
+    
+    // Search
+    if (search) {
+      list = list.filter(q => 
+        q.quoteNo.toLowerCase().includes(search.toLowerCase()) || 
+        q.customer.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    // Filters
+    if (filterCustomer) list = list.filter(q => q.customer === filterCustomer);
+    if (filterMonth) {
+      list = list.filter(q => {
+        const date = new Date(q.date);
+        return MONTHS[date.getMonth()] === filterMonth;
+      });
+    }
+    
+    return list;
+  }, [quotations, activeTab, search, filterCustomer, filterMonth]);
+
+  const handleEditClick = (item: any) => {
+    navigate(`/admin/sales/quotations/${item.id}/edit`);
+  };
+
+  const handleDeleteClick = (item: any) => {
+    if (window.confirm(`Are you sure you want to delete ${item.quoteNo}?`)) {
+      setQuotations(quotations.filter(q => q.id !== item.id));
+    }
+  };
 
   const columns = [
     {
       key: 'quoteNo' as const,
       label: 'Quotation No',
-      sortable: true,
       render: (value: string) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
-            <FileDuplicate size={20} />
+            <FileText size={20} />
           </div>
           <div className="font-semibold text-slate-900">{value}</div>
         </div>
@@ -34,7 +103,6 @@ export const QuotationsPage: React.FC = () => {
     {
       key: 'date' as const,
       label: 'Date',
-      sortable: true,
       render: (value: string) => (
         <div className="flex items-center gap-2 text-slate-600 text-sm">
           <Calendar size={14} className="text-slate-400" />
@@ -45,7 +113,6 @@ export const QuotationsPage: React.FC = () => {
     {
       key: 'customer' as const,
       label: 'Customer',
-      filterable: true,
       render: (value: string) => (
         <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
           <User size={14} className="text-slate-400" />
@@ -57,12 +124,11 @@ export const QuotationsPage: React.FC = () => {
       key: 'amount' as const,
       label: 'Total Amount',
       align: 'right' as const,
-      render: (val: number) => <span className="font-bold text-slate-900">${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+      render: (val: number) => <span className="font-bold text-slate-900">Rs. {val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
     },
     {
       key: 'status' as const,
       label: 'Status',
-      filterable: true,
       render: (value: string) => {
         if (value === 'Accepted') return (
           <div className="flex items-center gap-1.5 text-emerald-600">
@@ -118,44 +184,60 @@ export const QuotationsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-1">
-        {['All Proposals', 'Accepted', 'Pending Intake', 'Expired Vouchers'].map((chip, idx) => (
-          <button key={chip} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition-all border ${idx === 0 ? 'bg-[#002147] text-white border-[#002147] shadow-md shadow-blue-900/10' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>
-            {chip}
+      <div className="flex items-center gap-1.5">
+        {TABS.map(tab => (
+          <button 
+            key={tab} 
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition-all border ${
+              activeTab === tab 
+                ? 'bg-[#002147] text-white border-[#002147] shadow-md shadow-blue-900/10' 
+                : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'
+            }`}
+          >
+            {tab}
           </button>
         ))}
       </div>
 
+      <TableFilters
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search quotations..."
+        filters={[
+          { label: 'Filter by Customer', value: filterCustomer, options: customerOptions, onChange: setFilterCustomer },
+          { label: 'Filter by Month', value: filterMonth, options: MONTHS, onChange: setFilterMonth }
+        ]}
+        onClearAll={() => { setSearch(''); setFilterCustomer(''); setFilterMonth(''); }}
+        showClearButton={!!(search || filterCustomer || filterMonth)}
+      />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <DataTable 
-          data={quotations}
-          columns={columns}
-          searchable
-          filterable
-          paginated
-          pageSize={10}
-          actions={[
-            {
-              label: 'Convert to Bill',
-              icon: <FileText size={16} />,
-              onClick: (item) => console.log('Convert', item),
-              variant: 'secondary'
-            },
-            {
-              label: 'Delete',
-              icon: <Trash2 size={16} />,
-              onClick: (item) => console.log('Delete', item),
-              variant: 'danger'
-            }
-          ]}
-        />
-      </div>
+      <DataTableWrapper 
+        data={displayed}
+        columns={columns}
+        actions={[
+          {
+            label: 'Convert',
+            icon: <FileText size={14} />,
+            onClick: (item) => console.log('Convert', item),
+            variant: 'primary'
+          },
+          {
+            label: 'Edit',
+            icon: <Edit size={14} />,
+            onClick: (item) => handleEditClick(item),
+            variant: 'primary'
+          },
+          {
+            label: 'Delete',
+            icon: <Trash2 size={14} />,
+            onClick: (item) => handleDeleteClick(item),
+            variant: 'danger'
+          }
+        ]}
+      />
     </motion.div>
   );
 };
-const FileDuplicate = ({ size, className }: { size: number, className?: string }) => (
-  <svg className={className} width={size} height={size} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-  </svg>
-);
+
+export default QuotationsPage;
