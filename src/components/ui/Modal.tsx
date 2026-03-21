@@ -135,7 +135,7 @@ const Modal: React.FC<ModalProps> = ({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <div className="flex items-center justify-center min-h-screen p-4 text-center">
         {/* Overlay */}
         <div 
           className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" 
@@ -146,22 +146,21 @@ const Modal: React.FC<ModalProps> = ({
         <div 
           ref={modalRef}
           className={`
-            inline-block w-full ${sizeClasses[size]} p-6 my-8 overflow-hidden text-left align-middle 
-            transition-all transform bg-white shadow-xl rounded-2xl ${contentClassName} ${className}
+            relative inline-block w-full ${sizeClasses[size]} overflow-hidden text-left align-middle 
+            transition-all transform bg-gray-800 shadow-xl rounded-2xl ${contentClassName} ${className}
           `}
-          style={{ backgroundColor: 'white' }}
           onKeyDown={handleKeyDown}
           tabIndex={-1}
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h3 id="modal-title" className="text-lg font-medium text-gray-900">
+          <div className="flex items-center justify-between px-6 py-4 bg-gray-800 border-b border-gray-700">
+            <h3 id="modal-title" className="text-lg font-medium text-white">
               {title}
             </h3>
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md p-1"
+                className="text-gray-400 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md p-1"
                 aria-label="Close modal"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +171,7 @@ const Modal: React.FC<ModalProps> = ({
           </div>
           
           {/* Content */}
-          <div>
+          <div className="p-6 bg-white">
             {children}
           </div>
         </div>
