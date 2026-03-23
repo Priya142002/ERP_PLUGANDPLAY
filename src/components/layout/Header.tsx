@@ -4,6 +4,7 @@ import Icon from '../ui/Icon';
 import { useSuperAdminTheme } from '../../app/superadmin-theme';
 import { useAdminTheme } from '../../app/admin-theme';
 import { cn } from '../../utils/cn';
+import '../../styles/admin-mobile.css';
 
 interface HeaderProps {
   user: User;
@@ -94,7 +95,18 @@ export const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onLogout, onS
           {/* Mobile Menu Button - NEW */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-all active:scale-95"
+            className="lg:hidden p-3 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-all active:scale-95 mobile-menu-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '48px',
+              height: '48px',
+              backgroundColor: 'rgba(248, 250, 252, 0.9)',
+              border: '1px solid rgba(226, 232, 240, 0.6)',
+              borderRadius: '12px',
+              color: '#64748b'
+            }}
           >
             <Icon name="menu" size="sm" />
           </button>
@@ -135,15 +147,15 @@ export const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onLogout, onS
               </button>
 
               {showCompanyMenu && (
-                <div className="absolute top-full left-0 mt-3 w-[400px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-3 duration-200">
-                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="absolute top-full left-0 mt-3 w-[400px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-3 duration-200 company-dropdown">
+                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 company-dropdown-header">
                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">My Organizations</span>
                     <button className="flex items-center text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors">
                       <Icon name="cog" size="xs" className="mr-1.5" />
                       Manage Company
                     </button>
                   </div>
-                  <div className="max-h-[420px] overflow-y-auto py-2 custom-scrollbar">
+                  <div className="max-h-[420px] overflow-y-auto py-2 custom-scrollbar company-list">
                     {companies.map((comp) => (
                       <button
                         key={comp}
@@ -152,18 +164,18 @@ export const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onLogout, onS
                           setShowCompanyMenu(false);
                         }}
                         className={cn(
-                          "w-full flex items-center px-5 py-4 transition-all hover:bg-slate-50 relative group",
+                          "w-full flex items-center px-5 py-4 transition-all hover:bg-slate-50 relative group company-item",
                           currentCompany === comp ? "bg-indigo-50/50" : ""
                         )}
                       >
                         <div className={cn(
-                          "w-12 h-8 rounded-md flex items-center justify-center mr-4 shadow-sm",
+                          "w-12 h-8 rounded-md flex items-center justify-center mr-4 shadow-sm company-icon",
                           currentCompany === comp ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
                         )}>
                           <Icon name="building-2" size="xs" />
                         </div>
                         <span className={cn(
-                          "text-sm font-bold tracking-tight transition-colors",
+                          "text-sm font-bold tracking-tight transition-colors company-name",
                           currentCompany === comp ? "text-indigo-600" : "text-slate-700 group-hover:text-slate-900"
                         )}>
                           {comp}

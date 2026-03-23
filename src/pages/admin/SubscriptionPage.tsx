@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui";
 import { PLAN_FEATURES } from "../../utils/subscriptionAccess";
+import "../../styles/admin-mobile.css";
 
 const pageMotion = {
   initial: { opacity: 0, y: 10 },
@@ -166,7 +167,7 @@ export function SubscriptionPage() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto admin-cards-grid">
         {PLANS.map((plan, index) => {
           const Icon = plan.icon;
           const isCurrentPlan = plan.id === currentPlan;
@@ -264,8 +265,8 @@ export function SubscriptionPage() {
         <h2 className="text-2xl font-bold text-center mb-8" style={{ color: "var(--text-primary)" }}>
           Compare Plans
         </h2>
-        <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}>
-          <table className="w-full">
+        <div className="rounded-xl border overflow-hidden admin-table-container" style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}>
+          <table className="w-full admin-table">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--border)", backgroundColor: "var(--hover)" }}>
                 <th className="p-4 text-left text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Feature</th>

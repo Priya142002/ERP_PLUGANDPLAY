@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, Eye, FileText, BarChart3, Users, DollarSign, TrendingUp, PieChart } from "lucide-react";
 import "../../../pages/admin/reports/InventoryReportsPage.css";
+import "../../../styles/admin-mobile.css";
 
 interface FilterField { key:string; label:string; type:"text"|"date"|"select"; options?:string[]; }
 interface Report { id:string; name:string; icon:React.ReactNode; filters:FilterField[]; }
@@ -119,7 +120,7 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
           <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">{report.icon}</div>
           <h2 className="font-bold text-slate-800 text-sm">{report.name}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 reports-actions">
           <button className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><Upload size={13}/> Upload</button>
           <button className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><Download size={13}/> Download</button>
           <button className="flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[#002147] text-white text-xs font-bold hover:bg-[#003366] transition"><Eye size={13}/> Show</button>
@@ -129,7 +130,7 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
         <div className="grid grid-cols-1 mb-2">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Report Filters & Parameters</p>
         </div>
-        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white reports-filters">
           {report.filters.map((f,idx)=>{
             const isLast = idx===report.filters.length-1;
             const renderField = (key:string) => f.type==="select"
@@ -145,7 +146,7 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
             );
           })}
         </div>
-        <div className="flex items-center justify-between mt-5">
+        <div className="flex items-center justify-between mt-5 reports-actions">
           {hasFilters ? <button onClick={()=>setValues(init())} className="text-xs text-slate-400 hover:text-rose-500 transition font-medium">Clear filters</button> : <span/>}
           <button className="flex items-center gap-2 h-9 px-5 rounded-xl bg-[#002147] text-white text-xs font-bold hover:bg-[#003366] transition"><Eye size={14}/> Generate Report</button>
         </div>
@@ -168,7 +169,7 @@ export const SalesReportsPage: React.FC = () => {
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Reports</h1>
         <button className="flex items-center gap-2 h-9 px-4 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition"><Download size={14}/> Export Summary</button>
       </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex min-h-[600px]">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex">
         <div className="report-sidebar">
           <div className="report-sidebar-header">
             <p className="report-sidebar-title">Report Type</p>

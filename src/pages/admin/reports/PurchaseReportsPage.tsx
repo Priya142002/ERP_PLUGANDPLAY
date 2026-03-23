@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, Eye, FileText, BarChart, Users, DollarSign, ShoppingBag, PieChart, TrendingUp } from "lucide-react";
 import "../../../pages/admin/reports/InventoryReportsPage.css";
+import "../../../styles/admin-mobile.css";
 
 interface FilterField { key:string; label:string; type:"text"|"date"|"select"; options?:string[]; }
 interface Report { id:string; name:string; icon:React.ReactNode; filters:FilterField[]; }
@@ -122,18 +123,18 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
           <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">{report.icon}</div>
           <h2 className="font-bold text-slate-800 text-sm">{report.name}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 reports-actions">
           <button className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><Upload size={13}/> Upload</button>
           <button className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><Download size={13}/> Download</button>
           <button className="flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[#002147] text-white text-xs font-bold hover:bg-[#003366] transition"><Eye size={13}/> Show</button>
         </div>
       </div>
       <div className="p-6 flex-1">
-        <div className="grid grid-cols-2 gap-x-6 mb-2">
+        <div className="grid grid-cols-2 gap-x-6 mb-2 hidden md:grid">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Value (From)</p>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Value (To)</p>
         </div>
-        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white reports-filters">
           {report.filters.map((f,idx)=>{
             const isLast = idx===report.filters.length-1;
             const renderField = (key:string) => f.type==="select"
@@ -142,17 +143,31 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
               ? <input type="date" className={fieldCls} value={values[key]} onChange={e=>set(key,e.target.value)}/>
               : <input type="text" className={fieldCls} placeholder={`Enter ${f.label.toLowerCase()}…`} value={values[key]} onChange={e=>set(key,e.target.value)}/>;
             return (
-              <div key={f.key} className={`grid grid-cols-2 gap-0 ${!isLast?"border-b border-slate-100":""}`}>
-                <div className="flex items-center gap-3 px-5 py-3 border-r border-slate-100 bg-slate-50/40">
-                  <span className="text-xs font-semibold text-slate-700 min-w-[120px]">{f.label}</span>
-                  <div className="flex-1">{renderField(f.key)}</div>
+              <div key={f.key} className={`${!isLast?"border-b border-slate-100":""}`}>
+                {/* Mobile Layout - Stacked */}
+                <div className="block md:hidden">
+                  <div className="px-4 py-3 bg-slate-50/40 border-b border-slate-100">
+                    <span className="text-xs font-semibold text-slate-700 block mb-2">From {f.label}</span>
+                    {renderField(f.key)}
+                  </div>
+                  <div className="px-4 py-3 bg-white">
+                    <span className="text-xs font-semibold text-slate-700 block mb-2">To {f.label}</span>
+                    {renderField(`${f.key}_to`)}
+                  </div>
                 </div>
-                <div className="flex items-center px-5 py-3">{renderField(`${f.key}_to`)}</div>
+                {/* Desktop Layout - Two Columns */}
+                <div className="hidden md:grid grid-cols-2 gap-0">
+                  <div className="flex items-center gap-3 px-5 py-3 border-r border-slate-100 bg-slate-50/40">
+                    <span className="text-xs font-semibold text-slate-700 min-w-[120px]">{f.label}</span>
+                    <div className="flex-1">{renderField(f.key)}</div>
+                  </div>
+                  <div className="flex items-center px-5 py-3">{renderField(`${f.key}_to`)}</div>
+                </div>
               </div>
             );
           })}
         </div>
-        <div className="flex items-center justify-between mt-5">
+        <div className="flex items-center justify-between mt-5 reports-actions">
           {hasFilters ? <button onClick={()=>setValues(init())} className="text-xs text-slate-400 hover:text-rose-500 transition font-medium">Clear filters</button> : <span/>}
           <button className="flex items-center gap-2 h-9 px-5 rounded-xl bg-[#002147] text-white text-xs font-bold hover:bg-[#003366] transition"><Eye size={14}/> Generate Report</button>
         </div>
@@ -175,7 +190,7 @@ export const PurchaseReportsPage: React.FC = () => {
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Purchase Reports</h1>
         <button className="flex items-center gap-2 h-9 px-4 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition"><Download size={14}/> Export Summary</button>
       </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex min-h-[600px]">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex">
         <div className="report-sidebar">
           <div className="report-sidebar-header">
             <p className="report-sidebar-title">Report Type</p>

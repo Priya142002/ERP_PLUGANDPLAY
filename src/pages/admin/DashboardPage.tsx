@@ -8,6 +8,7 @@ import {
   DistributionDonutChart
 } from '../../components/analytics/DashboardCharts';
 import { useAdminTheme } from '../../app/admin-theme';
+import "../../styles/admin-mobile.css";
 
 // Mock Data for Charts
 const salesTrendData = [
@@ -61,7 +62,7 @@ export const AdminDashboardPage: React.FC = () => {
       backgroundColor: mode === 'dark' ? 'var(--admin-background)' : undefined 
     }}>
       {/* Page Title Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 admin-header">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ 
             color: mode === 'dark' ? 'var(--admin-text-primary)' : undefined 
@@ -89,7 +90,7 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* Row 1: Operational Tiles (Enhanced existing feature) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 admin-cards-grid dashboard-widgets">
         {operationalOverview.map((op, i) => (
           <div key={i} className="group relative p-6 rounded-[2rem] border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer" style={{
             backgroundColor: mode === 'dark' ? 'var(--admin-card)' : 'white',
@@ -110,7 +111,7 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* Row 2: KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 admin-stats-grid">
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -159,8 +160,8 @@ export const AdminDashboardPage: React.FC = () => {
               Full Statement
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto admin-table-container">
+            <table className="w-full text-left admin-table">
               <thead>
                 <tr className="text-white text-[10px] uppercase font-bold tracking-[0.1em]" style={{
                   backgroundColor: mode === 'dark' ? 'var(--admin-primary)' : '#002147'

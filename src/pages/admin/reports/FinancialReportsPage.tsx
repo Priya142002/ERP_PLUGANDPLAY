@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, Eye, FileText, BarChart3, Calculator, TrendingUp, TrendingDown, DollarSign, Calendar, Briefcase, Layers } from "lucide-react";
 import "./InventoryReportsPage.css";
+import "../../../styles/admin-mobile.css";
 
 interface Report {
   id: string;
@@ -129,7 +130,7 @@ const ReportPanel: React.FC<{ report: Report }> = ({ report }) => {
           <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">{report.icon}</div>
           <h2 className="font-bold text-slate-800 text-sm">{report.name}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 reports-actions">
           <button className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
             <Upload size={13} /> Upload
           </button>
@@ -143,7 +144,7 @@ const ReportPanel: React.FC<{ report: Report }> = ({ report }) => {
       </div>
 
       <div className="p-4 md:p-6 flex-1">
-        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white reports-filters">
           {report.filters.map((f, idx) => {
             const isLast = idx === report.filters.length - 1;
             return (
@@ -166,7 +167,7 @@ const ReportPanel: React.FC<{ report: Report }> = ({ report }) => {
           })}
         </div>
 
-        <div className="flex items-center justify-between mt-5">
+        <div className="flex items-center justify-between mt-5 reports-actions">
           {hasFilters ? (
             <button onClick={() => setValues(initValues())} className="text-xs text-slate-400 hover:text-rose-500 transition font-medium">
               Clear filters
@@ -200,7 +201,7 @@ export const FinancialReportsPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:flex-row" style={{ minHeight: '600px', maxHeight: '80vh' }}>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:flex-row">
 
         <div className="report-sidebar">
           <div className="report-sidebar-header">

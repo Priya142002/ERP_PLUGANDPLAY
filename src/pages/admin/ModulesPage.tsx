@@ -9,6 +9,7 @@ import { useApp } from "../../context/AppContext";
 import { useModulesSafe } from "../../context/ModuleContext";
 import type { SubscriptionPlan } from "../../utils/subscriptionAccess";
 import { getStoredTrialStart, getTrialStatus, TRIAL_DAYS } from "../../utils/trialAccess";
+import "../../styles/admin-mobile.css";
 
 const pageMotion = {
   initial: { opacity: 0, y: 10 },
@@ -129,7 +130,7 @@ export function ModulesPage() {
   return (
     <motion.div {...pageMotion} className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 admin-header module-header">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>My Modules</h1>
           <p className="text-slate-500 mt-1">Enable or disable modules for your company</p>
@@ -220,7 +221,7 @@ export function ModulesPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 admin-stats-grid module-stats-grid">
         {[
           { label: "Available Modules", value: availableModules.length, color: "var(--primary)" },
           { label: "Enabled Modules", value: enabledCount, color: "var(--success)" },
