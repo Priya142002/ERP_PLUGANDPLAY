@@ -122,9 +122,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
       })
     : navigationItems;
 
-  console.log('Navigation items:', navigationItems.map(i => i.id));
-  console.log('Filtered items:', filteredNavigationItems.map(i => i.id));
-
   const toggleExpanded = (itemId: string) => {
     const newExpanded = new Set(expandedItems);
     if (newExpanded.has(itemId)) {
