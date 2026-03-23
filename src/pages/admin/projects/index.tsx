@@ -23,6 +23,64 @@ import {
 } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 
+// Mobile responsive styles
+const mobileStyles = `
+  @media (max-width: 768px) {
+    .project-header-buttons {
+      flex-direction: column;
+      width: 100%;
+    }
+    .project-header-buttons > * {
+      width: 100%;
+      justify-content: center;
+    }
+    .project-stats-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .project-cards-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .project-kanban-container {
+      flex-direction: column;
+      height: auto !important;
+      min-height: auto !important;
+    }
+    .project-kanban-column {
+      min-width: 100% !important;
+      max-height: 400px;
+    }
+    .project-modal {
+      max-width: 95% !important;
+      margin: 0 auto;
+    }
+    .project-modal-content {
+      padding: 16px !important;
+    }
+    .project-modal-header {
+      padding: 12px 16px !important;
+    }
+  }
+  @media (max-width: 640px) {
+    .project-title {
+      font-size: 1.5rem !important;
+    }
+    .project-subtitle {
+      font-size: 0.75rem !important;
+    }
+  }
+`;
+
+// Add styles to document
+if (typeof document !== 'undefined') {
+  const styleId = 'projects-mobile-styles';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = mobileStyles;
+    document.head.appendChild(style);
+  }
+}
+
 // --- Project Health Report Modal ---
 const ProjectHealthReportModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [exportHover, setExportHover] = useState(false);
@@ -167,7 +225,7 @@ export const ProjectDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 project-stats-grid">
         {stats.map((stat, i) => (
           <motion.div
             key={i}
@@ -283,7 +341,7 @@ export const ProjectListPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 project-cards-grid">
         {[1, 2, 3, 4, 5, 6].map(i => (
           <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-[2rem]" style={{ backgroundColor: '#1a2744' }} />
@@ -394,9 +452,9 @@ export const TasksPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex gap-6 overflow-x-auto pb-6 h-[calc(100vh-280px)] min-h-[500px]">
+      <div className="flex gap-6 overflow-x-auto pb-6 h-[calc(100vh-280px)] min-h-[500px] project-kanban-container">
         {['Backlog', 'Processing', 'Final Review', 'Done'].map((col, idx) => (
-          <div key={idx} className="flex-1 min-w-[320px] bg-slate-50/30 rounded-[2.5rem] border border-slate-100/50 flex flex-col p-6">
+          <div key={idx} className="flex-1 min-w-[320px] bg-slate-50/30 rounded-[2.5rem] border border-slate-100/50 flex flex-col p-6 project-kanban-column">
             <div className="flex items-center justify-between mb-6 px-2">
               <div className="flex items-center gap-2.5">
                 <div className={`w-2.5 h-2.5 rounded-full ${idx === 0 ? 'bg-slate-400' : idx === 1 ? 'bg-blue-500' : idx === 2 ? 'bg-indigo-500' : 'bg-emerald-500'}`} />

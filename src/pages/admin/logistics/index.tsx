@@ -19,6 +19,69 @@ import {
 import Button from '../../../components/ui/Button';
 import { useNotifications } from '../../../context/AppContext';
 
+// Mobile responsive styles
+const mobileStyles = `
+  @media (max-width: 768px) {
+    .logistics-header-buttons {
+      flex-direction: column;
+      width: 100%;
+    }
+    .logistics-header-buttons > * {
+      width: 100%;
+      justify-content: center;
+    }
+    .logistics-stats-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .logistics-cards-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .logistics-table-container {
+      overflow-x: auto;
+    }
+    .logistics-table {
+      min-width: 800px;
+    }
+    .logistics-modal {
+      max-width: 95% !important;
+      margin: 0 auto;
+    }
+    .logistics-modal-content {
+      padding: 16px !important;
+    }
+    .logistics-search-bar {
+      flex-direction: column;
+      align-items: stretch !important;
+    }
+    .logistics-search-bar > * {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .logistics-route-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+  @media (max-width: 640px) {
+    .logistics-title {
+      font-size: 1.5rem !important;
+    }
+    .logistics-subtitle {
+      font-size: 0.75rem !important;
+    }
+  }
+`;
+
+// Add styles to document
+if (typeof document !== 'undefined') {
+  const styleId = 'logistics-mobile-styles';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = mobileStyles;
+    document.head.appendChild(style);
+  }
+}
+
 // --- Fleet Intelligence (Dashboard) ---
 export const LogisticsDashboard: React.FC = () => {
   const { showNotification } = useNotifications();
@@ -73,10 +136,10 @@ export const LogisticsDashboard: React.FC = () => {
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Fleet Intelligence</h1>
-          <p className="text-slate-500 text-sm mt-1 font-medium italic lowercase">Global logistics monitoring and delivery optimization</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 logistics-title">Fleet Intelligence</h1>
+          <p className="text-slate-500 text-sm mt-1 font-medium italic lowercase logistics-subtitle">Global logistics monitoring and delivery optimization</p>
         </div>
-        <div className="flex flex-row items-center gap-2 md:gap-3">
+        <div className="flex flex-row items-center gap-2 md:gap-3 logistics-header-buttons">
           <div className="flex items-center gap-2 md:gap-2.5 bg-white border border-slate-200 px-3 md:px-4 py-1.5 md:py-2 rounded-xl shadow-sm">
             <Calendar size={14} className="text-blue-600" />
             <span className="text-[10px] md:text-xs font-bold text-slate-600 uppercase">Cycle: Mar 2026</span>
@@ -91,7 +154,7 @@ export const LogisticsDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 logistics-stats-grid">
         {[
           { label: 'Active Shipments', value: '184', badge: '12 Delayed', icon: <Package size={20} /> },
           { label: 'Delivered Today', value: '42', badge: '+15% Eff', icon: <CheckCircle size={20} /> },
@@ -248,7 +311,7 @@ export const LogisticsOrderPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 logistics-cards-grid">
                 {[
                     { stage: 'Pending Packing', count: 12, icon: <Package size={20} />, bar: '#1a2744' },
                     { stage: 'In QC Inspection', count: 17, icon: <ShieldCheck size={20} />, bar: '#1a2744' },
@@ -506,9 +569,9 @@ export const ShipmentListPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden logistics-table-container">
                 <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-3 flex-1 logistics-search-bar">
                         <div className="relative flex-1 max-w-xs">
                             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input 
@@ -552,7 +615,7 @@ export const ShipmentListPage: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <table className="w-full">
+                <table className="w-full logistics-table">
                     <thead>
                         <tr className="bg-slate-900 text-white uppercase tracking-[0.15em] text-[10px] font-bold">
                             <th className="px-8 py-4 text-left border-none">Tracking Info</th>
@@ -861,7 +924,7 @@ export const DeliveryPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 logistics-route-grid">
                 {[1, 2, 3, 4].map(i => (
                     <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden">
                         <div style={{ height: '6px', backgroundColor: '#1a2744' }} />

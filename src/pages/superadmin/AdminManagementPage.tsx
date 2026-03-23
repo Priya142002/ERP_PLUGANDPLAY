@@ -4,6 +4,7 @@ import {
   Search, Mail, Calendar, Trash2, 
   Clock, Users
 } from "lucide-react";
+import "../../styles/superadmin-mobile.css";
 
 const pageMotion = {
   initial: { opacity: 0, y: 10 },
@@ -50,7 +51,7 @@ export function AdminManagementPage() {
   return (
     <motion.div {...pageMotion} className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Page Title Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 superadmin-header">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--sa-text-primary)" }}>Global Identity Index</h1>
           <p className="text-slate-500 mt-1">Unified directory for all users and administrative roles cross-platform</p>
@@ -87,7 +88,7 @@ export function AdminManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 superadmin-stats-grid">
         <div className="p-4 rounded-xl border" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
           <div className="text-2xl font-bold" style={{ color: "var(--sa-text-primary)" }}>{stats.total}</div>
           <div className="text-xs mt-1" style={textStyles.description}>Total Users</div>
@@ -128,9 +129,9 @@ export function AdminManagementPage() {
       </div>
 
       {/* Users Table */}
-      <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
+      <div className="rounded-xl border overflow-hidden superadmin-table-container" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full superadmin-table">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--sa-border)" }}>
                 <th className="p-4 text-left text-xs font-medium" style={textStyles.description}>User</th>

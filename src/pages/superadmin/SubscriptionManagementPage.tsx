@@ -4,6 +4,7 @@ import {
   TrendingUp, Clock, DollarSign, Users, Building, 
   Search, X, Calendar, Save 
 } from "lucide-react";
+import "../../styles/superadmin-mobile.css";
 
 function ChangePlanModal({ subscription, onClose, onSave }: { subscription: any; onClose: () => void; onSave: (id: string, newPlan: string, prorated: boolean) => void }) {
   const [newPlan, setNewPlan] = useState(subscription.plan);
@@ -170,7 +171,7 @@ export function SubscriptionManagementPage() {
   return (
     <motion.div {...pageMotion} className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Page Title Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 superadmin-header">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--sa-text-primary)" }}>Subscription Ledger</h1>
           <p className="text-slate-500 mt-1">Manage global billing cycles, plan conversions, and revenue flow</p>
@@ -206,7 +207,7 @@ export function SubscriptionManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 superadmin-stats-grid">
         <div className="p-5 rounded-xl border" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
           <div className="flex items-center gap-3 mb-3">
             <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(44, 110, 213, 0.1)" }}>
@@ -268,9 +269,9 @@ export function SubscriptionManagementPage() {
       </div>
 
       {/* Subscriptions Table */}
-      <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
+      <div className="rounded-xl border overflow-hidden superadmin-table-container" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full superadmin-table">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--sa-border)" }}>
                 <th className="p-4 text-left text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Company</th>

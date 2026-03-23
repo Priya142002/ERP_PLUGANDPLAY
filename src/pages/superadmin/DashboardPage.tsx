@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useApp } from "../../context/AppContext";
+import "../../styles/superadmin-mobile.css";
 
 const pageMotion = {
   initial: { opacity: 0, y: 10 },
@@ -107,7 +108,7 @@ export function DashboardPage() {
   return (
     <motion.div {...pageMotion} className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 superadmin-header">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <div className="h-6 px-3 rounded-full text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-wider"
@@ -176,7 +177,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 superadmin-stats-grid">
         {STATS.map((stat, index) => {
           const Icon = stat.icon;
           
@@ -217,7 +218,7 @@ export function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 superadmin-quick-actions">
         {QUICK_ACTIONS.map((action, index) => {
           const Icon = action.icon;
           return (

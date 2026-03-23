@@ -5,6 +5,7 @@ import {
   Users, Download, Filter, X, Save, Upload, Image, Layers
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+import "../../styles/superadmin-mobile.css";
 
 const ALL_MODULES = [
   { id: "inventory", name: "Inventory Management" },

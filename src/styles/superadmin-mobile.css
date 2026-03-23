@@ -1,0 +1,154 @@
+/* Super Admin Mobile Responsive Styles */
+
+@media (max-width: 768px) {
+  /* Common mobile styles for all superadmin pages */
+  
+  /* Header sections */
+  .superadmin-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+
+  .superadmin-header h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .superadmin-header p {
+    font-size: 0.813rem !important;
+  }
+
+  .superadmin-header-buttons {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .superadmin-header-buttons > * {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Header badges and status indicators */
+  .superadmin-header .flex.items-center.gap-2 {
+    font-size: 0.813rem !important;
+  }
+
+  .superadmin-header .flex.items-center.gap-2 span {
+    font-size: 0.813rem !important;
+  }
+
+  /* Stats grids */
+  .superadmin-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tables */
+  .superadmin-table-container {
+    overflow-x: auto !important;
+  }
+
+  .superadmin-table {
+    min-width: 800px !important;
+  }
+
+  /* Search and filter bars */
+  .superadmin-search-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .superadmin-search-bar > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Modals */
+  .superadmin-modal {
+    max-width: 95% !important;
+    margin: 0 auto !important;
+  }
+
+  .superadmin-modal-content {
+    padding: 16px !important;
+  }
+
+  .superadmin-modal-header {
+    padding: 12px 16px !important;
+  }
+
+  /* Form grids */
+  .superadmin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Cards grid */
+  .superadmin-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Charts */
+  .superadmin-chart-container {
+    overflow-x: auto !important;
+  }
+
+  /* Banner */
+  .superadmin-banner {
+    padding: 1rem 1.5rem !important;
+  }
+
+  /* Quick actions */
+  .superadmin-quick-actions {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Extra small screens */
+  
+  .superadmin-title {
+    font-size: 1.25rem !important;
+  }
+
+  .superadmin-subtitle {
+    font-size: 0.75rem !important;
+  }
+
+  .superadmin-header h1 {
+    font-size: 1.25rem !important;
+  }
+
+  .superadmin-header p {
+    font-size: 0.75rem !important;
+  }
+
+  .superadmin-header .flex.items-center.gap-2 {
+    font-size: 0.75rem !important;
+  }
+
+  .superadmin-header .flex.items-center.gap-2 span {
+    font-size: 0.75rem !important;
+  }
+
+  .superadmin-quick-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table text sizes */
+  .superadmin-table th,
+  .superadmin-table td {
+    font-size: 0.75rem !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Button text sizes */
+  .superadmin-header button {
+    font-size: 0.813rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  /* Badge and icon sizes */
+  .superadmin-header svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+}
