@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Clock, CheckCircle } from 'lucide-react';
+import { X, CheckCircle } from 'lucide-react';
 
 interface SubscriptionPlanModalProps {
   onClose: () => void;
@@ -35,16 +35,9 @@ export const SubscriptionPlanModal: React.FC<SubscriptionPlanModalProps> = ({ on
           <X className="h-5 w-5 text-slate-600" />
         </button>
 
-        {/* Header with Icon */}
-        <div className="relative pt-12 pb-4 px-8 text-center" style={{ backgroundColor: '#1a2744' }}>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-xl"
-              style={{ backgroundColor: '#ffffff' }}>
-              <Clock className="h-8 w-8" style={{ color: '#1a2744' }} />
-            </div>
-          </div>
-          
-          <h2 className="text-xl font-bold text-white mt-2 mb-1">Start Your Free Trial!</h2>
+        {/* Header */}
+        <div className="relative pt-8 pb-4 px-8 text-center" style={{ backgroundColor: '#1a2744' }}>
+          <h2 className="text-xl font-bold text-white mb-1">Start Your Free Trial!</h2>
           <p className="text-xs text-white/80">
             30 days full access to all features
           </p>
@@ -85,8 +78,8 @@ export const SubscriptionPlanModal: React.FC<SubscriptionPlanModalProps> = ({ on
           <div className="space-y-2.5">
             <button
               onClick={handleStartTrial}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition hover:opacity-90 shadow-lg"
-              style={{ backgroundColor: '#1a2744' }}
+              className="w-full py-2.5 rounded-xl text-sm font-bold transition hover:opacity-90 shadow-lg"
+              style={{ backgroundColor: '#1a2744', color: '#ffffff' }}
             >
               Start Free Trial
             </button>
