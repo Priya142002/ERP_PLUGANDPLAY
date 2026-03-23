@@ -203,12 +203,8 @@ export const adminNavigation: NavigationItem[] = [
       { id: 'prod-bom', label: 'Bill of Materials', path: '/admin/production/bom', roles: ['admin'], icon: 'clipboard-list' },
       { id: 'prod-plan', label: 'Production Planning', path: '/admin/production/planning', roles: ['admin'], icon: 'calendar' },
       { id: 'prod-wo', label: 'Work Orders', path: '/admin/production/work-orders', roles: ['admin'], icon: 'factory' },
-      { id: 'prod-jc', label: 'Job Cards', path: '/admin/production/job-cards', roles: ['admin'], icon: 'list' },
-      { id: 'prod-rmi', label: 'Raw Material Issue', path: '/admin/production/material-issue', roles: ['admin'], icon: 'truck' },
-      { id: 'prod-fge', label: 'Finished Goods Entry', path: '/admin/production/finished-goods', roles: ['admin'], icon: 'cube' },
+      { id: 'prod-inv', label: 'Inventory Movement', path: '/admin/production/inventory-movement', roles: ['admin'], icon: 'truck' },
       { id: 'prod-qc', label: 'Quality Check', path: '/admin/production/quality-check', roles: ['admin'], icon: 'clipboard-check' },
-      { id: 'prod-mt', label: 'Machine Tracking', path: '/admin/production/machines', roles: ['admin'], icon: 'cpu' },
-      { id: 'prod-rep', label: 'Production Reports', path: '/admin/reports/production', roles: ['admin'], icon: 'document-report' },
     ]
   },
   {

@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onLogout, onS
 
   return (
     <header 
-      className="sticky top-0 z-40 transition-all duration-300 backdrop-blur-md border-b border-slate-200 shadow-sm"
+      className="sticky top-0 z-40 transition-all duration-300 backdrop-blur-md shadow-sm"
       style={{ backgroundColor: user.role === 'super_admin' ? "var(--sa-header)" : "var(--admin-header)" }}
     >
       <div className="flex items-center justify-between h-20 px-6 lg:px-8 mx-auto w-full">

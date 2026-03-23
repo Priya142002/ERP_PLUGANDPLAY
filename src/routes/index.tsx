@@ -127,12 +127,8 @@ import {
   BOMPage,
   ProductionPlanningPage,
   WorkOrdersPage,
-  JobCardsPage,
-  MaterialIssuePage,
-  FinishedGoodsPage,
+  InventoryMovementPage,
   QualityCheckPage,
-  MachineTrackingPage,
-  ProductionReportsPage,
 } from '../pages/admin';
 
 interface AppRoutesProps {
@@ -306,7 +302,6 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route path="purchase" element={<PurchaseReportsPage />} />
           <Route path="inventory" element={<InventoryReportsPage />} />
           <Route path="financial" element={<FinancialReportsPage />} />
-          <Route path="production" element={<ProductionReportsPage />} />
         </Route>
 
         {/* Settings */}
@@ -384,11 +379,8 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route path="bom" element={<BOMPage />} />
           <Route path="planning" element={<ProductionPlanningPage />} />
           <Route path="work-orders" element={<WorkOrdersPage />} />
-          <Route path="job-cards" element={<JobCardsPage />} />
-          <Route path="material-issue" element={<MaterialIssuePage />} />
-          <Route path="finished-goods" element={<FinishedGoodsPage />} />
+          <Route path="inventory-movement" element={<InventoryMovementPage />} />
           <Route path="quality-check" element={<QualityCheckPage />} />
-          <Route path="machines" element={<MachineTrackingPage />} />
         </Route>
 
         {/* Billing */}
