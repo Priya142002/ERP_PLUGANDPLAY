@@ -49,6 +49,13 @@ export const superAdminNavigation: NavigationItem[] = [
 
 export const adminNavigation: NavigationItem[] = [
   {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: 'dashboard',
+    path: '/admin/dashboard',
+    roles: ['admin']
+  },
+  {
     id: 'inventory',
     label: 'Inventory',
     icon: 'archive',

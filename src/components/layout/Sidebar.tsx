@@ -112,14 +112,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
   // Filter navigation items based on enabled modules (only for admin role)
   const filteredNavigationItems = user.role === 'admin' 
     ? navigationItems.filter(item => {
-        // Always show non-module items (subscription, modules, admin settings)
-        if (['subscription', 'modules', 'admin'].includes(item.id)) {
+        // Always show non-module items (dashboard, subscription, modules, admin settings)
+        // Dashboard should ALWAYS be visible
+        if (['dashboard', 'subscription', 'modules', 'admin'].includes(item.id)) {
           return true;
         }
         // Filter module items based on enabled state
         return isModuleEnabled(item.id);
       })
     : navigationItems;
+
+  console.log('Navigation items:', navigationItems.map(i => i.id));
+  console.log('Filtered items:', filteredNavigationItems.map(i => i.id));
 
   const toggleExpanded = (itemId: string) => {
     const newExpanded = new Set(expandedItems);

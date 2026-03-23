@@ -17,6 +17,7 @@ const ModuleContext = createContext<ModuleContextType | undefined>(undefined);
 
 // Default module states - these would be persisted in localStorage or backend
 const DEFAULT_MODULES: ModuleState[] = [
+  { id: 'dashboard', name: 'Dashboard', enabled: true },
   { id: 'inventory', name: 'Inventory Management', enabled: true },
   { id: 'purchase', name: 'Purchase Management', enabled: true },
   { id: 'sales', name: 'Sales Management', enabled: true },
