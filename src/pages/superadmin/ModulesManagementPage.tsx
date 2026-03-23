@@ -4,7 +4,7 @@ import {
   Puzzle, ToggleLeft, ToggleRight, Archive, ShoppingCart, 
   TrendingUp, BookOpen, Users, Briefcase, Headphones, 
   Truck, Factory, Receipt, Search, Building2, ChevronRight,
-  CheckCircle2, XCircle, Package
+  CheckCircle2, XCircle, Package, Clock, X, Save
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
@@ -50,14 +50,171 @@ interface CompanyModules {
   };
 }
 
+function TrialAccessModal({
+  company,
+  defaultModules,
+  onClose,
+  onSave,
+}: {
+  company?: any;
+  defaultModules: string[];
+  onClose: () => void;
+  onSave: (modules: string[]) => void;
+}) {
+  const [selected, setSelected] = useState<string[]>(
+    company
+      ? (company.allowedModules && company.allowedModules.length > 0 ? company.allowedModules : defaultModules)
+      : defaultModules
+  );
+
+  const toggle = (id: string) =>
+    setSelected(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
+
+  const isGlobal = !company;
+  const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+        style={{ backgroundColor: "#ffffff" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4" style={{ backgroundColor: "#1a2744" }}>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center">
+              <Clock className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Trial Access Modules</h2>
+              <p className="text-xs text-white/60">
+                {isGlobal ? 'Default — applies to all companies' : company.name}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition">
+            <X className="h-5 w-5 text-white" />
+          </button>
+        </div>
+
+        {/* Subheader */}
+        <div className={`px-6 py-3 border-b ${isGlobal ? 'bg-amber-50 border-amber-100' : 'bg-indigo-50 border-indigo-100'}`}>
+          <p className={`text-xs ${isGlobal ? 'text-amber-700' : 'text-indigo-700'}`}>
+            {isGlobal
+              ? 'Setting default trial modules — these will apply to all companies that have no specific assignment.'
+              : `Select which modules ${company.name} can access during their 30-day free trial.`}
+          </p>
+        </div>
+
+        {/* Module grid */}
+        <div className="p-5 grid grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto">
+          {ALL_MODULES.map(mod => {
+            const IconComponent = MODULE_ICONS[mod.name] || Puzzle;
+            const isOn = selected.includes(mod.id);
+            return (
+              <button
+                key={mod.id}
+                onClick={() => toggle(mod.id)}
+                className="flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all"
+                style={{
+                  borderColor: isOn ? "#6366f1" : "#e2e8f0",
+                  backgroundColor: isOn ? "rgba(99,102,241,0.07)" : "#f8fafc",
+                }}
+              >
+                <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: isOn ? "rgba(99,102,241,0.15)" : "#e2e8f0" }}>
+                  <IconComponent className="h-4 w-4" style={{ color: isOn ? "#6366f1" : "#94a3b8" }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: isOn ? "#4338ca" : "#475569" }}>
+                    {mod.name}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">{mod.category}</p>
+                </div>
+                <div className={`h-4 w-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                  isOn ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 bg-white'
+                }`}>
+                  {isOn && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSelected(ALL_MODULES.map(m => m.id))}
+              onMouseEnter={() => setHoveredBtn('all')}
+              onMouseLeave={() => setHoveredBtn(null)}
+              className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-medium transition"
+              style={{ color: hoveredBtn === 'all' ? '#000000' : '#6366f1', backgroundColor: hoveredBtn === 'all' ? '#e0e7ff' : '#ffffff' }}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setSelected([])}
+              onMouseEnter={() => setHoveredBtn('none')}
+              onMouseLeave={() => setHoveredBtn(null)}
+              className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 font-medium transition"
+              style={{ color: hoveredBtn === 'none' ? '#000000' : '#64748b', backgroundColor: hoveredBtn === 'none' ? '#f1f5f9' : '#ffffff' }}
+            >
+              None
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">{selected.length} selected</span>
+            <button
+              onClick={onClose}
+              onMouseEnter={() => setHoveredBtn('cancel')}
+              onMouseLeave={() => setHoveredBtn(null)}
+              className="px-4 py-2 rounded-lg text-sm border border-slate-200 transition"
+              style={{ color: hoveredBtn === 'cancel' ? '#000000' : '#374151', backgroundColor: hoveredBtn === 'cancel' ? '#f1f5f9' : '#ffffff' }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave(selected)}
+              onMouseEnter={() => setHoveredBtn('save')}
+              onMouseLeave={() => setHoveredBtn(null)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition"
+              style={{
+                backgroundColor: hoveredBtn === 'save' ? '#e2e8f0' : '#1a2744',
+                color: hoveredBtn === 'save' ? '#000000' : '#ffffff'
+              }}
+            >
+              <Save className="h-4 w-4" />
+              {isGlobal ? 'Save Default' : 'Save Access'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export function ModulesManagementPage() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [companyModules, setCompanyModules] = useState<CompanyModules>({});
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [companySearch, setCompanySearch] = useState("");
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
+  const [defaultTrialModules, setDefaultTrialModules] = useState<string[]>(
+    () => {
+      try {
+        const stored = localStorage.getItem('default_trial_modules');
+        if (stored) return JSON.parse(stored);
+      } catch {}
+      return ['inventory', 'sales', 'purchase', 'accounts'];
+    }
+  );
+  const [trialBtnHover, setTrialBtnHover] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedCompany = state.companies.find(c => c.id === selectedCompanyId);
@@ -97,6 +254,30 @@ export function ModulesManagementPage() {
     return companyModules[selectedCompanyId]?.[moduleId] ?? true;
   };
 
+  const handleSaveTrialAccess = (modules: string[]) => {
+    if (selectedCompanyId) {
+      // Save to specific company
+      dispatch({
+        type: 'UPDATE_COMPANY',
+        payload: { id: selectedCompanyId, updates: { allowedModules: modules, updatedAt: new Date() } }
+      });
+    } else {
+      // Save as global default — persist to localStorage + update ALL companies that have no specific assignment
+      localStorage.setItem('default_trial_modules', JSON.stringify(modules));
+      setDefaultTrialModules(modules);
+      // Apply to all companies that don't have a custom allowedModules set
+      state.companies.forEach(company => {
+        if (!company.allowedModules || company.allowedModules.length === 0) {
+          dispatch({
+            type: 'UPDATE_COMPANY',
+            payload: { id: company.id, updates: { allowedModules: modules, updatedAt: new Date() } }
+          });
+        }
+      });
+    }
+    setShowTrialModal(false);
+  };
+
   const filteredModules = ALL_MODULES.filter(m => 
     m.name.toLowerCase().includes(search.toLowerCase()) &&
     (filterCategory === "all" || m.category === filterCategory)
@@ -118,15 +299,36 @@ export function ModulesManagementPage() {
           </h1>
           <p className="text-slate-500 mt-1">Select a company and manage their ERP modules</p>
         </div>
-        {selectedCompany && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl border shadow-sm"
-            style={{ borderColor: "var(--sa-border)", backgroundColor: "var(--sa-card)" }}>
-            <Puzzle className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
-            <span className="text-sm font-medium" style={{ color: "var(--sa-text-primary)" }}>
-              {enabledCount} / {ALL_MODULES.length} Modules Active
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (!selectedCompany) {
+                setShowCompanyDropdown(true);
+                (dropdownRef.current?.querySelector('input') as HTMLInputElement)?.focus();
+              }
+              setShowTrialModal(true);
+            }}
+            onMouseEnter={() => setTrialBtnHover(true)}
+            onMouseLeave={() => setTrialBtnHover(false)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all"
+            style={{
+              backgroundColor: trialBtnHover ? "#e2e8f0" : "#1a2744",
+              color: trialBtnHover ? "#000000" : "#ffffff"
+            }}
+          >
+            <Clock className="h-4 w-4" />
+            Trial Access
+          </button>
+          {selectedCompany && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border shadow-sm"
+              style={{ borderColor: "var(--sa-border)", backgroundColor: "var(--sa-card)" }}>
+              <Puzzle className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
+              <span className="text-sm font-medium" style={{ color: "var(--sa-text-primary)" }}>
+                {enabledCount} / {ALL_MODULES.length} Modules Active
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Company Selection Dropdown */}
@@ -495,6 +697,15 @@ export function ModulesManagementPage() {
             Choose a company from above to manage their ERP modules
           </p>
         </div>
+      )}
+      {/* Trial Access Modal */}
+      {showTrialModal && (
+        <TrialAccessModal
+          company={selectedCompany}
+          defaultModules={defaultTrialModules}
+          onClose={() => setShowTrialModal(false)}
+          onSave={handleSaveTrialAccess}
+        />
       )}
     </motion.div>
   );

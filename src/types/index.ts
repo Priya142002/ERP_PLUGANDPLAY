@@ -24,6 +24,8 @@ export interface Company {
   financialYearStart?: string; // e.g., "April"
   currency?: string;
   status: 'active' | 'inactive';
+  trialStartDate?: Date;       // Set when company is created (free demo)
+  allowedModules?: string[];   // Superadmin-assigned modules for trial/free access
   createdAt: Date;
   updatedAt: Date;
 }

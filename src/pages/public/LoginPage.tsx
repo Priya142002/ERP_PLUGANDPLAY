@@ -9,7 +9,7 @@ declare global {
 
 interface LoginPageProps {
   user: User | null;
-  onLogin: (role: 'super_admin' | 'admin', remember: boolean) => void;
+  onLogin: (role: 'super_admin' | 'admin', remember: boolean, email?: string) => void;
 }
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
@@ -102,7 +102,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
     const role = email.toLowerCase().includes('superadmin') ? 'super_admin' : 'admin';
     setTimeout(() => {
       setLoading(false);
-      onLogin(role, rememberMe);
+      onLogin(role, rememberMe, email);
       navigate(role === 'super_admin' ? '/superadmin/dashboard' : '/admin/dashboard');
     }, 600);
   };

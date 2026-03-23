@@ -2,9 +2,24 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Plus, Building2, Search, Edit, Trash2, Power,
-  Users, Download, Filter, X, Save, Upload, Image
+  Users, Download, Filter, X, Save, Upload, Image, Layers
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+
+const ALL_MODULES = [
+  { id: "inventory", name: "Inventory Management" },
+  { id: "purchase", name: "Purchase Management" },
+  { id: "sales", name: "Sales Management" },
+  { id: "accounts", name: "Accounts & Finance" },
+  { id: "crm", name: "CRM" },
+  { id: "hrm", name: "HRM" },
+  { id: "projects", name: "Projects" },
+  { id: "helpdesk", name: "Helpdesk" },
+  { id: "assets", name: "Assets" },
+  { id: "logistics", name: "Logistics" },
+  { id: "production", name: "Production" },
+  { id: "billing", name: "Billing" },
+];
 
 const pageMotion = {
   initial: { opacity: 0, y: 10 },
@@ -47,11 +62,13 @@ interface CompanyFormData {
   gstNumber?: string;
   taxNumber?: string;
   status: 'active' | 'inactive';
-  logo: string; // Required - Base64 encoded image
+  logo: string;
   // Admin User Details
   adminName: string;
   adminEmail: string;
   adminPhone: string;
+  // Trial module access
+  allowedModules: string[];
 }
 
 interface FilterState {
@@ -72,7 +89,6 @@ function CompanyFormModal({
 }) {
   const [formData, setFormData] = useState<CompanyFormData>(() => {
     if (company) {
-      // Editing existing company
       return {
         code: company.code || '',
         name: company.name || '',
@@ -80,23 +96,17 @@ function CompanyFormModal({
         industry: company.industry || '',
         email: company.email || '',
         phone: company.phone || '',
-        address: company.address || {
-          street: '',
-          city: '',
-          state: '',
-          country: '',
-          postalCode: ''
-        },
+        address: company.address || { street: '', city: '', state: '', country: '', postalCode: '' },
         gstNumber: company.gstNumber || '',
         taxNumber: company.taxNumber || '',
         status: company.status || 'active',
         logo: company.logo || '',
         adminName: company.adminName || '',
         adminEmail: company.adminEmail || '',
-        adminPhone: company.adminPhone || ''
+        adminPhone: company.adminPhone || '',
+        allowedModules: company.allowedModules || ['inventory', 'sales', 'purchase', 'accounts'],
       };
     }
-    // Creating new company
     return {
       code: '',
       name: '',
@@ -104,20 +114,15 @@ function CompanyFormModal({
       industry: '',
       email: '',
       phone: '',
-      address: {
-        street: '',
-        city: '',
-        state: '',
-        country: '',
-        postalCode: ''
-      },
+      address: { street: '', city: '', state: '', country: '', postalCode: '' },
       gstNumber: '',
       taxNumber: '',
       status: 'active' as const,
       logo: '',
       adminName: '',
       adminEmail: '',
-      adminPhone: ''
+      adminPhone: '',
+      allowedModules: ['inventory', 'sales', 'purchase', 'accounts'],
     };
   });
 
@@ -511,6 +516,46 @@ function CompanyFormModal({
             </div>
           </div>
 
+          {/* Allowed Modules (Trial Access) */}
+          <div className="space-y-3 p-4 rounded-lg border" style={{ borderColor: "var(--sa-border)", backgroundColor: "rgba(99, 102, 241, 0.05)" }}>
+            <h3 className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--sa-text-primary)" }}>
+              <Layers className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
+              Allowed Modules (Trial Access)
+            </h3>
+            <p className="text-xs" style={{ color: "var(--sa-text-secondary)" }}>
+              Select which modules this company can access during their free trial period.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {ALL_MODULES.map(mod => (
+                <label key={mod.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--sa-hover)] transition">
+                  <input
+                    type="checkbox"
+                    checked={formData.allowedModules.includes(mod.id)}
+                    onChange={(e) => {
+                      const updated = e.target.checked
+                        ? [...formData.allowedModules, mod.id]
+                        : formData.allowedModules.filter(m => m !== mod.id);
+                      setFormData({ ...formData, allowedModules: updated });
+                    }}
+                    className="h-4 w-4 rounded"
+                    style={{ accentColor: "var(--sa-primary)" }}
+                  />
+                  <span className="text-xs" style={{ color: "var(--sa-text-primary)" }}>{mod.name}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button type="button" onClick={() => setFormData({ ...formData, allowedModules: ALL_MODULES.map(m => m.id) })}
+                className="text-xs px-3 py-1 rounded-lg border" style={{ borderColor: "var(--sa-border)", color: "var(--sa-primary)" }}>
+                Select All
+              </button>
+              <button type="button" onClick={() => setFormData({ ...formData, allowedModules: [] })}
+                className="text-xs px-3 py-1 rounded-lg border" style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-secondary)" }}>
+                Clear All
+              </button>
+            </div>
+          </div>
+
           {/* Status */}
           <div>
             <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
@@ -553,11 +598,115 @@ function CompanyFormModal({
   );
 }
 
+function TrialAccessModal({
+  company,
+  onClose,
+  onSave,
+}: {
+  company: any;
+  onClose: () => void;
+  onSave: (modules: string[]) => void;
+}) {
+  const [selected, setSelected] = useState<string[]>(
+    company.allowedModules && company.allowedModules.length > 0
+      ? company.allowedModules
+      : ['inventory', 'sales', 'purchase', 'accounts']
+  );
+
+  const toggle = (id: string) =>
+    setSelected(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md rounded-xl border shadow-2xl"
+        style={{ backgroundColor: "#ffffff", borderColor: "var(--sa-border)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "var(--sa-border)" }}>
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Trial Module Access</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{company.name}</p>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100">
+            <X className="h-5 w-5 text-slate-500" />
+          </button>
+        </div>
+
+        {/* Module list */}
+        <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto">
+          <p className="text-xs text-slate-500 mb-3">
+            Choose which modules this company can access during their free trial.
+          </p>
+          {ALL_MODULES.map(mod => (
+            <label
+              key={mod.id}
+              className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition"
+              style={{
+                borderColor: selected.includes(mod.id) ? "#6366f1" : "#e2e8f0",
+                backgroundColor: selected.includes(mod.id) ? "rgba(99,102,241,0.06)" : "#f8fafc",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(mod.id)}
+                onChange={() => toggle(mod.id)}
+                className="h-4 w-4 rounded"
+                style={{ accentColor: "#6366f1" }}
+              />
+              <span className="text-sm font-medium text-slate-800">{mod.name}</span>
+            </label>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="p-5 border-t flex items-center justify-between gap-3" style={{ borderColor: "var(--sa-border)" }}>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSelected(ALL_MODULES.map(m => m.id))}
+              className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-indigo-600 hover:bg-slate-50"
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelected([])}
+              className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"
+            >
+              None
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave(selected)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+              style={{ backgroundColor: "#6366f1" }}
+            >
+              <Save className="h-4 w-4" />
+              Save ({selected.length})
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export function CompanyManagementPage() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const [search, setSearch] = useState("");
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState<any>(null);
+  const [trialAccessCompany, setTrialAccessCompany] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     industry: '',
@@ -593,11 +742,44 @@ export function CompanyManagementPage() {
     return matchesSearch && matchesIndustry && matchesStatus && matchesCountry && matchesType;
   });
 
-  const handleSaveCompany = (_data: CompanyFormData) => {
-    // Here you would call the context method to create/update company
-    // TODO: Implement actual save logic with AppContext
+  const handleSaveCompany = (data: CompanyFormData) => {
+    if (editingCompany) {
+      // Update existing company
+      dispatch({
+        type: 'UPDATE_COMPANY',
+        payload: {
+          id: editingCompany.id,
+          updates: {
+            ...data,
+            allowedModules: data.allowedModules,
+            updatedAt: new Date(),
+          }
+        }
+      });
+    } else {
+      // Create new company with trial start date
+      const now = new Date();
+      const newCompany = {
+        id: `company_${Date.now()}`,
+        ...data,
+        trialStartDate: now,
+        allowedModules: data.allowedModules,
+        createdAt: now,
+        updatedAt: now,
+      };
+      dispatch({ type: 'ADD_COMPANY', payload: newCompany });
+    }
     setShowFormModal(false);
     setEditingCompany(null);
+  };
+
+  const handleSaveTrialAccess = (modules: string[]) => {
+    if (!trialAccessCompany) return;
+    dispatch({
+      type: 'UPDATE_COMPANY',
+      payload: { id: trialAccessCompany.id, updates: { allowedModules: modules, updatedAt: new Date() } }
+    });
+    setTrialAccessCompany(null);
   };
 
   const handleToggleStatus = (companyId: string, currentStatus: 'active' | 'inactive', companyName: string) => {
@@ -804,6 +986,7 @@ export function CompanyManagementPage() {
                 <th className="p-4 text-left text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Contact</th>
                 <th className="p-4 text-left text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Location</th>
                 <th className="p-4 text-left text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Status</th>
+                <th className="p-4 text-left text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Trial Modules</th>
                 <th className="p-4 text-left text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Created</th>
                 <th className="p-4 text-right text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Actions</th>
               </tr>
@@ -811,7 +994,7 @@ export function CompanyManagementPage() {
             <tbody>
               {filteredCompanies.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center" style={{ color: "var(--sa-text-secondary)" }}>
+                  <td colSpan={11} className="p-8 text-center" style={{ color: "var(--sa-text-secondary)" }}>
                     No companies found
                   </td>
                 </tr>
@@ -883,6 +1066,16 @@ export function CompanyManagementPage() {
                         </span>
                       </div>
                     </td>
+                    <td className="p-4">
+                      <div className="text-xs" style={{ color: "var(--sa-text-secondary)" }}>
+                        {company.allowedModules && company.allowedModules.length > 0
+                          ? <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: "rgba(99,102,241,0.1)", color: "#6366f1" }}>
+                              {company.allowedModules.length} modules
+                            </span>
+                          : <span className="text-slate-400">None</span>
+                        }
+                      </div>
+                    </td>
                     <td className="p-4" style={{ color: "var(--sa-text-secondary)" }}>
                       <div className="text-xs">
                         {new Date(company.createdAt).toLocaleDateString()}
@@ -890,6 +1083,13 @@ export function CompanyManagementPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setTrialAccessCompany(company)}
+                          className="p-1.5 rounded-lg hover:bg-[var(--sa-hover)] transition"
+                          title="Set trial module access"
+                        >
+                          <Layers className="h-4 w-4" style={{ color: "#6366f1" }} />
+                        </button>
                         <button 
                           onClick={() => handleToggleStatus(company.id, company.status, company.name)}
                           className="p-1.5 rounded-lg hover:bg-[var(--sa-hover)] transition"
@@ -936,6 +1136,15 @@ export function CompanyManagementPage() {
             setEditingCompany(null);
           }}
           onSave={handleSaveCompany}
+        />
+      )}
+
+      {/* Trial Access Modal */}
+      {trialAccessCompany && (
+        <TrialAccessModal
+          company={trialAccessCompany}
+          onClose={() => setTrialAccessCompany(null)}
+          onSave={handleSaveTrialAccess}
         />
       )}
     </motion.div>

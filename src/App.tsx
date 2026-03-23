@@ -7,6 +7,7 @@ import { SuperAdminThemeProvider } from './app/superadmin-theme';
 import { AdminThemeProvider } from './app/admin-theme';
 import { ModuleProvider } from './context/ModuleContext';
 import { AppProvider } from './context/AppContext';
+import { initTrialStart } from './utils/trialAccess';
 
 // Mock users data
 const mockUsers: Record<'super_admin' | 'admin', User> = {
@@ -20,15 +21,20 @@ const mockUsers: Record<'super_admin' | 'admin', User> = {
     id: '2',
     fullName: 'Branch Admin',
     email: 'admin@erp.com',
-    role: 'admin'
+    role: 'admin',
+    companyId: 'demo-company-1'
   }
 };
 
 function App() {
   const [user, setUser] = useState<User | null>(() => getStoredUser());
 
-  const login = (role: 'super_admin' | 'admin', remember: boolean) => {
+  const login = (role: 'super_admin' | 'admin', remember: boolean, email?: string) => {
     const userToLogin = mockUsers[role];
+    // Init trial start date on first login for admin users
+    if (role === 'admin' && email) {
+      initTrialStart(email);
+    }
     setStoredUser(userToLogin, remember);
     setUser(userToLogin);
   };
