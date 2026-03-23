@@ -107,59 +107,61 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
     }, 600);
   };
 
-  const LoginForm = () => (
-    <form onSubmit={handleSubmit} noValidate>
-      <div className="lp-field">
-        <label htmlFor="lp-email">EMAIL OR USERNAME</label>
-        <div className="lp-iw">
-          <input id="lp-email" type="text" value={email}
-            onChange={e => setEmail(e.target.value)}
-            className={errors.email ? 'lp-err-input' : ''}
-            placeholder="Enter your email" autoComplete="email" />
-          <span className="lp-ico" style={{ cursor: 'default' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-          </span>
-        </div>
-        {errors.email && <p className="lp-err">{errors.email}</p>}
-      </div>
-      <div className="lp-field">
-        <label htmlFor="lp-password">PASSWORD</label>
-        <div className="lp-iw">
-          <input id="lp-password" type={showPassword ? 'text' : 'password'} value={password}
-            onChange={e => setPassword(e.target.value)}
-            className={errors.password ? 'lp-err-input' : ''}
-            placeholder="Enter your password" autoComplete="current-password" />
-          <button type="button" className="lp-ico" onClick={() => setShowPassword(p => !p)}>
-            {showPassword ? (
+  const LoginForm = React.useMemo(() => {
+    return (
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="lp-field">
+          <label htmlFor="lp-email">EMAIL OR USERNAME</label>
+          <div className="lp-iw">
+            <input id="lp-email" type="text" value={email}
+              onChange={e => setEmail(e.target.value)}
+              className={errors.email ? 'lp-err-input' : ''}
+              placeholder="Enter your email" autoComplete="email" />
+            <span className="lp-ico" style={{ cursor: 'default' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
-                <line x1="1" y1="1" x2="23" y2="23" />
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
               </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            )}
-          </button>
+            </span>
+          </div>
+          {errors.email && <p className="lp-err">{errors.email}</p>}
         </div>
-        {errors.password && <p className="lp-err">{errors.password}</p>}
-      </div>
-      <div className="lp-row">
-        <label className="lp-rem">
-          <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
-          <span>Remember Me</span>
-        </label>
-        <button type="button" className="lp-fgt">Forgot Password?</button>
-      </div>
-      <button type="submit" className="lp-submit" disabled={loading}>
-        {loading ? <><div className="lp-spinner" />Signing in...</> : 'Login'}
-      </button>
-    </form>
-  );
+        <div className="lp-field">
+          <label htmlFor="lp-password">PASSWORD</label>
+          <div className="lp-iw">
+            <input id="lp-password" type={showPassword ? 'text' : 'password'} value={password}
+              onChange={e => setPassword(e.target.value)}
+              className={errors.password ? 'lp-err-input' : ''}
+              placeholder="Enter your password" autoComplete="current-password" />
+            <button type="button" className="lp-ico" onClick={() => setShowPassword(p => !p)} onMouseDown={(e) => e.preventDefault()} tabIndex={-1}>
+              {showPassword ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </div>
+          {errors.password && <p className="lp-err">{errors.password}</p>}
+        </div>
+        <div className="lp-row">
+          <label className="lp-rem">
+            <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
+            <span>Remember Me</span>
+          </label>
+          <button type="button" className="lp-fgt">Forgot Password?</button>
+        </div>
+        <button type="submit" className="lp-submit" disabled={loading}>
+          {loading ? <><div className="lp-spinner" />Signing in...</> : 'Login'}
+        </button>
+      </form>
+    );
+  }, [email, password, showPassword, errors, rememberMe, loading]);
 
   return (
     <>
@@ -209,14 +211,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
 
         .lp-lc { position:relative;z-index:2; }
         .lp-brand { display:flex;align-items:center;gap:14px;margin-bottom:48px; }
-        .lp-brand-name { font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:0.5px;line-height:1.15; }
-        .lp-brand-sub { font-size:13px;color:rgba(155,200,255,0.65);font-weight:300; }
-        .lp-title { font-family:'Rajdhani',sans-serif;font-size:46px;font-weight:700;color:#fff;line-height:1.15;margin-bottom:14px;letter-spacing:0.3px; }
-        .lp-subtitle { font-size:15px;color:rgba(155,200,255,0.7);line-height:1.65;font-weight:300;margin-bottom:44px; }
+        .lp-brand-name { font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:rgba(255,255,255,0.95);letter-spacing:0.5px;line-height:1.15; }
+        .lp-brand-sub { font-size:13px;color:rgba(200,220,255,0.75);font-weight:300; }
+        .lp-title { font-family:'Rajdhani',sans-serif;font-size:46px;font-weight:700;color:rgba(255,255,255,0.92);line-height:1.15;margin-bottom:14px;letter-spacing:0.3px; }
+        .lp-subtitle { font-size:15px;color:rgba(255,255,255,0.78);line-height:1.65;font-weight:300;margin-bottom:44px; }
         .lp-stats { display:flex;gap:48px; }
-        .lp-stat-val { font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:#fff; }
-        .lp-stat-lbl { font-size:11px;color:rgba(155,200,255,0.6);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;margin-top:2px; }
-        .lp-left-foot { position:relative;z-index:2;font-size:12px;color:rgba(88,128,200,0.42);line-height:1.7; }
+        .lp-stat-val { font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:rgba(255,255,255,0.92); }
+        .lp-stat-lbl { font-size:11px;color:rgba(255,255,255,0.72);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;margin-top:2px; }
+        .lp-left-foot { position:relative;z-index:2;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.7; }
 
         @media (max-width: 900px) {
           .lp-left-foot { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 24px; text-align: center; }
@@ -229,7 +231,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
         .lp-right {
           flex: 0 0 45%; height: 100vh; overflow: hidden;
           position: relative; display: flex; align-items: center;
-          justify-content: center; padding: 40px 32px; background: #f8fafc;
+          justify-content: center; padding: 60px 32px; background: #f8fafc;
         }
         .lp-right::before { content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;background:radial-gradient(circle,rgba(185,215,255,0.55) 0%,transparent 70%);pointer-events:none; }
         .lp-right::after { content:'';position:absolute;bottom:-20px;left:0;width:180px;height:180px;background:radial-gradient(circle,rgba(165,205,255,0.38) 0%,transparent 70%);pointer-events:none; }
@@ -238,41 +240,42 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
         .lp-card {
           position:relative;z-index:1;background:rgba(255,255,255,0.92);
           backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-          border-radius:22px;padding:44px 38px 34px;width:100%;max-width:400px;
+          border-radius:22px;padding:36px 38px 28px;width:100%;max-width:400px;
           border:1px solid rgba(255,255,255,0.96);
           box-shadow:0 24px 64px rgba(8,28,85,0.11),0 6px 18px rgba(8,28,85,0.07),inset 0 1px 0 rgba(255,255,255,0.95);
         }
-        .lp-card-hd { text-align:center;margin-bottom:30px; }
-        .lp-card-hd h2 { font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:#0f172a;margin-bottom:6px;letter-spacing:0.3px; }
-        .lp-card-hd p { font-size:13px;color:#64748b; }
+        .lp-card-hd { text-align:center;margin-bottom:24px; }
+        .lp-card-hd h2 { font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:#475569;margin-bottom:6px;letter-spacing:0.3px; }
+        .lp-card-hd p { font-size:13px;color:#94a3b8; }
 
         /* ── Fields ── */
-        .lp-field { margin-bottom:20px; }
-        .lp-field label { display:block;font-size:11px;font-weight:600;color:#475569;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px; }
+        .lp-field { margin-bottom:16px; }
+        .lp-field label { display:block;font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px; }
         .lp-iw { position:relative; }
-        .lp-iw input { width:100%;padding:13px 42px 13px 16px;border:1.5px solid #dce8f2;border-radius:10px;font-size:13.5px;font-family:'Outfit',sans-serif;color:#1e293b;background:rgba(246,250,255,0.9);outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
-        .lp-iw input::placeholder { color:#a8b8cc; }
+        .lp-iw input { width:100%;padding:12px 42px 12px 16px;border:1.5px solid #dce8f2;border-radius:10px;font-size:13.5px;font-family:'Outfit',sans-serif;color:#475569;background:rgba(246,250,255,0.9);outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
+        .lp-iw input::placeholder { color:#cbd5e1; }
         .lp-iw input:focus { border-color:#002147;background:#fff;box-shadow:0 0 0 3px rgba(0,33,71,0.05); }
         .lp-iw input.lp-err-input { border-color:#fca5a5;background:rgba(255,245,245,0.9); }
-        .lp-ico { position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#9bafc4;display:flex;align-items:center;background:none;border:none;cursor:pointer;padding:0; }
+        .lp-ico { position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#cbd5e1;display:flex;align-items:center;background:none;border:none;cursor:pointer;padding:0; }
         .lp-ico svg { width:16px;height:16px; }
         .lp-err { font-size:12px;color:#ef4444;margin-top:5px; }
-        .lp-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:22px; }
+        .lp-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:18px; }
         .lp-rem { display:flex;align-items:center;gap:8px;cursor:pointer; }
         .lp-rem input[type="checkbox"] { width:15px;height:15px;accent-color:#3b82f6;cursor:pointer; }
-        .lp-rem span { font-size:13px;color:#475569; }
-        .lp-fgt { font-size:13px;color:#002147;font-weight:600;cursor:pointer;background:none;border:none;font-family:'Outfit',sans-serif;padding:0; }
-        .lp-fgt:hover { text-decoration:underline; }        .lp-submit { width:100%;padding:14px;background:#002147;color:#fff;border:none;border-radius:10px;font-size:15.5px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;box-shadow:0 5px 18px rgba(0,33,71,0.25);display:flex;align-items:center;justify-content:center;gap:8px; }
+        .lp-rem span { font-size:13px;color:#94a3b8; }
+        .lp-fgt { font-size:13px;color:#475569;font-weight:600;cursor:pointer;background:none;border:none;font-family:'Outfit',sans-serif;padding:0; }
+        .lp-fgt:hover { text-decoration:underline; }
+        .lp-submit { width:100%;padding:13px;background:#002147;color:#fff;border:none;border-radius:10px;font-size:15.5px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;box-shadow:0 5px 18px rgba(0,33,71,0.25);display:flex;align-items:center;justify-content:center;gap:8px; }
         .lp-submit:hover:not(:disabled) { background:linear-gradient(135deg,#1e40af 0%,#1d4ed8 55%,#2563eb 100%);box-shadow:0 7px 24px rgba(29,78,216,0.55);transform:translateY(-1px); }
         .lp-submit:disabled { opacity:0.65;cursor:not-allowed; }
         @keyframes lp-spin { to { transform:rotate(360deg); } }
         .lp-spinner { width:17px;height:17px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:lp-spin 0.7s linear infinite; }
-        .lp-hr { height:1px;background:rgba(200,215,230,0.5);margin:18px 0; }
+        .lp-hr { height:1px;background:rgba(200,215,230,0.5);margin:14px 0; }
         .lp-foot { text-align:center; }
         .lp-foot-help { font-size:12px;color:#94a3b8;margin-bottom:6px; }
-        .lp-foot-copy { font-size:11.5px;color:#aab8cc;line-height:1.7; }
-        .lp-foot-copy strong { color:#5a7096;font-weight:600; }
-        #google-btn-desktop, #google-btn-modal { display:flex !important;justify-content:center !important;width:100% !important;margin-bottom:16px; }
+        .lp-foot-copy { font-size:11.5px;color:#94a3b8;line-height:1.7; }
+        .lp-foot-copy strong { color:#64748b;font-weight:600; }
+        #google-btn-desktop, #google-btn-modal { display:flex !important;justify-content:center !important;width:100% !important;margin-bottom:12px; }
 
         /* ── Desktop: hide CTA buttons on left panel ── */
         .lp-cta-buttons { display: none; }
@@ -460,7 +463,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
               <h2>Welcome Back</h2>
               <p>Sign in to continue to ERP</p>
             </div>
-            <LoginForm />
+            {LoginForm}
             <div className="lp-hr" />
             <div id="google-btn-desktop" style={{display:'flex',justifyContent:'center',width:'100%',minHeight:'44px'}} />
             <div className="lp-foot">
@@ -485,7 +488,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
               <h2>Welcome Back</h2>
               <p>Sign in to continue to ERP</p>
             </div>
-            <LoginForm />
+            {LoginForm}
             <div className="lp-hr" />
             <div id="google-btn-modal" style={{display:'flex',justifyContent:'center',width:'100%',minHeight:'44px'}} />
             <div className="lp-foot">

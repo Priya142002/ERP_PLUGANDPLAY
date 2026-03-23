@@ -15,39 +15,44 @@ const pageMotion = {
 const PLANS = [
   {
     id: "basic",
-    name: "Basic",
+    name: "Starter",
     icon: Zap,
-    price: 49,
-    description: "Perfect for small businesses getting started",
+    price: 2499,
+    description: "Perfect for small businesses getting started with ERP",
     color: "from-blue-500 to-blue-600",
-    modules: PLAN_FEATURES.basic.moduleList,
+    modules: ['Inventory', 'Purchase', 'Sales', 'Accounts'],
     features: [
-      "Up to 50 users",
-      `${PLAN_FEATURES.basic.modules} core ERP modules`,
-      "10GB storage",
-      "Email support",
-      "Basic reporting",
-      "Mobile app access"
+      "Up to 10 users",
+      "4 core ERP modules",
+      "25GB cloud storage",
+      "Email & chat support",
+      "Basic reports & analytics",
+      "Mobile app access",
+      "Data backup (weekly)",
+      "Standard security"
     ],
     popular: false
   },
   {
     id: "pro",
-    name: "Pro",
+    name: "Professional",
     icon: Crown,
-    price: 149,
-    description: "For growing businesses with advanced needs",
+    price: 6499,
+    description: "For growing businesses with advanced operational needs",
     color: "from-purple-500 to-pink-500",
-    modules: PLAN_FEATURES.pro.moduleList,
+    modules: ['Inventory', 'Purchase', 'Sales', 'Accounts', 'CRM', 'HRM', 'Projects', 'Helpdesk', 'Assets', 'Logistics', 'Production', 'Billing'],
     features: [
-      "Up to 200 users",
-      `All ${PLAN_FEATURES.pro.modules} ERP modules`,
-      "100GB storage",
-      "Priority support",
-      "Advanced analytics",
-      "API access",
+      "Up to 50 users",
+      "All 12 ERP modules",
+      "100GB cloud storage",
+      "Priority support (24/5)",
+      "Advanced analytics & custom reports",
+      "Mobile app access",
+      "API access & integrations",
+      "Data backup (daily)",
+      "Multi-branch support",
       "Custom workflows",
-      "Multi-location support"
+      "Role-based permissions"
     ],
     popular: true
   },
@@ -55,20 +60,26 @@ const PLANS = [
     id: "enterprise",
     name: "Enterprise",
     icon: Building2,
-    price: 499,
-    description: "For large organizations requiring full control",
+    price: 16499,
+    description: "For large organizations requiring full control and customization",
     color: "from-orange-500 to-red-500",
-    modules: PLAN_FEATURES.enterprise.moduleList,
+    modules: ['All 12 modules', 'Custom modules'],
     features: [
       "Unlimited users",
-      `All ${PLAN_FEATURES.enterprise.modules} ERP modules`,
-      "Unlimited storage",
+      "All 12 modules + custom modules",
+      "Unlimited cloud storage",
       "24/7 dedicated support",
-      "Custom reports",
+      "Enterprise analytics & BI tools",
+      "Mobile app access",
+      "Full API access",
+      "Real-time data backup",
+      "Multi-company management",
       "White-label options",
+      "Custom integrations",
       "Dedicated account manager",
-      "SLA guarantees",
-      "Advanced security"
+      "SLA guarantee (99.9% uptime)",
+      "Advanced security & compliance",
+      "On-premise deployment option"
     ],
     popular: false
   }
@@ -141,7 +152,7 @@ export function SubscriptionPage() {
                 </span>
               </div>
               <p className="text-sm text-slate-600 mt-1">
-                Next billing: April 30, 2026 • $149/month • {PLAN_FEATURES.pro.modules} modules enabled
+                Next billing: April 30, 2026 • ₹{(6499).toLocaleString('en-IN')}/month • 12 modules enabled
               </p>
             </div>
           </div>
@@ -191,7 +202,7 @@ export function SubscriptionPage() {
                 </div>
                 <p className="text-white/90 text-sm mb-4">{plan.description}</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">${price}</span>
+                  <span className="text-4xl font-bold">₹{price.toLocaleString('en-IN')}</span>
                   <span className="text-white/80">/{billingCycle === "monthly" ? "month" : "year"}</span>
                 </div>
               </div>
@@ -265,13 +276,17 @@ export function SubscriptionPage() {
             </thead>
             <tbody>
               {[
-                { feature: "Users", basic: "50", pro: "200", enterprise: "Unlimited" },
-                { feature: "Storage", basic: "10GB", pro: "100GB", enterprise: "Unlimited" },
-                { feature: "ERP Modules", basic: "Core (4)", pro: "All (12)", enterprise: "All (12)" },
-                { feature: "Support", basic: "Email", pro: "Priority", enterprise: "24/7 Dedicated" },
-                { feature: "API Access", basic: "—", pro: "✓", enterprise: "✓" },
+                { feature: "Users", basic: "10", pro: "50", enterprise: "Unlimited" },
+                { feature: "Storage", basic: "25GB", pro: "100GB", enterprise: "Unlimited" },
+                { feature: "ERP Modules", basic: "4 Core", pro: "All 12", enterprise: "All 12 + Custom" },
+                { feature: "Support", basic: "Email & Chat", pro: "Priority (24/5)", enterprise: "24/7 Dedicated" },
+                { feature: "Data Backup", basic: "Weekly", pro: "Daily", enterprise: "Real-time" },
+                { feature: "API Access", basic: "—", pro: "✓", enterprise: "Full Access" },
+                { feature: "Multi-branch", basic: "—", pro: "✓", enterprise: "✓" },
+                { feature: "Custom Workflows", basic: "—", pro: "✓", enterprise: "✓" },
                 { feature: "White Label", basic: "—", pro: "—", enterprise: "✓" },
-                { feature: "SLA", basic: "—", pro: "—", enterprise: "✓" }
+                { feature: "SLA Guarantee", basic: "—", pro: "—", enterprise: "99.9%" },
+                { feature: "On-premise", basic: "—", pro: "—", enterprise: "✓" }
               ].map((row, i) => (
                 <tr key={i} className="border-b" style={{ borderColor: "var(--border)" }}>
                   <td className="p-4 text-sm font-medium" style={{ color: "var(--text-primary)" }}>{row.feature}</td>
