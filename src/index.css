@@ -1078,3 +1078,64 @@ aside svg {
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
+
+/* ========================================
+   DESKTOP FONT SIZE REDUCTION - 80% of default
+   Applied only on desktop screens (1024px and above)
+   ======================================== */
+@media (min-width: 1024px) {
+  html {
+    font-size: 80%;
+  }
+  
+  body {
+    font-size: 0.8rem;
+  }
+  
+  /* Adjust all text elements proportionally */
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.4rem; }
+  h3 { font-size: 1.2rem; }
+  h4 { font-size: 1rem; }
+  h5 { font-size: 0.9rem; }
+  h6 { font-size: 0.8rem; }
+  
+  p, span, div, label, input, select, textarea, button {
+    font-size: inherit;
+  }
+  
+  /* Table font sizes */
+  .data-table th,
+  .data-table thead th,
+  table thead th {
+    font-size: 0.75rem !important;
+  }
+  
+  .data-table td,
+  .data-table tbody td,
+  table tbody td {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Button font sizes */
+  .btn-primary,
+  button[class*="primary"],
+  button[class*="bg-blue"],
+  button[class*="bg-indigo"] {
+    font-size: 0.7rem !important;
+  }
+  
+  /* Form elements */
+  .form-input {
+    font-size: 0.7rem;
+  }
+  
+  .form-label {
+    font-size: 0.7rem;
+  }
+  
+  /* Sidebar navigation */
+  .sidebar-nav-item {
+    font-size: 0.7rem;
+  }
+}
