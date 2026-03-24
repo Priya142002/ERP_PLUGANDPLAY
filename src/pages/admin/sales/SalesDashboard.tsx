@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   TrendingUp, 
@@ -9,10 +9,15 @@ import {
   Clock,
   Briefcase,
   ChevronRight,
-  Target
+  Target,
+  Download
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
+import ReportModal from "../../../components/common/ReportModal";
+import { generateSalesMetaReport, generateSalesExcelData } from "../../../utils/salesReportData";
+import { exportToExcel } from "../../../utils/reportGenerator";
+import { useNotifications } from "../../../context/AppContext";
 
 const SALES_STATS = [
   {
@@ -62,6 +67,45 @@ const RECENT_SALES = [
 ];
 
 export const SalesDashboard: React.FC = () => {
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const { showNotification } = useNotifications();
+
+  // Get company name - use a default since CompanyProvider might not be available
+  const companyName = 'Your Company';
+
+  const handleGenerateMetaReport = () => {
+    setIsReportModalOpen(true);
+    showNotification({
+      type: 'success',
+      title: 'Report Generated',
+      message: 'Sales meta report has been generated successfully.',
+      duration: 3000
+    });
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const excelData = generateSalesExcelData();
+      exportToExcel(excelData, 'Sales_Data');
+      
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Sales data has been exported to Excel successfully.',
+        duration: 3000
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export sales data to Excel.',
+        duration: 5000
+      });
+    }
+  };
+
+  const reportData = generateSalesMetaReport(companyName);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -78,11 +122,31 @@ export const SalesDashboard: React.FC = () => {
             <Clock size={14} className="text-blue-600" />
             <span className="text-[10px] md:text-xs font-bold text-slate-600">Sync: Just Now</span>
           </div>
-          <Button className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all">
-            Export Financials
+          <Button 
+            onClick={handleExportExcel}
+            className="bg-emerald-600 hover:bg-emerald-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-emerald-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            style={{ color: '#ffffff' }}
+          >
+            <Download size={14} style={{ color: '#ffffff' }} />
+            <span className="hidden md:inline" style={{ color: '#ffffff' }}>Export</span>
+          </Button>
+          <Button 
+            onClick={handleGenerateMetaReport}
+            className="bg-[#002147] hover:bg-[#003366] px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            style={{ color: '#ffffff' }}
+          >
+            <FileText size={14} style={{ color: '#ffffff' }} />
+            <span className="hidden md:inline" style={{ color: '#ffffff' }}>Report</span>
           </Button>
         </div>
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        reportData={reportData}
+      />
 
 
       {/* Stats Grid */}

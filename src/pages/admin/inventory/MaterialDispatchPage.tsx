@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { useNotifications } from "../../../context/AppContext";
+import { exportToExcel } from "../../../utils/reportGenerator";
 
 /* ─────────────────────────────────────────
    Types
@@ -70,6 +72,14 @@ const EditDispatchModal: React.FC<EditModalProps> = ({ dispatch, customers, onCl
   const [form, setForm] = useState<Dispatch>({ ...dispatch, items: dispatch.items.map(i => ({ ...i })) });
   const set = (k: keyof Dispatch, v: any) => setForm(p => ({ ...p, [k]: v }));
 
+  // Prevent body scroll when modal is open
+  React.useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   const addItem = () => setForm(p => ({ ...p, items: [...p.items, { id: Date.now().toString(), product: '', warehouse: '', stock: '—', qty: 0 }] }));
   const removeItem = (id: string) => setForm(p => ({ ...p, items: p.items.filter(i => i.id !== id) }));
   const updateItem = (id: string, k: keyof DispatchItem, v: any) =>
@@ -84,15 +94,15 @@ const EditDispatchModal: React.FC<EditModalProps> = ({ dispatch, customers, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 bg-black/45 overflow-y-auto"
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: -16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mb-8 relative"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl relative flex flex-col max-h-[90vh]"
         style={{ backgroundColor: '#ffffff', opacity: 1 }}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white z-10 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><Truck size={16} /></div>
             <div>
@@ -103,7 +113,7 @@ const EditDispatchModal: React.FC<EditModalProps> = ({ dispatch, customers, onCl
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition"><X size={18} /></button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* ── Left: Main Details ── */}
@@ -259,7 +269,7 @@ const EditDispatchModal: React.FC<EditModalProps> = ({ dispatch, customers, onCl
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-slate-100 sticky bottom-0 bg-white rounded-b-2xl">
+        <div className="flex gap-3 px-6 py-4 border-t border-slate-100 bg-white rounded-b-2xl flex-shrink-0">
           <button onClick={onClose}
             className="flex-1 h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-slate-50 transition">
             Cancel
@@ -292,12 +302,12 @@ const DeleteModal: React.FC<{ dispatchNo: string; onClose: () => void; onConfirm
       </p>
       <div className="flex gap-3">
         <button onClick={onClose} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
+          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
           className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
           Cancel
         </button>
         <button onClick={() => { onConfirm(); onClose(); }} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
+          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
           className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] transition flex items-center justify-center">
           Delete
         </button>
@@ -311,6 +321,7 @@ const DeleteModal: React.FC<{ dispatchNo: string; onClose: () => void; onConfirm
 ───────────────────────────────────────── */
 export const MaterialDispatchPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showNotification } = useNotifications();
   const [dispatches, setDispatches]         = useState<Dispatch[]>(MOCK_DISPATCHES);
   const [editDispatch, setEditDispatch]     = useState<Dispatch | null>(null);
   const [deleteDispatch, setDeleteDispatch] = useState<Dispatch | null>(null);
@@ -320,6 +331,42 @@ export const MaterialDispatchPage: React.FC = () => {
 
   const handleSave   = (updated: Dispatch) => setDispatches(prev => prev.map(d => d.id === updated.id ? updated : d));
   const handleDelete = (id: string)        => setDispatches(prev => prev.filter(d => d.id !== id));
+
+  const handleExportExcel = () => {
+    try {
+      const excelData = [
+        {
+          sheetName: 'Material Dispatch',
+          headers: ['Dispatch No', 'Date', 'Customer', 'Source Warehouse', 'Carrier', 'Tracking', 'Items Qty', 'Status'],
+          data: displayed.map(d => [
+            d.dispatchNo,
+            d.date,
+            d.customer,
+            d.sourceWH,
+            d.carrier,
+            d.tracking,
+            d.itemCount,
+            d.status
+          ])
+        }
+      ];
+      exportToExcel(excelData, 'Material_Dispatch');
+      
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Material dispatch data has been exported to Excel successfully.',
+        duration: 3000
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export material dispatch data to Excel.',
+        duration: 5000
+      });
+    }
+  };
 
   const customerOptions = useMemo(() => Array.from(new Set(dispatches.map(d => d.customer))), [dispatches]);
 
@@ -381,7 +428,9 @@ export const MaterialDispatchPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Material Dispatch</h1>
           <div className="flex flex-row items-center gap-2 md:gap-3">
-            <Button variant="secondary"
+            <Button 
+              onClick={handleExportExcel}
+              variant="secondary"
               className="rounded-xl px-4 md:px-6 h-9 md:h-10 text-[10px] md:text-xs font-bold transition-all border-slate-200"
               leftIcon={<Download size={14} />}>Export</Button>
             <Button variant="primary"

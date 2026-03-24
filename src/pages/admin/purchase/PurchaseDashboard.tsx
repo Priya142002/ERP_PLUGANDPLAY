@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -10,9 +10,14 @@ import {
   TrendingUp,
   Package,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Download
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
+import ReportModal from "../../../components/common/ReportModal";
+import { generatePurchaseMetaReport, generatePurchaseExcelData } from "../../../utils/purchaseReportData";
+import { exportToExcel } from "../../../utils/reportGenerator";
+import { useNotifications } from "../../../context/AppContext";
 
 const STAT_CARDS = [
   {
@@ -71,6 +76,45 @@ const RECENT_PURCHASES = [
 
 export const PurchaseDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const { showNotification } = useNotifications();
+
+  // Get company name - use a default since CompanyProvider might not be available
+  const companyName = 'Your Company';
+
+  const handleGenerateMetaReport = () => {
+    setIsReportModalOpen(true);
+    showNotification({
+      type: 'success',
+      title: 'Report Generated',
+      message: 'Purchase meta report has been generated successfully.',
+      duration: 3000
+    });
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const excelData = generatePurchaseExcelData();
+      exportToExcel(excelData, 'Purchase_Data');
+      
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Purchase data has been exported to Excel successfully.',
+        duration: 3000
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export purchase data to Excel.',
+        duration: 5000
+      });
+    }
+  };
+
+  const reportData = generatePurchaseMetaReport(companyName);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -88,13 +132,38 @@ export const PurchaseDashboard: React.FC = () => {
             <span className="text-[10px] md:text-xs font-bold text-slate-600">Ops Sync: Live</span>
           </div>
           <Button 
-            className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
-            onClick={() => navigate('/admin/purchase/invoices/create')}
+            onClick={handleExportExcel}
+            className="bg-emerald-600 hover:bg-emerald-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-emerald-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            style={{ color: '#ffffff' }}
           >
-            New Purchase Invoice
+            <Download size={14} style={{ color: '#ffffff' }} />
+            <span className="hidden md:inline" style={{ color: '#ffffff' }}>Export</span>
+          </Button>
+          <Button 
+            onClick={handleGenerateMetaReport}
+            className="bg-violet-600 hover:bg-violet-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-violet-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            style={{ color: '#ffffff' }}
+          >
+            <FileText size={14} style={{ color: '#ffffff' }} />
+            <span className="hidden md:inline" style={{ color: '#ffffff' }}>Report</span>
+          </Button>
+          <Button 
+            className="bg-[#002147] hover:bg-[#003366] px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
+            onClick={() => navigate('/admin/purchase/invoices/create')}
+            style={{ color: '#ffffff' }}
+          >
+            <span className="hidden md:inline" style={{ color: '#ffffff' }}>New Purchase Invoice</span>
+            <span className="md:hidden" style={{ color: '#ffffff' }}>New Invoice</span>
           </Button>
         </div>
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        reportData={reportData}
+      />
 
 
       {/* Stats Grid */}

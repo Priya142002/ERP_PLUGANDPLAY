@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Package, 
@@ -9,10 +9,15 @@ import {
   ArrowDownRight,
   Activity,
   Calendar,
-  ChevronRight
+  FileText,
+  Download
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { TrendingUp } from "lucide-react";
+import ReportModal from "../../../components/common/ReportModal";
+import { generateInventoryMetaReport, generateInventoryExcelData } from "../../../utils/inventoryReportData";
+import { exportToExcel } from "../../../utils/reportGenerator";
+import { useNotifications } from "../../../context/AppContext";
 
 const STAT_CARDS = [
   {
@@ -77,6 +82,45 @@ const RECENT_ACTIVITIES = [
 ];
 
 export const InventoryDashboard: React.FC = () => {
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const { showNotification } = useNotifications();
+
+  // Get company name - use a default since CompanyProvider might not be available
+  const companyName = 'Your Company';
+
+  const handleGenerateMetaReport = () => {
+    setIsReportModalOpen(true);
+    showNotification({
+      type: 'success',
+      title: 'Report Generated',
+      message: 'Inventory meta report has been generated successfully.',
+      duration: 3000
+    });
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const excelData = generateInventoryExcelData();
+      exportToExcel(excelData, 'Inventory_Data');
+      
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Inventory data has been exported to Excel successfully.',
+        duration: 3000
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export inventory data to Excel.',
+        duration: 5000
+      });
+    }
+  };
+
+  const reportData = generateInventoryMetaReport(companyName);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -93,11 +137,33 @@ export const InventoryDashboard: React.FC = () => {
             <Calendar size={14} className="text-blue-600" />
             <span className="text-[10px] md:text-xs font-bold text-slate-600">Cycle: Mar 2026</span>
           </div>
-          <Button className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all">
-            Generate Meta-Report
+          <Button 
+            onClick={handleExportExcel}
+            className="bg-emerald-600 hover:bg-emerald-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-emerald-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            style={{ color: '#ffffff' }}
+          >
+            <Download size={14} style={{ color: '#ffffff' }} />
+            <span className="hidden md:inline" style={{ color: '#ffffff' }}>Export Excel</span>
+            <span className="md:hidden" style={{ color: '#ffffff' }}>Excel</span>
+          </Button>
+          <Button 
+            onClick={handleGenerateMetaReport}
+            className="bg-[#002147] hover:bg-[#003366] px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            style={{ color: '#ffffff' }}
+          >
+            <FileText size={14} style={{ color: '#ffffff' }} />
+            <span className="hidden md:inline" style={{ color: '#ffffff' }}>Generate Meta-Report</span>
+            <span className="md:hidden" style={{ color: '#ffffff' }}>Report</span>
           </Button>
         </div>
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        reportData={reportData}
+      />
 
 
       {/* Stats Grid */}
@@ -139,7 +205,6 @@ export const InventoryDashboard: React.FC = () => {
               </div>
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Performance Leaders</h3>
             </div>
-            <button className="text-[9px] font-bold text-[#334e68] uppercase tracking-widest hover:underline px-3 py-1.5 bg-indigo-50/50 rounded-lg transition-colors">View Market Data</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -187,12 +252,24 @@ export const InventoryDashboard: React.FC = () => {
               </div>
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Operation Logs</h3>
             </div>
-            <button className="text-[9px] font-bold text-amber-600 uppercase tracking-widest hover:underline px-3 py-1.5 bg-amber-50/50 rounded-lg transition-colors">Real-time Stream</button>
+            <button 
+              onClick={() => {
+                showNotification({
+                  type: 'info',
+                  title: 'Operation Logs',
+                  message: 'Viewing real-time inventory operations. Live streaming feature coming soon!',
+                  duration: 3000
+                });
+              }}
+              className="text-[9px] font-bold text-amber-700 uppercase tracking-widest px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg transition-all hover:bg-amber-100 hover:border-amber-300 hover:shadow-sm"
+            >
+              Real-time Stream
+            </button>
           </div>
           <div className="p-4 md:p-6 space-y-3 md:space-y-4 flex-1">
             {RECENT_ACTIVITIES.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 md:p-4 rounded-2xl bg-slate-50/50 border border-slate-100/50 hover:bg-white hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all group relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-500" />
+              <div key={activity.id} className="flex items-center justify-between p-3 md:p-4 rounded-2xl bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10 transition-all group relative overflow-hidden shadow-sm">
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#002147] group-hover:w-2 transition-all" />
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className={`h-9 w-9 md:h-11 md:w-11 rounded-xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-110 ${
                     activity.type === 'positive' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
@@ -224,11 +301,6 @@ export const InventoryDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-          <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-center">
-            <button className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] hover:text-[#334e68] transition-colors group">
-              View Detailed Operations <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
           </div>
         </div>
       </div>

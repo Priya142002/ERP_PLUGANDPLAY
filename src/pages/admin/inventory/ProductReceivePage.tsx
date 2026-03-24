@@ -5,6 +5,8 @@ import { Plus, Download, Edit, Trash2, Calendar, Building2, X, Save, Package, Al
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { useNotifications } from "../../../context/AppContext";
+import { exportToExcel } from "../../../utils/reportGenerator";
 
 // Mock data for Product Receive
 const MOCK_RECEIVES = [
@@ -269,13 +271,13 @@ const DeleteModal: React.FC<{ receiveNo: string; onClose: () => void; onConfirm:
       </p>
       <div className="flex gap-3">
         <button onClick={onClose} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
-          className="flex-1 border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition flex items-center justify-center">
+          style={{ minHeight: '36px', height: '36px', borderRadius: '12px' }}
+          className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
           Cancel
         </button>
         <button onClick={() => { onConfirm(); onClose(); }} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
-          className="flex-1 bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition flex items-center justify-center">
+          style={{ minHeight: '36px', height: '36px', borderRadius: '12px' }}
+          className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] transition flex items-center justify-center">
           Delete
         </button>
       </div>
@@ -285,6 +287,7 @@ const DeleteModal: React.FC<{ receiveNo: string; onClose: () => void; onConfirm:
 
 export const ProductReceivePage: React.FC = () => {
   const navigate = useNavigate();
+  const { showNotification } = useNotifications();
   const [receives, setReceives] = useState<Receive[]>(MOCK_RECEIVES);
   const [editReceive, setEditReceive] = useState<Receive | null>(null);
   const [deleteReceive, setDeleteReceive] = useState<Receive | null>(null);
@@ -293,6 +296,43 @@ export const ProductReceivePage: React.FC = () => {
 
   const handleSave = (updated: Receive) => setReceives(prev => prev.map(r => r.id === updated.id ? updated : r));
   const handleDelete = (id: string) => setReceives(prev => prev.filter(r => r.id !== id));
+
+  const handleExportExcel = () => {
+    try {
+      const exportData = displayed.map(receive => [
+        receive.receiveNo,
+        receive.date,
+        receive.source,
+        receive.warehouse,
+        receive.items,
+        receive.status
+      ]);
+
+      exportToExcel(
+        [
+          {
+            sheetName: 'Product Receiving',
+            headers: ['Receive No', 'Date', 'Source', 'Warehouse', 'Qty Received', 'Status'],
+            data: exportData
+          }
+        ],
+        'Product_Receiving_Mar_2026'
+      );
+
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Product receiving data exported successfully'
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export Excel file'
+      });
+      console.error('Export error:', error);
+    }
+  };
 
   const statusOptions = useMemo(() => Array.from(new Set(receives.map(r => r.status))), [receives]);
 
@@ -373,6 +413,7 @@ export const ProductReceivePage: React.FC = () => {
             variant="secondary" 
             className="rounded-xl px-4 md:px-6 h-9 md:h-10 text-[10px] md:text-xs font-bold transition-all border-slate-200"
             leftIcon={<Download size={14} />}
+            onClick={handleExportExcel}
           >
             Export
           </Button>

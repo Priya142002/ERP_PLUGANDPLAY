@@ -5,6 +5,8 @@ import { Plus, Calendar, MapPin, Download, Edit, Trash2, X, Save, Package, Alert
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { useNotifications } from "../../../context/AppContext";
+import { exportToExcel } from "../../../utils/reportGenerator";
 
 // Mock data for stock transfers
 const MOCK_TRANSFERS = [
@@ -279,13 +281,13 @@ const DeleteModal: React.FC<{ referenceNo: string; onClose: () => void; onConfir
       </p>
       <div className="flex gap-3">
         <button onClick={onClose} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
-          className="flex-1 border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition flex items-center justify-center">
+          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
+          className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
           Cancel
         </button>
         <button onClick={() => { onConfirm(); onClose(); }} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
-          className="flex-1 bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition flex items-center justify-center">
+          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
+          className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] transition flex items-center justify-center">
           Delete
         </button>
       </div>
@@ -295,6 +297,7 @@ const DeleteModal: React.FC<{ referenceNo: string; onClose: () => void; onConfir
 
 export const StockTransferPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showNotification } = useNotifications();
   const [transfers, setTransfers] = useState<Transfer[]>(MOCK_TRANSFERS);
   const [editTransfer, setEditTransfer] = useState<Transfer | null>(null);
   const [deleteTransfer, setDeleteTransfer] = useState<Transfer | null>(null);
@@ -305,6 +308,40 @@ export const StockTransferPage: React.FC = () => {
 
   const handleSave = (updated: Transfer) => setTransfers(prev => prev.map(t => t.id === updated.id ? updated : t));
   const handleDelete = (id: string) => setTransfers(prev => prev.filter(t => t.id !== id));
+
+  const handleExportExcel = () => {
+    try {
+      const excelData = [
+        {
+          sheetName: 'Stock Transfers',
+          headers: ['Ref No', 'Date', 'From', 'To', 'Quantity', 'Status'],
+          data: displayed.map(t => [
+            t.referenceNo,
+            t.date,
+            t.fromWarehouse,
+            t.toWarehouse,
+            `${t.totalItems} pcs`,
+            t.status
+          ])
+        }
+      ];
+      exportToExcel(excelData, 'Stock_Transfers');
+      
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Stock transfer data has been exported to Excel successfully.',
+        duration: 3000
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export stock transfer data to Excel.',
+        duration: 5000
+      });
+    }
+  };
 
   const fromOptions = useMemo(() => Array.from(new Set(transfers.map(t => t.fromWarehouse))), [transfers]);
   const toOptions = useMemo(() => Array.from(new Set(transfers.map(t => t.toWarehouse))), [transfers]);
@@ -398,6 +435,7 @@ export const StockTransferPage: React.FC = () => {
         </div>
         <div className="flex flex-row items-center gap-2 md:gap-3">
           <Button 
+            onClick={handleExportExcel}
             variant="secondary" 
             className="rounded-xl px-4 md:px-6 h-9 md:h-10 text-[10px] md:text-xs font-bold transition-all border-slate-200"
             leftIcon={<Download size={14} />}

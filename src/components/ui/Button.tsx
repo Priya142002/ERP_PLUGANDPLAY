@@ -12,6 +12,7 @@ interface ButtonProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   'aria-label'?: string;
   title?: string;
 }
@@ -28,6 +29,7 @@ const Button: React.FC<ButtonProps> = ({
   leftIcon,
   rightIcon,
   className = '',
+  style,
   'aria-label': ariaLabel,
   title
 }) => {
@@ -73,6 +75,7 @@ const Button: React.FC<ButtonProps> = ({
       disabled={isDisabled}
       aria-label={ariaLabel || title}
       title={title}
+      style={style}
       className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${widthClass} ${className}`}
     >
       {loading && (

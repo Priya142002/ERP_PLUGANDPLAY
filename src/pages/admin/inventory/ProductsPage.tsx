@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Plus, Download, Edit, Trash2, X, Save, Package, AlertTriangle, Layers } from "lucide-react";
 import Button from "../../../components/ui/Button";
+import { useNotifications } from "../../../context/AppContext";
+import { exportToExcel } from "../../../utils/reportGenerator";
 
 /* ─────────────────────────────────────────
    Types
@@ -176,13 +178,13 @@ const EditModal: React.FC<EditModalProps> = ({ product, categories, brands, unit
         {/* Footer */}
         <div className="flex gap-3 px-6 py-4 border-t border-slate-100 sticky bottom-0 bg-white">
           <button onClick={onClose} 
-            style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
+            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
             className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
             Cancel
           </button>
           <button onClick={() => { onSave(form); onClose(); }}
-            style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
-            className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] transition flex items-center justify-center gap-2">
+            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
+            className="flex-1 bg-[#002147] text-white text-sm font-semibold transition flex items-center justify-center gap-2">
             <Save size={15} /> Update Product
           </button>
         </div>
@@ -206,12 +208,12 @@ const DeleteModal: React.FC<{ name: string; onClose: () => void; onConfirm: () =
       <p className="text-sm text-slate-500 mb-6">Are you sure you want to delete <span className="font-semibold text-slate-700">"{name}"</span>? This cannot be undone.</p>
       <div className="flex gap-3">
         <button onClick={onClose} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
+          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
           className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
           Cancel
         </button>
         <button onClick={() => { onConfirm(); onClose(); }} 
-          style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
+          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
           className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] transition flex items-center justify-center">
           Delete
         </button>
@@ -297,12 +299,12 @@ const StockModal: React.FC<StockModalProps> = ({ product, onClose, onSave }) => 
         {/* Actions */}
         <div className="flex gap-3">
           <button onClick={onClose} 
-            style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
+            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
             className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
             Cancel
           </button>
           <button onClick={handleSave} disabled={qty === ''}
-            style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
+            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
             className="flex-1 bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
             <Save size={14} /> Update Stock
           </button>
@@ -342,6 +344,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 ───────────────────────────────────────── */
 export const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showNotification } = useNotifications();
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [activeTab, setActiveTab] = useState<Tab>('All Products');
   const [search, setSearch] = useState('');
@@ -373,6 +376,42 @@ export const ProductsPage: React.FC = () => {
     return list;
   }, [products, activeTab, search, filterCategory]);
 
+  const handleExportExcel = () => {
+    try {
+      const excelData = [
+        {
+          sheetName: 'Products',
+          headers: ['Product Name', 'SKU', 'Category', 'Brand', 'Unit', 'Stock', 'Price', 'Status'],
+          data: displayed.map(p => [
+            p.name,
+            p.sku,
+            p.category,
+            p.brand,
+            p.unit,
+            p.stock,
+            p.price,
+            p.status
+          ])
+        }
+      ];
+      exportToExcel(excelData, 'Products_Catalog');
+      
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Product catalog has been exported to Excel successfully.',
+        duration: 3000
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export product catalog to Excel.',
+        duration: 5000
+      });
+    }
+  };
+
   const handleSave = (updated: Product) => setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
   const handleDelete = (id: string) => setProducts(prev => prev.filter(p => p.id !== id));
   const handleStockUpdate = (id: string, newStock: number) =>
@@ -389,7 +428,14 @@ export const ProductsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Product Catalog</h1>
           <div className="flex items-center gap-3">
-            <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>Export</Button>
+            <Button 
+              onClick={handleExportExcel}
+              variant="secondary" 
+              className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" 
+              leftIcon={<Download size={14} />}
+            >
+              Export
+            </Button>
             <Button variant="primary"
               className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10"
               leftIcon={<Plus size={14} />}
