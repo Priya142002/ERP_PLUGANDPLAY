@@ -53,7 +53,7 @@ const PLAN_INFO: Record<SubscriptionPlan, { name: string; color: string; maxModu
 
 export function ModulesPage() {
   const { state } = useApp();
-  const { toggleModule, isModuleEnabled } = useModulesSafe();
+  const { toggleModule, isModuleEnabled, isModuleLocked } = useModulesSafe();
 
   // --- Trial status ---
   const userEmail = state.user?.email || '';
@@ -87,43 +87,24 @@ export function ModulesPage() {
   }, [state.user, state.companySubscriptions]);
 
   // --- Superadmin-assigned modules for this company (trial access) ---
-  const superadminAllowedModules: string[] = useMemo(() => {
-    if (state.user?.companyId) {
-      const company = state.companies.find(c => c.id === state.user?.companyId);
-      if (company?.allowedModules && company.allowedModules.length > 0) {
-        return company.allowedModules;
-      }
-    }
-    // Default trial modules if superadmin hasn't configured
-    return ['inventory', 'sales', 'purchase', 'accounts'];
-  }, [state.user, state.companies]);
+  // kept for future use
 
   const currentPlanInfo = PLAN_INFO[CURRENT_PLAN];
 
   const modules = ALL_MODULES.map(module => ({
     ...module,
-    enabled: isModuleEnabled(module.id)
+    enabled: isModuleEnabled(module.id),
+    locked: isModuleLocked(module.id)
   }));
 
-  // If trial expired and no subscription → only show superadmin-allowed modules (locked/view only)
-  // If active subscription → use plan-based access
-  const isModuleAvailable = (module: typeof ALL_MODULES[0]) => {
-    if (hasActiveSubscription) {
-      if (CURRENT_PLAN === "basic") return module.plan === "basic";
-      return true;
-    }
-    // Trial or no subscription: only superadmin-allowed modules
-    return superadminAllowedModules.includes(module.id);
-  };
-
-  const availableModules = modules.filter(m => isModuleAvailable(m));
-  const lockedModules = modules.filter(m => !isModuleAvailable(m));
+  // Locked = not subscribed (only Billing for now)
+  // Available = everything else
+  const availableModules = modules.filter(m => !m.locked);
+  const lockedModules = modules.filter(m => m.locked);
   const enabledCount = availableModules.filter(m => m.enabled).length;
 
   const handleToggleModule = (id: string) => {
-    const module = modules.find(m => m.id === id);
-    if (!module || !isModuleAvailable(module)) return;
-    if (trial.isExpired && !hasActiveSubscription) return; // Expired trial — no toggling
+    if (isModuleLocked(id)) return;
     toggleModule(id);
   };
 
@@ -242,7 +223,7 @@ export function ModulesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {availableModules.map((module, index) => {
             const IconComponent = MODULE_ICONS[module.icon] || Puzzle;
-            const canToggle = hasActiveSubscription || (!trial.isExpired);
+            const canToggle = true;
             return (
               <motion.div key={module.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }} className="p-5 rounded-xl border hover:shadow-lg transition-all"
@@ -279,9 +260,7 @@ export function ModulesPage() {
         <div>
           <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
             Locked Modules
-            <span className="text-sm font-normal text-slate-500 ml-2">
-              {hasActiveSubscription ? '(Upgrade to unlock)' : '(Subscribe to unlock)'}
-            </span>
+            <span className="text-sm font-normal text-slate-500 ml-2">(Subscribe to unlock)</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {lockedModules.map((module, index) => {
@@ -302,9 +281,7 @@ export function ModulesPage() {
                   </div>
                   <p className="text-sm text-slate-500 mb-3">{module.description}</p>
                   <div className="px-2 py-1 rounded-full text-xs font-medium inline-flex bg-orange-100 text-orange-700">
-                    {hasActiveSubscription
-                      ? `Requires ${module.plan === "pro" ? "Pro" : "Enterprise"} Plan`
-                      : 'Subscribe to unlock'}
+                    Subscribe to unlock
                   </div>
                 </motion.div>
               );

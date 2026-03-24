@@ -140,9 +140,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({ user, onLogout, 
         />
 
         {/* Main content */}
-         <main className={cn("flex-1 relative overflow-y-auto focus:outline-none transition-colors duration-200 hide-scrollbar", bgClass)}>
-          <div className="py-8">
-            <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+        <main className={cn("flex-1 relative overflow-y-auto focus:outline-none transition-colors duration-200 hide-scrollbar main-content-area", bgClass)}>
+          <div className="page-content py-8 px-6 sm:px-8 lg:px-10">
+            <div className="max-w-7xl mx-auto">
               <Outlet />
             </div>
           </div>

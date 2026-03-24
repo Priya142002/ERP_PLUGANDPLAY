@@ -4,6 +4,7 @@ export interface ModuleState {
   id: string;
   name: string;
   enabled: boolean;
+  locked?: boolean; // locked = not subscribed, hidden from sidebar
 }
 
 interface ModuleContextType {
@@ -11,34 +12,37 @@ interface ModuleContextType {
   enabledModuleIds: string[];
   toggleModule: (id: string) => void;
   isModuleEnabled: (id: string) => boolean;
+  isModuleLocked: (id: string) => boolean;
 }
 
 const ModuleContext = createContext<ModuleContextType | undefined>(undefined);
 
 // Default module states - these would be persisted in localStorage or backend
 const DEFAULT_MODULES: ModuleState[] = [
-  { id: 'dashboard', name: 'Dashboard', enabled: true },
-  { id: 'inventory', name: 'Inventory Management', enabled: true },
-  { id: 'purchase', name: 'Purchase Management', enabled: true },
-  { id: 'sales', name: 'Sales Management', enabled: true },
-  { id: 'accounts', name: 'Accounts & Finance', enabled: true },
-  { id: 'crm', name: 'CRM', enabled: true },
-  { id: 'hrm', name: 'HRM', enabled: true },
-  { id: 'projects', name: 'Projects', enabled: false },
-  { id: 'helpdesk', name: 'Helpdesk', enabled: true },
-  { id: 'assets', name: 'Assets', enabled: false },
-  { id: 'logistics', name: 'Logistics', enabled: true },
-  { id: 'production', name: 'Production', enabled: false },
-  { id: 'billing', name: 'Billing', enabled: true }
+  { id: 'dashboard',  name: 'Dashboard',            enabled: true,  locked: false },
+  { id: 'inventory',  name: 'Inventory Management', enabled: true,  locked: false },
+  { id: 'purchase',   name: 'Purchase Management',  enabled: true,  locked: false },
+  { id: 'sales',      name: 'Sales Management',     enabled: true,  locked: false },
+  { id: 'accounts',   name: 'Accounts & Finance',   enabled: true,  locked: false },
+  { id: 'crm',        name: 'CRM',                  enabled: true,  locked: false },
+  { id: 'hrm',        name: 'HRM',                  enabled: true,  locked: false },
+  { id: 'projects',   name: 'Projects',             enabled: true,  locked: false },
+  { id: 'helpdesk',   name: 'Helpdesk',             enabled: true,  locked: false },
+  { id: 'assets',     name: 'Assets',               enabled: true,  locked: false },
+  { id: 'logistics',  name: 'Logistics',            enabled: true,  locked: false },
+  { id: 'production', name: 'Production',           enabled: true,  locked: false },
+  { id: 'billing',    name: 'Billing',              enabled: true,  locked: true  }, // locked — hidden from sidebar
 ];
 
 export const ModuleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [modules, setModules] = useState<ModuleState[]>(() => {
-    // Load from localStorage if available
     try {
       const stored = localStorage.getItem('enabledModules');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed: ModuleState[] = JSON.parse(stored);
+        // If stored data is missing the locked field, discard it and use defaults
+        const hasLockField = parsed.some(m => 'locked' in m);
+        if (hasLockField) return parsed;
       }
     } catch (error) {
       console.error('Error loading modules from localStorage:', error);
@@ -66,10 +70,15 @@ export const ModuleProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return module?.enabled ?? true; // Default to true if not found
   };
 
+  const isModuleLocked = (id: string): boolean => {
+    const module = modules.find(m => m.id === id);
+    return module?.locked ?? false;
+  };
+
   const enabledModuleIds = modules.filter(m => m.enabled).map(m => m.id);
 
   return (
-    <ModuleContext.Provider value={{ modules, enabledModuleIds, toggleModule, isModuleEnabled }}>
+    <ModuleContext.Provider value={{ modules, enabledModuleIds, toggleModule, isModuleEnabled, isModuleLocked }}>
       {children}
     </ModuleContext.Provider>
   );
@@ -87,12 +96,12 @@ export const useModules = () => {
 export const useModulesSafe = () => {
   const context = useContext(ModuleContext);
   if (!context) {
-    // Return default implementation if context is not available
     return {
       modules: DEFAULT_MODULES,
       enabledModuleIds: DEFAULT_MODULES.filter(m => m.enabled).map(m => m.id),
       toggleModule: () => {},
-      isModuleEnabled: () => true
+      isModuleEnabled: () => true,
+      isModuleLocked: (id: string) => DEFAULT_MODULES.find(m => m.id === id)?.locked ?? false
     };
   }
   return context;

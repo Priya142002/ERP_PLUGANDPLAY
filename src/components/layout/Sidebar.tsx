@@ -102,7 +102,7 @@ const NavigationItemComponent: React.FC<NavigationItemComponentProps> = ({
 
 export const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
   const location = useLocation();
-  const { isModuleEnabled } = useModulesSafe();
+  const { isModuleEnabled, isModuleLocked } = useModulesSafe();
   
   // Get subscription plan from user context (default to 'pro' for demo)
   // In production, this would come from the user's actual subscription
@@ -132,15 +132,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
     });
   }, [location.pathname]);
 
-  // Filter navigation items based on enabled modules (only for admin role)
-  const filteredNavigationItems = user.role === 'admin' 
+  // Filter navigation items based on enabled/locked modules (only for admin role)
+  const filteredNavigationItems = user.role === 'admin'
     ? navigationItems.filter(item => {
-        // Always show non-module items (dashboard, subscription, modules, admin settings)
-        // Dashboard should ALWAYS be visible
+        // Always show non-module items
         if (['dashboard', 'subscription', 'modules', 'admin'].includes(item.id)) {
           return true;
         }
-        // Filter module items based on enabled state
+        // Hide locked modules (not subscribed)
+        if (isModuleLocked(item.id)) {
+          return false;
+        }
+        // Hide disabled modules
         return isModuleEnabled(item.id);
       })
     : navigationItems;

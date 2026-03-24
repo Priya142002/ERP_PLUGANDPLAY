@@ -1,933 +1,246 @@
-/* Admin Modules Mobile Responsive Styles */
-/* Applies to all admin modules except Production */
+/* ============================================================
+   FULL RESPONSIVE STYLES — Mobile / Tablet / Desktop
+   Breakpoints:
+     Mobile  : max-width: 767px
+     Tablet  : 768px – 1023px
+     Desktop : min-width: 1024px
+   ============================================================ */
 
-@media (max-width: 768px) {
-  /* ===== COMMON STYLES ===== */
-  
-  /* Headers */
+/* ─── GLOBAL BASE ─────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+/* ─── LAYOUT SHELL ────────────────────────────────────────── */
+
+/* Main content shifts right on desktop when sidebar is fixed */
+@media (min-width: 1024px) {
+  .main-content-area {
+    margin-left: 0;
+  }
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────────────── */
+
+/* Mobile & Tablet: sidebar is a slide-in drawer */
+@media (max-width: 1023px) {
+  .sidebar-drawer {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    width: 280px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar-drawer.open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: block !important;
+  }
+}
+
+/* Desktop: sidebar always visible, static */
+@media (min-width: 1024px) {
+  .sidebar-drawer {
+    position: static !important;
+    transform: translateX(0) !important;
+    transition: none !important;
+  }
+  .sidebar-overlay {
+    display: none !important;
+  }
+}
+
+/* ─── HAMBURGER BUTTON ────────────────────────────────────── */
+.hamburger-btn {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .hamburger-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    color: #64748b;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+}
+
+/* ─── HEADER ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  header {
+    padding: 0 0.75rem !important;
+  }
+  header > div {
+    height: 56px !important;
+    padding: 0 !important;
+    gap: 0.5rem !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  header > div {
+    height: 64px !important;
+    padding: 0 1rem !important;
+  }
+}
+
+/* ─── MAIN CONTENT PADDING ────────────────────────────────── */
+@media (max-width: 767px) {
+  .page-content {
+    padding: 1rem !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .page-content {
+    padding: 1.5rem !important;
+  }
+}
+
+/* ─── PAGE HEADERS ────────────────────────────────────────── */
+@media (max-width: 767px) {
   .admin-header,
   .module-header {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 1rem !important;
+    gap: 0.75rem !important;
   }
-
   .admin-header h1,
   .module-header h1 {
-    font-size: 1.5rem !important;
+    font-size: 1.25rem !important;
   }
-
   .admin-header p,
   .module-header p {
-    font-size: 0.813rem !important;
+    font-size: 0.8rem !important;
   }
-
-  /* Header buttons */
   .admin-header-buttons,
   .module-header-buttons {
+    display: flex !important;
     flex-direction: column !important;
-    width: 100% !important;
     gap: 0.5rem !important;
+    width: 100% !important;
   }
-
   .admin-header-buttons > *,
   .module-header-buttons > * {
     width: 100% !important;
     justify-content: center !important;
   }
+}
 
-  /* Stats grids */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .admin-header h1,
+  .module-header h1 {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* ─── STATS GRIDS ─────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-stats-grid,
+  .module-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
   .admin-stats-grid,
   .module-stats-grid {
     grid-template-columns: 1fr !important;
   }
-
-  /* Cards grids */
-  .admin-cards-grid,
-  .module-cards-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Tables */
-  .admin-table-container,
-  .module-table-container {
-    overflow-x: auto !important;
-  }
-
-  .admin-table,
-  .module-table {
-    min-width: 800px !important;
-  }
-
-  /* Search and filter bars */
-  .admin-search-bar,
-  .module-search-bar {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.5rem !important;
-  }
-
-  .admin-search-bar > *,
-  .module-search-bar > * {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Modals */
-  .admin-modal,
-  .module-modal {
-    max-width: 95% !important;
-    margin: 0 auto !important;
-  }
-
-  .admin-modal-content,
-  .module-modal-content {
-    padding: 16px !important;
-  }
-
-  .admin-modal-header,
-  .module-modal-header {
-    padding: 12px 16px !important;
-  }
-
-  /* Form grids */
-  .admin-form-grid,
-  .module-form-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Charts */
-  .admin-chart-container,
-  .module-chart-container {
-    overflow-x: auto !important;
-  }
-
-  /* Kanban boards */
-  .admin-kanban-container,
-  .module-kanban-container {
-    flex-direction: column !important;
-    height: auto !important;
-    min-height: auto !important;
-  }
-
-  .admin-kanban-column,
-  .module-kanban-column {
-    min-width: 100% !important;
-    max-height: 400px !important;
-  }
-
-  /* Tabs */
-  .admin-tabs,
-  .module-tabs {
-    overflow-x: auto !important;
-    flex-wrap: nowrap !important;
-  }
-
-  /* Action buttons group */
-  .admin-actions-group,
-  .module-actions-group {
-    flex-direction: column !important;
-    width: 100% !important;
-  }
-
-  .admin-actions-group > *,
-  .module-actions-group > * {
-    width: 100% !important;
-  }
-
-  /* ===== MODULE-SPECIFIC STYLES ===== */
-
-  /* Dashboard */
-  .dashboard-widgets {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Inventory */
-  .inventory-filters {
-    flex-direction: column !important;
-  }
-
-  .inventory-product-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Purchase */
-  .purchase-vendor-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Sales */
-  .sales-customer-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Accounts */
-  .accounts-voucher-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* CRM */
-  .crm-leads-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* HRM */
-  .hrm-employee-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Helpdesk */
-  .helpdesk-ticket-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Assets */
-  .assets-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Billing */
-  .billing-invoice-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Reports */
-  .reports-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Reports filters - ensure they remain visible */
-  .reports-filters,
-  .report-filters {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.75rem !important;
-    width: 100% !important;
-  }
-
-  .reports-filters > *,
-  .report-filters > * {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Report filter selects */
-  .reports-filters select,
-  .report-filters select,
-  .reports-filters input,
-  .report-filters input {
-    width: 100% !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Report filter containers - force visibility */
-  .reports-filters .border,
-  .report-filters .border,
-  .reports-filters div[class*="border"],
-  .report-filters div[class*="border"] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    overflow: visible !important;
-  }
-
-  /* Report filter rows */
-  .reports-filters .flex,
-  .report-filters .flex {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.5rem !important;
-  }
-
-  /* Report filter labels and inputs */
-  .reports-filters span,
-  .report-filters span {
-    width: 100% !important;
-    margin-bottom: 0.25rem !important;
-  }
-
-  .reports-filters .flex-1,
-  .report-filters .flex-1 {
-    width: 100% !important;
-  }
-
-  /* Specific targeting for report filter cards */
-  .reports-filters div[class*="rounded"],
-  .report-filters div[class*="rounded"],
-  .reports-filters div[class*="bg-white"],
-  .report-filters div[class*="bg-white"] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  /* Force visibility on all child elements */
-  .reports-filters *,
-  .report-filters * {
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Ensure filter rows are visible */
-  .reports-filters div[class*="flex"],
-  .report-filters div[class*="flex"] {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-  }
-
-  /* Make sure select and input elements are properly sized */
-  .reports-filters select[class*="w-full"],
-  .report-filters select[class*="w-full"],
-  .reports-filters input[class*="w-full"],
-  .report-filters input[class*="w-full"] {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Report layout adjustments for mobile */
-  .report-sidebar {
-    width: 100% !important;
-    max-height: 200px !important;
-    border-right: none !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-
-  /* Report main content area */
-  .report-main-content {
-    width: 100% !important;
-    flex: 1 !important;
-  }
-
-  /* Report container adjustments */
-  div[class*="bg-white"][class*="rounded-2xl"][class*="shadow-sm"] {
-    flex-direction: column !important;
-  }
-
-  /* Ensure report panels are visible */
-  div[class*="flex-1"][class*="flex"][class*="flex-col"] {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-  }
-
-  /* Report panel header adjustments */
-  .report-panel-header {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 1rem !important;
-  }
-
-  /* Report panel content */
-  .report-panel-content {
-    padding: 1rem !important;
-  }
-
-  /* Force visibility on report filter sections */
-  div[class*="p-4"][class*="md:p-6"],
-  div[class*="p-6"] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    padding: 1rem !important;
-  }
-
-  /* Report filter card - the main container */
-  div[class*="border"][class*="border-slate-200"][class*="rounded-xl"][class*="overflow-hidden"][class*="bg-white"] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    overflow: visible !important;
-    height: auto !important;
-    max-height: none !important;
-  }
-
-  /* Individual filter rows */
-  div[class*="flex"][class*="flex-col"][class*="sm:flex-row"][class*="sm:items-center"] {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.5rem !important;
-    padding: 0.75rem !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Filter labels */
-  span[class*="text-xs"][class*="font-semibold"][class*="text-slate-600"] {
-    display: block !important;
-    width: 100% !important;
-    margin-bottom: 0.25rem !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Filter input containers */
-  div[class*="flex-1"] {
-    width: 100% !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Mobile menu button - ensure it's visible */
-  button[class*="lg:hidden"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 48px !important;
-    height: 48px !important;
-    background-color: rgba(248, 250, 252, 0.8) !important;
-    border: 1px solid rgba(226, 232, 240, 0.5) !important;
-    border-radius: 12px !important;
-    color: #64748b !important;
-    transition: all 0.2s ease !important;
-  }
-
-  button[class*="lg:hidden"]:hover {
-    background-color: rgba(238, 242, 255, 1) !important;
-    color: #4f46e5 !important;
-    border-color: rgba(199, 210, 254, 0.8) !important;
-  }
-
-  /* Ensure menu icon is visible */
-  button[class*="lg:hidden"] svg {
-    width: 20px !important;
-    height: 20px !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Header mobile adjustments */
-  header {
-    padding: 0 1rem !important;
-  }
-
-  header > div {
-    height: 64px !important;
-    padding: 0 !important;
-  }
-
-  /* Header left section */
-  header .flex-1 {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-  }
-
-  /* Force mobile menu button to be visible on small screens */
-  @media (max-width: 1023px) {
-    button[class*="lg:hidden"] {
-      display: flex !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-  }
-
-  /* Hide mobile menu button on large screens */
-  @media (min-width: 1024px) {
-    button[class*="lg:hidden"] {
-      display: none !important;
-    }
-  }
-
-  /* Ensure header items are properly spaced on mobile */
-  header div[class*="flex"][class*="items-center"][class*="justify-between"] {
-    padding: 0 1rem !important;
-  }
-
-  /* Company switcher adjustments on mobile */
-  div[class*="relative"] button[class*="flex"][class*="items-center"][class*="px-4"] {
-    padding: 0.5rem !important;
-    border-radius: 8px !important;
-  }
-
-  /* Hide company name text on very small screens */
-  @media (max-width: 480px) {
-    div[class*="relative"] button[class*="flex"][class*="items-center"] .text-left {
-      display: none !important;
-    }
-  }
-
-  /* Mobile menu button specific styling */
-  .mobile-menu-btn {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    z-index: 50 !important;
-  }
-
-  @media (min-width: 1024px) {
-    .mobile-menu-btn {
-      display: none !important;
-    }
-  }
-
-  /* Ensure menu icon is always visible */
-  .mobile-menu-btn svg {
-    width: 20px !important;
-    height: 20px !important;
-    stroke-width: 2 !important;
-    display: block !important;
-  }
-
-  /* Company dropdown mobile responsive */
-  .company-dropdown {
-    position: fixed !important;
-    top: 80px !important;
-    left: 1rem !important;
-    right: 1rem !important;
-    width: auto !important;
-    max-width: none !important;
-    z-index: 9999 !important;
-    border-radius: 16px !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-  }
-
-  /* Company dropdown header */
-  .company-dropdown-header {
-    padding: 1rem !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.75rem !important;
-  }
-
-  .company-dropdown-header span {
-    text-align: center !important;
-    font-size: 0.75rem !important;
-  }
-
-  .company-dropdown-header button {
-    width: 100% !important;
-    justify-content: center !important;
-    padding: 0.75rem 1rem !important;
-    font-size: 0.75rem !important;
-    border-radius: 8px !important;
-    background-color: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important;
-  }
-
-  /* Company list container */
-  .company-list {
-    max-height: 50vh !important;
-    overflow-y: auto !important;
-    padding: 0.5rem !important;
-  }
-
-  /* Individual company items */
-  .company-item {
-    padding: 1rem !important;
-    border-radius: 12px !important;
-    margin-bottom: 0.5rem !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    text-align: left !important;
-    gap: 1rem !important;
-  }
-
-  /* Company icon container */
-  .company-icon {
-    width: 3rem !important;
-    height: 3rem !important;
-    border-radius: 12px !important;
-    flex-shrink: 0 !important;
-  }
-
-  /* Company name text */
-  .company-name {
-    font-size: 0.875rem !important;
-    line-height: 1.25 !important;
-    flex: 1 !important;
-    text-align: left !important;
-  }
-
-  /* Active company indicator */
-  .company-item div[class*="ml-auto"] {
-    flex-shrink: 0 !important;
-  }
-
-  /* Smaller screens adjustments */
-  @media (max-width: 480px) {
-    .company-dropdown {
-      left: 0.5rem !important;
-      right: 0.5rem !important;
-      top: 70px !important;
-    }
-    
-    .company-item {
-      padding: 0.75rem !important;
-    }
-    
-    .company-name {
-      font-size: 0.813rem !important;
-    }
-    
-    .company-icon {
-      width: 2.5rem !important;
-      height: 2.5rem !important;
-    }
-  }
-
-  /* Purchase Reports specific - two column layout fix */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0 !important;
-  }
-
-  /* Purchase Reports - From/To column headers */
-  div[class*="grid"][class*="grid-cols-2"][class*="gap-x-6"] {
-    display: none !important;
-  }
-
-  /* Purchase Reports - individual filter rows */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] > div {
-    display: block !important;
-    width: 100% !important;
-    border-right: none !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-    padding: 1rem !important;
-  }
-
-  /* Purchase Reports - From field styling */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] > div:first-child {
-    background-color: #f8fafc !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-  }
-
-  /* Purchase Reports - To field styling */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] > div:last-child {
-    background-color: #ffffff !important;
-    margin-bottom: 1rem !important;
-  }
-
-  /* Purchase Reports - field labels */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] span[class*="text-xs"] {
-    display: block !important;
-    margin-bottom: 0.5rem !important;
-    font-size: 0.75rem !important;
-  }
-
-  /* Purchase Reports - add "From" and "To" labels */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] > div:first-child span[class*="text-xs"]:before {
-    content: "From: " !important;
-    color: #6366f1 !important;
-    font-weight: 700 !important;
-  }
-
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] > div:last-child:before {
-    content: "To: " !important;
-    display: block !important;
-    color: #6366f1 !important;
-    font-weight: 700 !important;
-    font-size: 0.75rem !important;
-    margin-bottom: 0.5rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-  }
-
-  /* Purchase Reports - input field adjustments */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] div[class*="flex-1"] {
-    width: 100% !important;
-    margin-top: 0.25rem !important;
-  }
-
-  /* Production Reports - same layout fix */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] div[class*="flex"][class*="items-center"] {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.5rem !important;
-  }
-
-  /* Ensure both From and To fields are visible */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] > div {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    min-height: 80px !important;
-  }
-
-  /* Better spacing for two-column reports */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"] {
-    margin-bottom: 1rem !important;
-  }
-
-  /* Last filter row styling */
-  .reports-filters div[class*="grid"][class*="grid-cols-2"]:last-child > div:last-child {
-    margin-bottom: 0 !important;
-    border-bottom: none !important;
-  }
-
-  /* Report header with action buttons */
-  div[class*="flex"][class*="flex-wrap"][class*="items-center"][class*="justify-between"] {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 1rem !important;
-  }
-
-  /* Report header title section */
-  div[class*="flex"][class*="items-center"][class*="gap-2"] {
-    justify-content: center !important;
-    margin-bottom: 0.5rem !important;
-  }
-
-  /* Report action buttons container */
-  div[class*="flex"][class*="items-center"][class*="gap-2"].reports-actions {
-    flex-direction: row !important;
-    justify-content: center !important;
-    flex-wrap: wrap !important;
-    gap: 0.5rem !important;
-  }
-
-  /* Individual action buttons */
-  .reports-actions button {
-    flex: 1 !important;
-    min-width: 80px !important;
-    max-width: 120px !important;
-    font-size: 0.75rem !important;
-    padding: 0.5rem 0.75rem !important;
-  }
-
-  /* Ensure all report content is visible */
-  div[class*="motion-div"] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Force visibility on AnimatePresence content */
-  div[data-framer-appear-id] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Report main container adjustments */
-  div[class*="bg-white"][class*="rounded-2xl"][class*="shadow-sm"][class*="border"][class*="border-slate-200"] {
-    flex-direction: column !important;
-    height: auto !important;
-    min-height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  /* Report content area - ensure full visibility */
-  div[class*="p-4"][class*="md:p-6"][class*="flex-1"],
-  div[class*="p-6"][class*="flex-1"] {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    padding: 1rem !important;
-    width: 100% !important;
-  }
-
-  /* Filter container - force full height and visibility */
-  .reports-filters {
-    height: auto !important;
-    max-height: none !important;
-    min-height: auto !important;
-    overflow: visible !important;
-    display: block !important;
-    width: 100% !important;
-  }
-
-  /* Individual filter items - ensure they're not cut off */
-  .reports-filters > div,
-  .report-filters > div {
-    height: auto !important;
-    min-height: 60px !important;
-    max-height: none !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 1rem !important;
-    margin-bottom: 0.5rem !important;
-  }
-
-  /* Filter input fields - ensure proper sizing */
-  .reports-filters select,
-  .reports-filters input,
-  .report-filters select,
-  .report-filters input {
-    height: 40px !important;
-    min-height: 40px !important;
-    width: 100% !important;
-    font-size: 14px !important;
-    padding: 8px 12px !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 8px !important;
-    background-color: white !important;
-  }
-
-  /* Remove any height restrictions on parent containers */
-  div[style*="minHeight"],
-  div[style*="maxHeight"] {
-    min-height: auto !important;
-    max-height: none !important;
-    height: auto !important;
-  }
-
-  /* Specific targeting for report layout containers */
-  div[class*="flex"][class*="flex-col"][class*="md:flex-row"] {
-    flex-direction: column !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  /* Report panel wrapper */
-  div[class*="motion-div"][class*="flex-1"] {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: 100% !important;
-  }
-
-  /* Ensure the main report container doesn't restrict height */
-  .report-container {
-    height: auto !important;
-    max-height: none !important;
-    min-height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* Override any inline styles that might be restricting height */
-  div[style*="600px"],
-  div[style*="80vh"] {
-    height: auto !important;
-    max-height: none !important;
-    min-height: auto !important;
-  }
-
-  /* Ensure filter section has enough space */
-  div[class*="border"][class*="border-slate-200"][class*="rounded-xl"].reports-filters {
-    padding: 1rem !important;
-    margin: 1rem 0 !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  /* Filter row spacing */
-  div[class*="px-4"][class*="py-3"],
-  div[class*="px-5"][class*="py-3"] {
-    padding: 1rem !important;
-    height: auto !important;
-    min-height: 60px !important;
-  }
-
-  /* Report actions */
-  .reports-actions,
-  .report-actions {
-    flex-direction: column !important;
-    width: 100% !important;
-    gap: 0.5rem !important;
-  }
-
-  .reports-actions > *,
-  .report-actions > * {
-    width: 100% !important;
-  }
-
-  /* Settings */
-  .settings-sections {
-    grid-template-columns: 1fr !important;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .admin-stats-grid,
+  .module-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
-@media (max-width: 640px) {
-  /* ===== EXTRA SMALL SCREENS ===== */
-  
-  /* Titles */
-  .admin-title,
-  .module-title {
-    font-size: 1.25rem !important;
+/* ─── CARDS GRIDS ─────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-cards-grid,
+  .module-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
   }
+}
 
-  .admin-subtitle,
-  .module-subtitle {
-    font-size: 0.75rem !important;
+@media (min-width: 768px) and (max-width: 1023px) {
+  .admin-cards-grid,
+  .module-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
+}
 
-  .admin-header h1,
-  .module-header h1 {
-    font-size: 1.25rem !important;
+/* ─── TABLES ──────────────────────────────────────────────── */
+.admin-table-container,
+.module-table-container {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  .admin-table,
+  .module-table {
+    min-width: 640px !important;
   }
-
-  .admin-header p,
-  .module-header p {
-    font-size: 0.75rem !important;
-  }
-
-  /* Buttons */
-  .admin-header button,
-  .module-header button {
-    font-size: 0.813rem !important;
-    padding: 0.5rem 1rem !important;
-  }
-
-  /* Icons */
-  .admin-header svg,
-  .module-header svg {
-    width: 1rem !important;
-    height: 1rem !important;
-  }
-
-  /* Tables */
   .admin-table th,
   .admin-table td,
   .module-table th,
   .module-table td {
     font-size: 0.75rem !important;
-    padding: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    white-space: nowrap;
   }
+}
 
-  /* Cards */
-  .admin-card,
-  .module-card {
+/* ─── SEARCH / FILTER BARS ────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-search-bar,
+  .module-search-bar {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .admin-search-bar > *,
+  .module-search-bar > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ─── MODALS ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-modal,
+  .module-modal {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
+  }
+  .admin-modal-content,
+  .module-modal-content {
     padding: 1rem !important;
   }
-
-  /* Stats cards */
-  .admin-stat-card,
-  .module-stat-card {
-    padding: 1rem !important;
+  .admin-modal-header,
+  .module-modal-header {
+    padding: 0.75rem 1rem !important;
   }
+}
 
-  .admin-stat-card h3,
-  .module-stat-card h3 {
-    font-size: 0.75rem !important;
+/* ─── FORMS ───────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-form-grid,
+  .module-form-grid {
+    grid-template-columns: 1fr !important;
   }
-
-  .admin-stat-card .value,
-  .module-stat-card .value {
-    font-size: 1.5rem !important;
-  }
-
-  /* Modal titles */
-  .admin-modal h2,
-  .module-modal h2 {
-    font-size: 1.125rem !important;
-  }
-
-  /* Form labels */
-  .admin-form label,
-  .module-form label {
-    font-size: 0.75rem !important;
-  }
-
-  /* Form inputs */
   .admin-form input,
   .admin-form select,
   .admin-form textarea,
@@ -938,35 +251,234 @@
   }
 }
 
+/* ─── KANBAN ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-kanban-container,
+  .module-kanban-container {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .admin-kanban-column,
+  .module-kanban-column {
+    min-width: 100% !important;
+    max-height: 350px !important;
+  }
+}
+
+/* ─── TABS ────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-tabs,
+  .module-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ─── MODULE GRIDS ────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .dashboard-widgets,
+  .inventory-product-grid,
+  .purchase-vendor-grid,
+  .sales-customer-grid,
+  .accounts-voucher-grid,
+  .crm-leads-grid,
+  .hrm-employee-grid,
+  .helpdesk-ticket-grid,
+  .assets-grid,
+  .billing-invoice-grid,
+  .reports-grid,
+  .settings-sections {
+    grid-template-columns: 1fr !important;
+  }
+  .inventory-filters {
+    flex-direction: column !important;
+  }
+}
+
+/* ─── REPORT SIDEBAR ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .report-sidebar {
+    width: 100% !important;
+    max-height: 180px !important;
+    border-right: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    overflow-y: auto !important;
+  }
+  /* Report container stacks vertically */
+  .report-sidebar ~ * {
+    width: 100% !important;
+  }
+}
+
+/* ─── REPORT FILTERS ──────────────────────────────────────── */
+.reports-filters,
+.report-filters {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .reports-filters,
+  .report-filters {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Each filter row stacks label + input */
+  .reports-filters div[class*="flex-col"],
+  .reports-filters div[class*="sm:flex-row"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.4rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .reports-filters select,
+  .reports-filters input,
+  .report-filters select,
+  .report-filters input {
+    width: 100% !important;
+    height: 40px !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Report action buttons row */
+  .reports-actions {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    justify-content: flex-start !important;
+  }
+  .reports-actions button {
+    flex: 1 !important;
+    min-width: 80px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ─── COMPANY DROPDOWN ────────────────────────────────────── */
+@media (max-width: 767px) {
+  .company-dropdown {
+    position: fixed !important;
+    top: 64px !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    width: auto !important;
+    z-index: 9999 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+  }
+  .company-list {
+    max-height: 45vh !important;
+    overflow-y: auto !important;
+  }
+  .company-item {
+    padding: 0.875rem 1rem !important;
+    gap: 0.75rem !important;
+  }
+  .company-icon {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  .company-name {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* ─── CARDS / STAT CARDS ──────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-card,
+  .module-card {
+    padding: 1rem !important;
+  }
+  .admin-stat-card,
+  .module-stat-card {
+    padding: 1rem !important;
+  }
+  .admin-stat-card h3,
+  .module-stat-card h3 {
+    font-size: 0.75rem !important;
+  }
+  .admin-stat-card .value,
+  .module-stat-card .value {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* ─── TYPOGRAPHY SCALING ──────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Base font size reduction */
+  body, html {
+    font-size: 14px !important;
+  }
+
+  /* Headings */
+  h1 { font-size: 1.2rem !important; }
+  h2 { font-size: 1.05rem !important; }
+  h3 { font-size: 0.95rem !important; }
+  h4 { font-size: 0.875rem !important; }
+  h5, h6 { font-size: 0.8rem !important; }
+
+  /* Paragraphs and general text */
+  p, span, label, li, td, th, div {
+    font-size: 0.8rem !important;
+  }
+
+  /* Buttons */
+  button {
+    font-size: 0.8rem !important;
+  }
+
+  /* Inputs */
+  input, select, textarea {
+    font-size: 0.8rem !important;
+  }
+
+  /* Named utility classes */
+  .admin-title,
+  .module-title {
+    font-size: 1.1rem !important;
+  }
+  .admin-subtitle,
+  .module-subtitle {
+    font-size: 0.75rem !important;
+  }
+}
+
 @media (max-width: 480px) {
-  /* ===== VERY SMALL SCREENS ===== */
-  
+  body, html {
+    font-size: 13px !important;
+  }
+
+  h1 { font-size: 1.05rem !important; }
+  h2 { font-size: 0.95rem !important; }
+  h3 { font-size: 0.875rem !important; }
+
+  p, span, label, li, td, th {
+    font-size: 0.75rem !important;
+  }
+
+  button {
+    font-size: 0.75rem !important;
+  }
+
+  input, select, textarea {
+    font-size: 0.75rem !important;
+  }
+
   .admin-header h1,
   .module-header h1 {
-    font-size: 1.125rem !important;
+    font-size: 1rem !important;
   }
-
   .admin-header p,
   .module-header p {
-    font-size: 0.688rem !important;
+    font-size: 0.7rem !important;
   }
-
-  /* Reduce padding */
   .admin-container,
   .module-container {
     padding: 0.75rem !important;
-  }
-
-  /* Smaller gaps */
-  .admin-header,
-  .module-header {
-    gap: 0.75rem !important;
-  }
-
-  /* Compact buttons */
-  .admin-header button,
-  .module-header button {
-    font-size: 0.75rem !important;
-    padding: 0.5rem 0.75rem !important;
   }
 }
