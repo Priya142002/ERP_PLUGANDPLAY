@@ -101,3 +101,6 @@ export * from './assets';
 export * from './logistics';
 export * from './billing';
 export * from './production';
+
+// POS Module
+export * from './pos';

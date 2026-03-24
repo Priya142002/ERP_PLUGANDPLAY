@@ -35,6 +35,7 @@ const ALL_MODULES = [
   { id: "purchase", name: "Purchase Management", description: "Vendors, POs, invoices, payments", icon: "shopping-cart", plan: "basic" as SubscriptionPlan },
   { id: "sales", name: "Sales Management", description: "Customers, quotations, invoices", icon: "presentation-chart-line", plan: "basic" as SubscriptionPlan },
   { id: "accounts", name: "Accounts & Finance", description: "Chart of accounts, vouchers, reports", icon: "book-open", plan: "basic" as SubscriptionPlan },
+  { id: "pos", name: "POS", description: "Point of Sale, billing, payments, receipts", icon: "receipt-tax", plan: "pro" as SubscriptionPlan },
   { id: "crm", name: "CRM", description: "Leads, opportunities, follow-ups", icon: "user-group", plan: "pro" as SubscriptionPlan },
   { id: "hrm", name: "HRM", description: "Employees, attendance, payroll", icon: "user-group", plan: "pro" as SubscriptionPlan },
   { id: "projects", name: "Projects", description: "Project management, tasks, timesheets", icon: "clipboard-list", plan: "pro" as SubscriptionPlan },

@@ -129,6 +129,13 @@ import {
   WorkOrdersPage,
   InventoryMovementPage,
   QualityCheckPage,
+  POSDashboard,
+  BillingScreen,
+  CustomerManagement,
+  PaymentManagement,
+  OrderManagement,
+  InventorySync,
+  InvoiceReceipt,
 } from '../pages/admin';
 
 interface AppRoutesProps {
@@ -389,6 +396,18 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route path="dashboard" element={<BillingDashboard />} />
           <Route path="invoices" element={<InvoicesPage />} />
           <Route path="reminders" element={<RemindersPage />} />
+        </Route>
+
+        {/* POS */}
+        <Route path="pos">
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<POSDashboard />} />
+          <Route path="billing" element={<BillingScreen />} />
+          <Route path="customers" element={<CustomerManagement />} />
+          <Route path="payment" element={<PaymentManagement />} />
+          <Route path="orders" element={<OrderManagement />} />
+          <Route path="inventory-sync" element={<InventorySync />} />
+          <Route path="invoice" element={<InvoiceReceipt />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

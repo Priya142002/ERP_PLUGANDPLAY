@@ -22,7 +22,8 @@ export const PLAN_MODULES: Record<SubscriptionPlan, string[]> = {
     'assets',
     'logistics',
     'production',
-    'billing'
+    'billing',
+    'pos'
   ],
   enterprise: [
     'inventory',
@@ -36,7 +37,8 @@ export const PLAN_MODULES: Record<SubscriptionPlan, string[]> = {
     'assets',
     'logistics',
     'production',
-    'billing'
+    'billing',
+    'pos'
   ]
 };
 
@@ -68,22 +70,22 @@ export const PLAN_FEATURES = {
   },
   pro: {
     name: 'Pro',
-    modules: 12,
+    modules: 13,
     description: 'All ERP modules for growing businesses',
     moduleList: [
       'Inventory', 'Purchase', 'Sales', 'Accounts & Finance',
       'CRM', 'HRM', 'Projects', 'Helpdesk',
-      'Assets', 'Logistics', 'Production', 'Billing'
+      'Assets', 'Logistics', 'Production', 'Billing', 'POS'
     ]
   },
   enterprise: {
     name: 'Enterprise',
-    modules: 12,
+    modules: 13,
     description: 'All modules with premium features',
     moduleList: [
       'Inventory', 'Purchase', 'Sales', 'Accounts & Finance',
       'CRM', 'HRM', 'Projects', 'Helpdesk',
-      'Assets', 'Logistics', 'Production', 'Billing'
+      'Assets', 'Logistics', 'Production', 'Billing', 'POS'
     ]
   }
 };

@@ -219,6 +219,21 @@ export const adminNavigation: NavigationItem[] = [
     ]
   },
   {
+    id: 'pos',
+    label: 'POS',
+    icon: 'receipt-tax',
+    roles: ['admin'],
+    children: [
+      { id: 'pos-dash', label: 'POS Dashboard', path: '/admin/pos/dashboard', roles: ['admin'], icon: 'dashboard' },
+      { id: 'pos-billing', label: 'Billing / Sales Screen', path: '/admin/pos/billing', roles: ['admin'], icon: 'shopping-cart' },
+      { id: 'pos-customers', label: 'Customer Management', path: '/admin/pos/customers', roles: ['admin'], icon: 'user-group' },
+      { id: 'pos-payment', label: 'Payment Management', path: '/admin/pos/payment', roles: ['admin'], icon: 'credit-card' },
+      { id: 'pos-orders', label: 'Order Management', path: '/admin/pos/orders', roles: ['admin'], icon: 'clipboard-list' },
+      { id: 'pos-inventory', label: 'Inventory Sync', path: '/admin/pos/inventory-sync', roles: ['admin'], icon: 'refresh' },
+      { id: 'pos-invoice', label: 'Invoice & Receipt', path: '/admin/pos/invoice', roles: ['admin'], icon: 'receipt-tax' },
+    ]
+  },
+  {
     id: 'subscription',
     label: 'My Subscription',
     icon: 'credit-card',
