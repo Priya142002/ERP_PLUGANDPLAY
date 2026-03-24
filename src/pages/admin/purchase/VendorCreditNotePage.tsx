@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Download, Edit, Trash2, Calendar } from "lucide-react";
+import { Plus, Download, Edit, Trash2, Calendar, AlertTriangle } from "lucide-react";
 import Button from "../../../components/ui/Button";
+import Modal from "../../../components/ui/Modal";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MOCK_CREDIT_NOTES = [
   { id: '1', date: '2026-03-12', noteNo: 'VCN-3001', vendor: 'TechNova Solutions', amount: 350.50, reason: 'Price Adjustment', status: 'Approved' },
@@ -20,6 +22,11 @@ export const VendorCreditNotePage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [filterVendor, setFilterVendor] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; noteId: string; noteNo: string }>({ 
+    isOpen: false, 
+    noteId: '', 
+    noteNo: '' 
+  });
 
   const vendorOptions = useMemo(() => Array.from(new Set(MOCK_CREDIT_NOTES.map(n => n.vendor))), []);
 
@@ -35,6 +42,30 @@ export const VendorCreditNotePage: React.FC = () => {
     if (filterStatus) list = list.filter(n => n.status === filterStatus);
     return list;
   }, [activeTab, search, filterVendor, filterStatus]);
+
+  const handleExport = () => {
+    const headers = ['Credit Note #', 'Date', 'Vendor', 'Reason', 'Credit Amount', 'Status'];
+    const data = displayed.map(note => [
+      note.noteNo,
+      note.date,
+      note.vendor,
+      note.reason,
+      note.amount,
+      note.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Vendor_Credit_Notes');
+  };
+
+  const handleDeleteClick = (note: typeof MOCK_CREDIT_NOTES[0]) => {
+    setDeleteModal({ isOpen: true, noteId: note.id, noteNo: note.noteNo });
+  };
+
+  const handleDeleteConfirm = () => {
+    // In a real app, this would call an API to delete the note
+    console.log('Deleting credit note:', deleteModal.noteId);
+    setDeleteModal({ isOpen: false, noteId: '', noteNo: '' });
+    // You could also show a success toast here
+  };
 
   const columns = [
     {
@@ -91,7 +122,7 @@ export const VendorCreditNotePage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Vendor Credit Note</h1>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>Export</Button>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>Export</Button>
           <Button variant="primary"
             className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10"
             leftIcon={<Plus size={14} />}
@@ -131,10 +162,48 @@ export const VendorCreditNotePage: React.FC = () => {
         columns={columns}
         actions={[
           { label: 'Edit', icon: <Edit size={14} />, onClick: () => navigate('/admin/purchase/credit-note/new'), variant: 'primary', title: 'Edit' },
-          { label: 'Delete', icon: <Trash2 size={14} />, onClick: () => {}, variant: 'danger', title: 'Delete' }
+          { label: 'Delete', icon: <Trash2 size={14} />, onClick: handleDeleteClick, variant: 'danger', title: 'Delete' }
         ]}
         emptyMessage="No credit notes found"
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, noteId: '', noteNo: '' })}
+        title="Delete Credit Note"
+        size="sm"
+      >
+        <div className="space-y-6">
+          <div className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+            <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Are you sure you want to delete this credit note?</p>
+              <p className="text-xs text-slate-700 mt-1">
+                Credit Note: <span className="font-bold">{deleteModal.noteNo}</span>
+              </p>
+              <p className="text-xs text-slate-600 mt-2">This action cannot be undone.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-3 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteModal({ isOpen: false, noteId: '', noteNo: '' })}
+              className="px-6 py-2 min-w-[120px]"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteConfirm}
+              className="px-8 py-2 min-w-[160px] bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 };

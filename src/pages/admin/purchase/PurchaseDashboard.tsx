@@ -147,14 +147,6 @@ export const PurchaseDashboard: React.FC = () => {
             <FileText size={14} style={{ color: '#ffffff' }} />
             <span className="hidden md:inline" style={{ color: '#ffffff' }}>Report</span>
           </Button>
-          <Button 
-            className="bg-[#002147] hover:bg-[#003366] px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
-            onClick={() => navigate('/admin/purchase/invoices/create')}
-            style={{ color: '#ffffff' }}
-          >
-            <span className="hidden md:inline" style={{ color: '#ffffff' }}>New Purchase Invoice</span>
-            <span className="md:hidden" style={{ color: '#ffffff' }}>New Invoice</span>
-          </Button>
         </div>
       </div>
 
@@ -207,7 +199,6 @@ export const PurchaseDashboard: React.FC = () => {
               </div>
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Procurement Stream</h3>
             </div>
-            <button className="text-[9px] font-bold text-[#334e68] uppercase tracking-widest hover:underline px-3 py-1.5 bg-indigo-50/50 rounded-lg transition-colors">Audit All Vouchers</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -259,11 +250,6 @@ export const PurchaseDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-center">
-            <button className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] hover:text-[#3b4cb8] transition-colors group">
-              View Detailed Ledger <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
         </div>
 
         <div className="bg-white rounded-xl md:rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -300,19 +286,6 @@ export const PurchaseDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-          
-          <div className="mt-10 p-5 bg-slate-50 rounded-2xl border border-slate-100 relative overflow-hidden group">
-            <div className="relative z-10 flex items-center gap-4">
-              <div className="p-3 bg-white rounded-xl text-indigo-600 shadow-sm border border-slate-100 group-hover:rotate-6 transition-transform">
-                <ShieldCheck size={20} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900 leading-tight border-b border-slate-100 pb-1 mb-1">Audit Compliance</p>
-                <p className="text-[11px] text-indigo-600 font-bold">100% Data Integrity</p>
-                <p className="text-[10px] text-slate-500 leading-relaxed font-medium mt-1">All procurement vouchers are cryptographically verified.</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

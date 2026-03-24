@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { useNotifications } from "../../../context/AppContext";
+import { exportToExcel } from "../../../utils/reportGenerator";
 
 interface PReturn {
   id: string; date: string; returnNo: string; invoiceNo: string;
@@ -36,8 +38,12 @@ const DeleteModal: React.FC<{ returnNo: string; onClose: () => void; onConfirm: 
         Are you sure you want to delete <span className="font-semibold text-slate-700">"{returnNo}"</span>? This cannot be undone.
       </p>
       <div className="flex gap-3">
-        <button onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-slate-50 transition">Cancel</button>
-        <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 h-11 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition">Delete</button>
+        <button onClick={onClose} 
+          style={{ minHeight: '36px', height: '36px', borderRadius: '12px' }}
+          className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition">Cancel</button>
+        <button onClick={() => { onConfirm(); onClose(); }} 
+          style={{ minHeight: '36px', height: '36px', borderRadius: '12px' }}
+          className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] transition">Delete</button>
       </div>
     </motion.div>
   </div>
@@ -46,6 +52,7 @@ const DeleteModal: React.FC<{ returnNo: string; onClose: () => void; onConfirm: 
 /* ── Main Page ── */
 export const PurchaseReturnsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showNotification } = useNotifications();
   const [returns, setReturns] = useState<PReturn[]>(MOCK_RETURNS);
   const [activeTab, setActiveTab] = useState<Tab>('All Returns');
   const [search, setSearch] = useState('');
@@ -71,6 +78,43 @@ export const PurchaseReturnsPage: React.FC = () => {
 
   const handleDelete = (id: string) =>
     setReturns(prev => prev.filter(r => r.id !== id));
+
+  const handleExportExcel = () => {
+    try {
+      const exportData = displayed.map(ret => [
+        ret.returnNo,
+        ret.date,
+        ret.invoiceNo,
+        ret.vendor,
+        `-$${ret.amount.toFixed(2)}`,
+        ret.status
+      ]);
+
+      exportToExcel(
+        [
+          {
+            sheetName: 'Purchase Returns',
+            headers: ['Return No', 'Date', 'Ref Invoice', 'Vendor', 'Return Amount', 'Status'],
+            data: exportData
+          }
+        ],
+        'Purchase_Returns_Mar_2026'
+      );
+
+      showNotification({
+        type: 'success',
+        title: 'Excel Downloaded',
+        message: 'Purchase returns exported successfully'
+      });
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Failed to export purchase returns'
+      });
+      console.error('Export error:', error);
+    }
+  };
 
   const columns = [
     {
@@ -123,7 +167,14 @@ export const PurchaseReturnsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Purchase Return</h1>
           <div className="flex items-center gap-3">
-            <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>Export</Button>
+            <Button 
+              variant="secondary" 
+              className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" 
+              leftIcon={<Download size={14} />}
+              onClick={handleExportExcel}
+            >
+              Export
+            </Button>
             <Button variant="primary"
               className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10"
               leftIcon={<Plus size={14} />}

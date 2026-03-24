@@ -109,9 +109,7 @@ const REPORTS: Report[] = [
 const fieldCls = "w-full h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition bg-white";
 
 const ReportPanel: React.FC<{report:Report}> = ({report}) => {
-  const init = () => Object.fromEntries(report.filters.flatMap(f=>[
-    [f.key,""], [`${f.key}_to`,""]
-  ]));
+  const init = () => Object.fromEntries(report.filters.map(f=>[f.key,""]));
   const [values, setValues] = useState<Record<string,string>>(init);
   const set = (k:string,v:string) => setValues(p=>({...p,[k]:v}));
   const hasFilters = Object.values(values).some(v=>v!=="");
@@ -130,39 +128,21 @@ const ReportPanel: React.FC<{report:Report}> = ({report}) => {
         </div>
       </div>
       <div className="p-6 flex-1">
-        <div className="grid grid-cols-2 gap-x-6 mb-2 hidden md:grid">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Value (From)</p>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Value (To)</p>
+        <div className="mb-2">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter Value</p>
         </div>
         <div className="border border-slate-200 rounded-xl overflow-hidden bg-white reports-filters">
           {report.filters.map((f,idx)=>{
             const isLast = idx===report.filters.length-1;
-            const renderField = (key:string) => f.type==="select"
-              ? <select className={fieldCls} value={values[key]} onChange={e=>set(key,e.target.value)}><option value="">— Select —</option>{f.options?.map(o=><option key={o} value={o}>{o}</option>)}</select>
+            const renderField = () => f.type==="select"
+              ? <select className={fieldCls} value={values[f.key]} onChange={e=>set(f.key,e.target.value)}><option value="">— Select —</option>{f.options?.map(o=><option key={o} value={o}>{o}</option>)}</select>
               : f.type==="date"
-              ? <input type="date" className={fieldCls} value={values[key]} onChange={e=>set(key,e.target.value)}/>
-              : <input type="text" className={fieldCls} placeholder={`Enter ${f.label.toLowerCase()}…`} value={values[key]} onChange={e=>set(key,e.target.value)}/>;
+              ? <input type="date" className={fieldCls} value={values[f.key]} onChange={e=>set(f.key,e.target.value)}/>
+              : <input type="text" className={fieldCls} placeholder={`Enter ${f.label.toLowerCase()}…`} value={values[f.key]} onChange={e=>set(f.key,e.target.value)}/>;
             return (
-              <div key={f.key} className={`${!isLast?"border-b border-slate-100":""}`}>
-                {/* Mobile Layout - Stacked */}
-                <div className="block md:hidden">
-                  <div className="px-4 py-3 bg-slate-50/40 border-b border-slate-100">
-                    <span className="text-xs font-semibold text-slate-700 block mb-2">From {f.label}</span>
-                    {renderField(f.key)}
-                  </div>
-                  <div className="px-4 py-3 bg-white">
-                    <span className="text-xs font-semibold text-slate-700 block mb-2">To {f.label}</span>
-                    {renderField(`${f.key}_to`)}
-                  </div>
-                </div>
-                {/* Desktop Layout - Two Columns */}
-                <div className="hidden md:grid grid-cols-2 gap-0">
-                  <div className="flex items-center gap-3 px-5 py-3 border-r border-slate-100 bg-slate-50/40">
-                    <span className="text-xs font-semibold text-slate-700 min-w-[120px]">{f.label}</span>
-                    <div className="flex-1">{renderField(f.key)}</div>
-                  </div>
-                  <div className="flex items-center px-5 py-3">{renderField(`${f.key}_to`)}</div>
-                </div>
+              <div key={f.key} className={`flex items-center gap-3 px-5 py-3 ${!isLast?"border-b border-slate-100":""} bg-slate-50/40`}>
+                <span className="text-xs font-semibold text-slate-700 min-w-[120px]">{f.label}</span>
+                <div className="flex-1">{renderField()}</div>
               </div>
             );
           })}
