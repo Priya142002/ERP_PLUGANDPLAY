@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { NavigationItem, User } from '../../types';
 import { getNavigationForRole } from '../../config/navigation';
@@ -32,7 +32,8 @@ const NavigationItemComponent: React.FC<NavigationItemComponentProps> = ({
   const location = useLocation();
   const hasChildren = item.children && item.children.length > 0;
   const isChildActive = item.children?.some(child => child.path === location.pathname);
-  const shouldExpand = isExpanded || isChildActive;
+  // Allow manual collapse even when child is active
+  const shouldExpand = isExpanded;
 
 
   const baseClasses = `
@@ -100,7 +101,6 @@ const NavigationItemComponent: React.FC<NavigationItemComponentProps> = ({
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const location = useLocation();
   const { isModuleEnabled } = useModulesSafe();
   
@@ -108,6 +108,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
   // In production, this would come from the user's actual subscription
   const subscriptionPlan = (user as any).subscriptionPlan || 'pro';
   const navigationItems = getNavigationForRole(user.role, subscriptionPlan);
+
+  // Find which parent menu should be expanded based on current path
+  const getInitialExpandedItems = () => {
+    const expanded = new Set<string>();
+    navigationItems.forEach(item => {
+      if (item.children?.some(child => child.path === location.pathname)) {
+        expanded.add(item.id);
+      }
+    });
+    return expanded;
+  };
+
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(getInitialExpandedItems());
+
+  // Update expanded items when location changes
+  useEffect(() => {
+    const newExpanded = getInitialExpandedItems();
+    setExpandedItems(prev => {
+      // Merge with existing expanded items to preserve manual expansions
+      const merged = new Set([...prev, ...newExpanded]);
+      return merged;
+    });
+  }, [location.pathname]);
 
   // Filter navigation items based on enabled modules (only for admin role)
   const filteredNavigationItems = user.role === 'admin' 
