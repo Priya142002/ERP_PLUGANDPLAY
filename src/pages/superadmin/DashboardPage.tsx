@@ -87,7 +87,7 @@ export function DashboardPage() {
     },
     { 
       label: "Platform Revenue", 
-      value: "$28.4K", 
+      value: "₹28.4K", 
       delta: "+12% MoM", 
       icon: DollarSign,
       color: CHART_COLORS.warning,

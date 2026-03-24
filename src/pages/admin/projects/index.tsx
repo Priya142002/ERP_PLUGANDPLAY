@@ -85,9 +85,9 @@ if (typeof document !== 'undefined') {
 const ProjectHealthReportModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [exportHover, setExportHover] = useState(false);
   const projects = [
-    { name: 'Infrastructure Modernization', progress: 75, status: 'On Track', health: 92, budget: '$80K / $110K', lead: 'Jordan T.', color: '#22c55e' },
-    { name: 'Core ERP Migration', progress: 42, status: 'In Review', health: 67, budget: '$45K / $70K', lead: 'Alex M.', color: '#f59e0b' },
-    { name: 'Supply Chain Sync', progress: 90, status: 'Finishing', health: 95, budget: '$55K / $60K', lead: 'Sara K.', color: '#22c55e' },
+    { name: 'Infrastructure Modernization', progress: 75, status: 'On Track', health: 92, budget: '₹80K / ₹1.1L', lead: 'Jordan T.', color: '#22c55e' },
+    { name: 'Core ERP Migration', progress: 42, status: 'In Review', health: 67, budget: '₹45K / ₹70K', lead: 'Alex M.', color: '#f59e0b' },
+    { name: 'Supply Chain Sync', progress: 90, status: 'Finishing', health: 95, budget: '₹55K / ₹60K', lead: 'Sara K.', color: '#22c55e' },
   ];
 
   return (
@@ -197,7 +197,7 @@ export const ProjectDashboard: React.FC = () => {
     { label: 'Active Projects', value: '24', icon: Briefcase, color: 'bg-blue-600', trend: '8 On Track' },
     { label: 'Total Tasks', value: '184', icon: CheckCircle, color: 'bg-indigo-600', trend: '+12 Weekly' },
     { label: 'Resource Util.', value: '88%', icon: Users, color: 'bg-emerald-600', trend: 'Optimal' },
-    { label: 'Project Budget', value: '$240K', icon: DollarSign, color: 'bg-amber-500', trend: '72% Used' },
+    { label: 'Project Budget', value: '₹2,40,000', icon: DollarSign, color: 'bg-amber-500', trend: '72% Used' },
   ];
 
   return (
@@ -388,7 +388,7 @@ export const ProjectListPage: React.FC = () => {
               {[
                 { label: 'Project Name', key: 'name', type: 'text', placeholder: 'e.g. Infrastructure Modernization' },
                 { label: 'Lead Manager', key: 'lead', type: 'text', placeholder: 'e.g. Jordan T.' },
-                { label: 'Budget', key: 'budget', type: 'text', placeholder: 'e.g. $50,000' },
+                { label: 'Budget', key: 'budget', type: 'text', placeholder: 'e.g. ₹50,000' },
                 { label: 'Deadline', key: 'deadline', type: 'date', placeholder: '' },
               ].map(f => (
                 <div key={f.key}>
@@ -689,7 +689,7 @@ export const TimesheetPage: React.FC = () => {
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Travel • Oct 1{i}, 2023</p>
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-rose-600">$420.00</span>
+                            <span className="text-sm font-bold text-rose-600">₹420.00</span>
                         </div>
                     ))}
                 </div>

@@ -44,9 +44,9 @@ export const AdminDashboardPage: React.FC = () => {
   const { mode } = useAdminTheme();
   
   const stats = [
-    { label: 'Total Revenue', value: '$128,450', icon: 'cash', color: 'bg-emerald-500', trend: '12.5%', trendUp: true },
-    { label: 'Avg Purchases', value: '$42,200', icon: 'shopping-cart', color: 'bg-blue-500', trend: '5.2%', trendUp: true },
-    { label: 'Inventory Value', value: '$845,000', icon: 'archive', color: 'bg-indigo-500', trend: '2.1%', trendUp: false },
+    { label: 'Total Revenue', value: '₹1,28,450', icon: 'cash', color: 'bg-emerald-500', trend: '12.5%', trendUp: true },
+    { label: 'Avg Purchases', value: '₹42,200', icon: 'shopping-cart', color: 'bg-blue-500', trend: '5.2%', trendUp: true },
+    { label: 'Inventory Value', value: '₹8,45,000', icon: 'archive', color: 'bg-indigo-500', trend: '2.1%', trendUp: false },
     { label: 'Pending Orders', value: '24', icon: 'bell', color: 'bg-rose-500', trend: '8.4%', trendUp: true },
   ];
 
@@ -203,7 +203,7 @@ export const AdminDashboardPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-5">
                       <span className={`text-sm font-bold transition-colors ${i % 2 === 0 ? 'text-rose-600 group-hover:text-rose-700' : 'text-emerald-600 group-hover:text-emerald-700'}`}>
-                        {i % 2 === 0 ? '-' : '+'}${245 * i}.00
+                        {i % 2 === 0 ? '-' : '+'}₹{245 * i}.00
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right pr-8">

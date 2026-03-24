@@ -17,7 +17,7 @@ import Badge from "../../../components/ui/Badge";
 const ACCOUNTS_STATS = [
   {
     title: "Capital Assets",
-    value: "$1,245,000",
+    value: "₹12,45,000",
     icon: <Briefcase size={24} />,
     color: "bg-blue-600",
     trend: "+4.2% Growth",
@@ -26,7 +26,7 @@ const ACCOUNTS_STATS = [
   },
   {
     title: "Net Net Profit",
-    value: "$158,400",
+    value: "₹1,58,400",
     icon: <TrendingUp size={24} />,
     color: "bg-emerald-600",
     trend: "+12.1% Alpha",
@@ -35,7 +35,7 @@ const ACCOUNTS_STATS = [
   },
   {
     title: "Accounts Payable",
-    value: "$42,500",
+    value: "₹42,500",
     icon: <Wallet size={24} />,
     color: "bg-rose-500",
     trend: "-5.4% Delta",
@@ -44,7 +44,7 @@ const ACCOUNTS_STATS = [
   },
   {
     title: "Liquid Cash",
-    value: "$384,200",
+    value: "₹3,84,200",
     icon: <DollarSign size={24} />,
     color: "bg-amber-500",
     trend: "+2.8% Flow",
@@ -54,11 +54,11 @@ const ACCOUNTS_STATS = [
 ];
 
 const RECENT_VOUCHERS = [
-  { id: '1', date: '2026-03-16', voucherNo: 'PV-001', type: 'Payment', ref: 'INV-2026-001', amount: '$4,410.00', status: 'Approved' },
-  { id: '2', date: '2026-03-16', voucherNo: 'RV-001', type: 'Receipt', ref: 'SINV-2026-001', amount: '$13,020.00', status: 'Authorized' },
-  { id: '3', date: '2026-03-15', voucherNo: 'JV-001', type: 'Journal', ref: 'ADJ-101', amount: '$1,200.00', status: 'Approved' },
-  { id: '4', date: '2026-03-15', voucherNo: 'PV-002', type: 'Payment', ref: 'OFF-404', amount: '$892.50', status: 'Approved' },
-  { id: '5', date: '2026-03-14', voucherNo: 'RV-002', type: 'Receipt', ref: 'SINV-2026-002', amount: '$893.03', status: 'Approved' },
+  { id: '1', date: '2026-03-16', voucherNo: 'PV-001', type: 'Payment', ref: 'INV-2026-001', amount: '₹4,410.00', status: 'Approved' },
+  { id: '2', date: '2026-03-16', voucherNo: 'RV-001', type: 'Receipt', ref: 'SINV-2026-001', amount: '₹13,020.00', status: 'Authorized' },
+  { id: '3', date: '2026-03-15', voucherNo: 'JV-001', type: 'Journal', ref: 'ADJ-101', amount: '₹1,200.00', status: 'Approved' },
+  { id: '4', date: '2026-03-15', voucherNo: 'PV-002', type: 'Payment', ref: 'OFF-404', amount: '₹892.50', status: 'Approved' },
+  { id: '5', date: '2026-03-14', voucherNo: 'RV-002', type: 'Receipt', ref: 'SINV-2026-002', amount: '₹893.03', status: 'Approved' },
 ];
 
 export const AccountsDashboard: React.FC = () => {
@@ -190,10 +190,10 @@ export const AccountsDashboard: React.FC = () => {
           </div>
           <div className="p-6 md:p-8 space-y-8">
             {[
-              { label: 'Procurement Gap', percentage: 45, color: 'bg-indigo-500', value: '$18,500' },
-              { label: 'Infrastructure', percentage: 25, color: 'bg-blue-500', value: '$10,250' },
-              { label: 'Payroll & HR', percentage: 20, color: 'bg-emerald-500', value: '$8,200' },
-              { label: 'Taxation Matrix', percentage: 10, color: 'bg-slate-400', value: '$4,100' },
+              { label: 'Procurement Gap', percentage: 45, color: 'bg-indigo-500', value: '₹18,500' },
+              { label: 'Infrastructure', percentage: 25, color: 'bg-blue-500', value: '₹10,250' },
+              { label: 'Payroll & HR', percentage: 20, color: 'bg-emerald-500', value: '₹8,200' },
+              { label: 'Taxation Matrix', percentage: 10, color: 'bg-slate-400', value: '₹4,100' },
             ].map((item) => (
               <div key={item.label} className="space-y-3">
                 <div className="flex justify-between items-end">

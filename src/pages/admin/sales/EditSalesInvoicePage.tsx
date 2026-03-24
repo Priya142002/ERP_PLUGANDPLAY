@@ -217,7 +217,7 @@ export const EditSalesInvoicePage: React.FC = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Tax Total</span>
-                <span className="font-semibold">$0.00</span>
+                <span className="font-semibold">₹0.00</span>
               </div>
               <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
                 <span className="font-bold text-slate-900">Total Amount</span>

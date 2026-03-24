@@ -11,7 +11,7 @@ export const HRDashboard: React.FC = () => {
     { label: 'Total Employees', value: '428', icon: 'users', color: 'bg-indigo-600', trend: '+14 New' },
     { label: 'Today Presence', value: '92%', icon: 'clipboard-check', color: 'bg-emerald-600', trend: 'Optimal' },
     { label: 'Leave Requests', value: '12', icon: 'calendar', color: 'bg-amber-500', trend: '8 Pending' },
-    { label: 'Net Payroll', value: '$245k', icon: 'cash', color: 'bg-rose-600', trend: 'Oct Cycle' },
+    { label: 'Net Payroll', value: '₹2,45,000', icon: 'cash', color: 'bg-rose-600', trend: 'Oct Cycle' },
   ];
 
   return (
@@ -241,7 +241,7 @@ export const PayrollPage: React.FC = () => (
       <div className="p-8 border-b border-slate-50 bg-[#002147] text-white relative">
         <div className="relative z-10">
           <p className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Total Monthly Payout</p>
-          <h2 className="text-4xl font-bold tracking-tight">$245,820.00</h2>
+          <h2 className="text-4xl font-bold tracking-tight">₹2,45,820.00</h2>
           <div className="mt-6 flex gap-8">
             <div>
               <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Calculated For</p>
@@ -269,7 +269,7 @@ export const PayrollPage: React.FC = () => (
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-slate-900">$242,100</p>
+                <p className="text-sm font-bold text-slate-900">₹2,42,100</p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                   <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Paid</span>

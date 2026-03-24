@@ -401,7 +401,7 @@ export const BOMPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <span className="text-sm font-bold text-green-600">${bom.totalCost.toFixed(2)}</span>
+                    <span className="text-sm font-bold text-green-600">₹{bom.totalCost.toFixed(2)}</span>
                   </td>
                   <td className="px-6 py-5">
                     <Badge variant="info" className="text-[10px]">V{bom.version}</Badge>
@@ -527,7 +527,7 @@ export const BOMPage: React.FC = () => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         <div>
-                          <label className="block text-xs font-bold text-slate-600 mb-1">Unit Cost ($)</label>
+                          <label className="block text-xs font-bold text-slate-600 mb-1">Unit Cost (₹)</label>
                           <input
                             type="number"
                             step="0.01"
@@ -539,7 +539,7 @@ export const BOMPage: React.FC = () => {
                           <label className="block text-xs font-bold text-slate-600 mb-1">Total Cost</label>
                           <input
                             type="text"
-                            value="$0.00"
+                            value="₹0.00"
                             disabled
                             className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-100 text-slate-600"
                           />
@@ -554,7 +554,7 @@ export const BOMPage: React.FC = () => {
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-slate-700">Total Production Cost</span>
-                  <span className="text-2xl font-bold text-blue-600">$0.00</span>
+                  <span className="text-2xl font-bold text-blue-600">₹0.00</span>
                 </div>
                 <p className="text-xs text-slate-600 mt-1">Auto-calculated from all materials</p>
               </div>

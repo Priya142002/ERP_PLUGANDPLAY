@@ -10,7 +10,7 @@ export const CRMDashboard: React.FC = () => {
     { label: 'Total Leads', value: '1,284', icon: 'users', color: 'bg-blue-600', trend: '+12% Growth' },
     { label: 'Opportunities', value: '420', icon: 'presentation-chart-line', color: 'bg-indigo-600', trend: '+8% Yield' },
     { label: 'Conversion Rate', value: '24.5%', icon: 'chart-bar', color: 'bg-emerald-600', trend: '+5% Alpha' },
-    { label: 'Deal Value', value: '$845k', icon: 'cash', color: 'bg-amber-500', trend: '+15% High' },
+    { label: 'Deal Value', value: '₹8,45,000', icon: 'cash', color: 'bg-amber-500', trend: '+15% High' },
   ];
 
   return (
@@ -80,7 +80,7 @@ export const CRMDashboard: React.FC = () => {
                   {[1, 2].map(j => (
                     <div key={j} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 cursor-pointer transition-all">
                       <p className="text-sm font-bold text-slate-900">Enterprise Deal #{i}{j}</p>
-                      <p className="text-[11px] text-slate-500 mt-1">$45,000 • High Probability</p>
+                      <p className="text-[11px] text-slate-500 mt-1">₹45,000 • High Probability</p>
                     </div>
                   ))}
                 </div>
@@ -302,7 +302,7 @@ export const OpportunitiesPage: React.FC = () => (
               </td>
               <td className="px-6 py-5 text-center">
                 <div className="font-mono font-bold text-slate-900 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block group-hover:border-blue-200 transition-colors">
-                  $24,500.00
+                  ₹24,500.00
                 </div>
               </td>
               <td className="px-6 py-5">

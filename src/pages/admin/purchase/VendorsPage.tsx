@@ -46,7 +46,7 @@ const INITIAL_VENDORS: Vendor[] = [
     autoGL: false, inactive: false,
     paymentTerms: 'Net 30', paymentMethod: 'Bank Transfer', currency: 'USD ($)',
     payFrom: '', status: 'Active', allowCashPay: false,
-    internalRemarks: '', balance: '$2,400.00', location: 'New York, USA',
+    internalRemarks: '', balance: '₹2,400.00', location: 'Mumbai, India',
   },
   {
     id: '2', name: 'Global Logistics', nameAbbr: 'GlobalLog', code: 'VND-002',
@@ -63,7 +63,7 @@ const INITIAL_VENDORS: Vendor[] = [
     autoGL: false, inactive: false,
     paymentTerms: 'Net 60', paymentMethod: 'Bank Transfer', currency: 'GBP (£)',
     payFrom: '', status: 'Active', allowCashPay: false,
-    internalRemarks: '', balance: '$0.00', location: 'London, UK',
+    internalRemarks: '', balance: '₹0.00', location: 'London, UK',
   },
   {
     id: '3', name: 'Office Essentials', nameAbbr: 'OfficeEss', code: 'VND-003',
@@ -80,7 +80,7 @@ const INITIAL_VENDORS: Vendor[] = [
     autoGL: false, inactive: true,
     paymentTerms: 'Net 30', paymentMethod: 'Cheque', currency: 'USD ($)',
     payFrom: '', status: 'Inactive', allowCashPay: false,
-    internalRemarks: '', balance: '$850.00', location: 'Toronto, CA',
+    internalRemarks: '', balance: '₹850.00', location: 'Toronto, CA',
   },
 ];
 

@@ -17,7 +17,7 @@ import Button from "../../../components/ui/Button";
 const STAT_CARDS = [
   {
     title: "Procurement Capital",
-    value: "$124,500",
+    value: "₹1,24,500",
     icon: <ShoppingBag size={24} />,
     color: "bg-blue-600",
     iconBg: "bg-blue-50",
@@ -39,7 +39,7 @@ const STAT_CARDS = [
   },
   {
     title: "Capital Outflow",
-    value: "$12,380",
+    value: "₹12,380",
     icon: <CreditCard size={24} />,
     color: "bg-rose-500",
     iconBg: "bg-rose-50",
@@ -62,11 +62,11 @@ const STAT_CARDS = [
 ];
 
 const RECENT_PURCHASES = [
-  { id: '1', invoice: 'PINV-2026-001', vendor: 'TechNova Solutions', date: '2026-03-16', amount: '$4,200.00', status: 'Settled' },
-  { id: '2', invoice: 'PINV-2026-002', vendor: 'Global Logistics', date: '2026-03-15', amount: '$1,850.50', status: 'Pending' },
-  { id: '3', invoice: 'PINV-2026-003', vendor: 'Office Essentials', date: '2026-03-14', amount: '$850.00', status: 'Settled' },
-  { id: '4', invoice: 'PINV-2026-004', vendor: 'Vertex Industries', date: '2026-03-14', amount: '$12,400.00', status: 'Partial' },
-  { id: '5', invoice: 'PINV-2026-005', vendor: 'Pure Water Co.', date: '2026-03-13', amount: '$120.00', status: 'Settled' },
+  { id: '1', invoice: 'PINV-2026-001', vendor: 'TechNova Solutions', date: '2026-03-16', amount: '₹4,200.00', status: 'Settled' },
+  { id: '2', invoice: 'PINV-2026-002', vendor: 'Global Logistics', date: '2026-03-15', amount: '₹1,850.50', status: 'Pending' },
+  { id: '3', invoice: 'PINV-2026-003', vendor: 'Office Essentials', date: '2026-03-14', amount: '₹850.00', status: 'Settled' },
+  { id: '4', invoice: 'PINV-2026-004', vendor: 'Vertex Industries', date: '2026-03-14', amount: '₹12,400.00', status: 'Partial' },
+  { id: '5', invoice: 'PINV-2026-005', vendor: 'Pure Water Co.', date: '2026-03-13', amount: '₹120.00', status: 'Settled' },
 ];
 
 export const PurchaseDashboard: React.FC = () => {
@@ -208,10 +208,10 @@ export const PurchaseDashboard: React.FC = () => {
           </div>
           <div className="p-6 md:p-8 space-y-8">
             {[
-              { label: 'Raw Materials', percentage: 65, color: 'bg-blue-500', value: '$80,925' },
-              { label: 'Finished Goods', percentage: 20, color: 'bg-indigo-500', value: '$24,900' },
-              { label: 'Critical Supplies', percentage: 10, color: 'bg-blue-400', value: '$12,450' },
-              { label: 'Cloud Services', percentage: 5, color: 'bg-slate-400', value: '$6,225' },
+              { label: 'Raw Materials', percentage: 65, color: 'bg-blue-500', value: '₹80,925' },
+              { label: 'Finished Goods', percentage: 20, color: 'bg-indigo-500', value: '₹24,900' },
+              { label: 'Critical Supplies', percentage: 10, color: 'bg-blue-400', value: '₹12,450' },
+              { label: 'Cloud Services', percentage: 5, color: 'bg-slate-400', value: '₹6,225' },
             ].map((cat) => (
               <div key={cat.label} className="space-y-3">
                 <div className="flex justify-between items-end">

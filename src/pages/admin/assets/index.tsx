@@ -28,10 +28,10 @@ import '../reports/InventoryReportsPage.css';
 // --- Asset Intelligence (Dashboard) ---
 export const AssetDashboard: React.FC = () => {
   const stats = [
-    { label: 'Total Enterprise Assets', value: '1,240', icon: Archive, color: 'bg-blue-600', trend: 'Val: $2.4M' },
+    { label: 'Total Enterprise Assets', value: '1,240', icon: Archive, color: 'bg-blue-600', trend: 'Val: ₹2.4Cr' },
     { label: 'Asset Allocation', value: '842', icon: UserCheck, color: 'bg-slate-600', trend: '68% Utilized' },
     { label: 'Critical Servicing', value: '12', icon: Hammer, color: 'bg-amber-500', trend: 'Scheduled' },
-    { label: 'Net Book Value', value: '$1.8M', icon: RefreshCw, color: 'bg-indigo-600', trend: 'Synced' },
+    { label: 'Net Book Value', value: '₹1.8Cr', icon: RefreshCw, color: 'bg-indigo-600', trend: 'Synced' },
   ];
 
   return (

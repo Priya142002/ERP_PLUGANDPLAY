@@ -59,7 +59,7 @@ function ChangePlanModal({ subscription, onClose, onSave }: { subscription: any;
                       {plan}
                     </div>
                     <div className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
-                      ${details.price}/mo · {details.seats === "∞" ? "Unlimited seats" : `Up to ${details.seats} seats`}
+                      ₹{details.price}/mo · {details.seats === "∞" ? "Unlimited seats" : `Up to ${details.seats} seats`}
                     </div>
                   </div>
                   {newPlan === plan && (
@@ -75,16 +75,16 @@ function ChangePlanModal({ subscription, onClose, onSave }: { subscription: any;
             <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--sa-hover)' }}>
               <div className="flex justify-between text-sm mb-2">
                 <span style={{ color: 'var(--sa-text-secondary)' }}>Current price:</span>
-                <span style={{ color: 'var(--sa-text-primary)' }}>${currentPrice}/mo</span>
+                <span style={{ color: 'var(--sa-text-primary)' }}>₹{currentPrice}/mo</span>
               </div>
               <div className="flex justify-between text-sm mb-2">
                 <span style={{ color: 'var(--sa-text-secondary)' }}>New price:</span>
-                <span style={{ color: 'var(--sa-text-primary)' }}>${newPrice}/mo</span>
+                <span style={{ color: 'var(--sa-text-primary)' }}>₹{newPrice}/mo</span>
               </div>
               <div className="flex justify-between text-sm font-medium pt-2 border-t" style={{ borderColor: 'var(--sa-border)' }}>
                 <span style={{ color: 'var(--sa-text-secondary)' }}>Difference:</span>
                 <span style={{ color: priceDiff > 0 ? 'var(--sa-success)' : 'var(--sa-error)' }}>
-                  {priceDiff > 0 ? '+' : ''}{priceDiff}/mo
+                  {priceDiff > 0 ? '+' : ''}₹{priceDiff}/mo
                 </span>
               </div>
             </div>
@@ -145,11 +145,11 @@ const pageMotion = {
 };
 
 const SUBSCRIPTIONS = [
-  { company: "BuildSafe Corp", plan: "Enterprise", price: "$499/mo", nextBilling: "Apr 1 2026", status: "Active", seats: 248, maxSeats: null },
-  { company: "SteelWorks Ltd", plan: "Pro", price: "$149/mo", nextBilling: "Mar 30 2026", status: "Active", seats: 78, maxSeats: 200 },
-  { company: "GreenField Mining", plan: "Basic", price: "$49/mo", nextBilling: "Apr 9 2026", status: "Active", seats: 18, maxSeats: 50 },
-  { company: "AeroCraft Inc", plan: "Enterprise", price: "$499/mo", nextBilling: "Apr 15 2026", status: "Active", seats: 519, maxSeats: null },
-  { company: "Harbor Logistics", plan: "Pro", price: "$149/mo", nextBilling: "—", status: "Suspended", seats: 87, maxSeats: 200 },
+  { company: "BuildSafe Corp", plan: "Enterprise", price: "₹41,317/mo", nextBilling: "Apr 1 2026", status: "Active", seats: 248, maxSeats: null },
+  { company: "SteelWorks Ltd", plan: "Pro", price: "₹12,367/mo", nextBilling: "Mar 30 2026", status: "Active", seats: 78, maxSeats: 200 },
+  { company: "GreenField Mining", plan: "Basic", price: "₹4,067/mo", nextBilling: "Apr 9 2026", status: "Active", seats: 18, maxSeats: 50 },
+  { company: "AeroCraft Inc", plan: "Enterprise", price: "₹41,317/mo", nextBilling: "Apr 15 2026", status: "Active", seats: 519, maxSeats: null },
+  { company: "Harbor Logistics", plan: "Pro", price: "₹12,367/mo", nextBilling: "—", status: "Suspended", seats: 87, maxSeats: 200 },
 ];
 
 export function SubscriptionManagementPage() {
@@ -179,7 +179,7 @@ export function SubscriptionManagementPage() {
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl border shadow-sm"
           style={{ borderColor: "var(--sa-border)", backgroundColor: "var(--sa-card)" }}>
           <DollarSign className="h-4 w-4" style={{ color: "var(--sa-success)" }} />
-          <span className="text-sm font-bold" style={{ color: "var(--sa-text-primary)" }}>Projected MRR: ${totalMRR.toLocaleString()}</span>
+          <span className="text-sm font-bold" style={{ color: "var(--sa-text-primary)" }}>Projected MRR: ₹{totalMRR.toLocaleString('en-IN')}</span>
         </div>
       </div>
 
@@ -215,7 +215,7 @@ export function SubscriptionManagementPage() {
             </div>
             <span className="text-xs font-medium" style={{ color: "var(--sa-text-secondary)" }}>Monthly Revenue</span>
           </div>
-          <div className="text-2xl font-bold" style={{ color: "var(--sa-text-primary)" }}>${totalMRR}</div>
+          <div className="text-2xl font-bold" style={{ color: "var(--sa-text-primary)" }}>₹{totalMRR.toLocaleString('en-IN')}</div>
           <div className="text-xs mt-1" style={{ color: "var(--sa-success)" }}>+12% from last month</div>
         </div>
 

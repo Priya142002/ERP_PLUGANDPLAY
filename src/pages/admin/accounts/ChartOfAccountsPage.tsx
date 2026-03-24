@@ -13,13 +13,13 @@ const MOCK_COA = [
     code: '1000', 
     name: 'Assets', 
     type: 'Asset', 
-    balance: '$1,245,000.00',
+    balance: '₹12,45,000.00',
     children: [
-      { id: '1-1', code: '1100', name: 'Current Assets', type: 'Asset', balance: '$645,000.00', children: [
-        { id: '1-1-1', code: '1110', name: 'Cash and Bank', type: 'Asset', balance: '$384,200.00' },
-        { id: '1-1-2', code: '1120', name: 'Accounts Receivable', type: 'Asset', balance: '$260,800.00' },
+      { id: '1-1', code: '1100', name: 'Current Assets', type: 'Asset', balance: '₹6,45,000.00', children: [
+        { id: '1-1-1', code: '1110', name: 'Cash and Bank', type: 'Asset', balance: '₹3,84,200.00' },
+        { id: '1-1-2', code: '1120', name: 'Accounts Receivable', type: 'Asset', balance: '₹2,60,800.00' },
       ]},
-      { id: '1-2', code: '1200', name: 'Fixed Assets', type: 'Asset', balance: '$600,000.00' }
+      { id: '1-2', code: '1200', name: 'Fixed Assets', type: 'Asset', balance: '₹6,00,000.00' }
     ]
   },
   { 
@@ -27,10 +27,10 @@ const MOCK_COA = [
     code: '2000', 
     name: 'Liabilities', 
     type: 'Liability', 
-    balance: '$142,500.00',
+    balance: '₹1,42,500.00',
     children: [
-      { id: '2-1', code: '2100', name: 'Current Liabilities', type: 'Liability', balance: '$42,500.00' },
-      { id: '2-2', code: '2200', name: 'Long Term Debt', type: 'Liability', balance: '$100,000.00' }
+      { id: '2-1', code: '2100', name: 'Current Liabilities', type: 'Liability', balance: '₹42,500.00' },
+      { id: '2-2', code: '2200', name: 'Long Term Debt', type: 'Liability', balance: '₹1,00,000.00' }
     ]
   },
   { 
@@ -38,7 +38,7 @@ const MOCK_COA = [
     code: '3000', 
     name: 'Equity', 
     type: 'Equity', 
-    balance: '$1,102,500.00'
+    balance: '₹11,02,500.00'
   }
 ];
 

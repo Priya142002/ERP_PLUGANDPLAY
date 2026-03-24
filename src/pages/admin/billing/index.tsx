@@ -7,10 +7,10 @@ import { TableFilters, DataTableWrapper } from '../../../components/common';
 
 export const BillingDashboard: React.FC = () => {
   const stats = [
-    { label: 'Total Revenue', value: '$428,240', icon: 'cash', color: 'bg-slate-600', trend: '+18% MoM' },
-    { label: 'Outstanding', value: '$24,500', icon: 'clock', color: 'bg-rose-600', trend: '12 Overdue' },
-    { label: 'Recurring Rev.', value: '$86,000', icon: 'refresh', color: 'bg-blue-600', trend: 'Active Subs' },
-    { label: 'Avg Payout', value: '$1,240', icon: 'document-text', color: 'bg-indigo-600', trend: 'Per Client' },
+    { label: 'Total Revenue', value: '₹4,28,240', icon: 'cash', color: 'bg-slate-600', trend: '+18% MoM' },
+    { label: 'Outstanding', value: '₹24,500', icon: 'clock', color: 'bg-rose-600', trend: '12 Overdue' },
+    { label: 'Recurring Rev.', value: '₹86,000', icon: 'refresh', color: 'bg-blue-600', trend: 'Active Subs' },
+    { label: 'Avg Payout', value: '₹1,240', icon: 'document-text', color: 'bg-indigo-600', trend: 'Per Client' },
   ];
 
   return (
@@ -76,11 +76,11 @@ export const BillingDashboard: React.FC = () => {
           <div className="relative h-[300px]">
             {/* Y-axis labels */}
             <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-xs text-slate-400 font-medium">
-              <span>$140K</span>
-              <span>$105K</span>
-              <span>$70K</span>
-              <span>$35K</span>
-              <span>$0</span>
+              <span>₹140K</span>
+              <span>₹105K</span>
+              <span>₹70K</span>
+              <span>₹35K</span>
+              <span>₹0</span>
             </div>
             
             {/* Chart area */}
@@ -107,7 +107,7 @@ export const BillingDashboard: React.FC = () => {
                         className="flex-1 bg-[#002147] rounded-t-lg hover:bg-blue-900 transition-colors cursor-pointer relative group"
                       >
                         <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          ${item.value1}K
+                          ₹{item.value1}K
                         </span>
                       </motion.div>
                       
@@ -119,7 +119,7 @@ export const BillingDashboard: React.FC = () => {
                         className="flex-1 bg-slate-300 rounded-t-lg hover:bg-slate-400 transition-colors cursor-pointer relative group"
                       >
                         <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          ${item.value2}K
+                          ₹{item.value2}K
                         </span>
                       </motion.div>
                     </div>
@@ -255,7 +255,7 @@ const CreateInvoiceModal: React.FC<{ onClose: () => void; onSave: (invoice: Omit
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">Amount <span className="text-rose-400">*</span></label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">₹</span>
                 <input
                   type="number"
                   min={0}
@@ -365,7 +365,7 @@ const EditInvoiceModal: React.FC<{ invoice: BillingInvoice; onClose: () => void;
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">Amount <span className="text-rose-400">*</span></label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">₹</span>
                 <input
                   type="number"
                   min={0}
@@ -494,7 +494,7 @@ export const InvoicesPage: React.FC = () => {
       key: 'amount' as const,
       label: 'Amount',
       align: 'right' as const,
-      render: (value: number) => <span className="font-bold text-slate-900">${value.toLocaleString()}</span>
+      render: (value: number) => <span className="font-bold text-slate-900">₹{value.toLocaleString('en-IN')}</span>
     },
     {
       key: 'status' as const,

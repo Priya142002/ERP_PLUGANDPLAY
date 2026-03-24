@@ -438,7 +438,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
             <h1 className="lp-title">Integrated Business<br/>Management Platform</h1>
             <p className="lp-subtitle">Streamline your operations with our<br/>comprehensive ERP solution</p>
             <div className="lp-stats">
-              {[{value:'$189K',label:'Revenue'},{value:'6,248',label:'Orders'},{value:'$25K',label:'Profit'}].map(s=>(
+              {[{value:'₹1.89L',label:'Revenue'},{value:'6,248',label:'Orders'},{value:'₹25K',label:'Profit'}].map(s=>(
                 <div key={s.label}>
                   <div className="lp-stat-val">{s.value}</div>
                   <div className="lp-stat-lbl">{s.label}</div>

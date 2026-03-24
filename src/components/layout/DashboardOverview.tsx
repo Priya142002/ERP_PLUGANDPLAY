@@ -209,7 +209,7 @@ const RecentInventoryTable: React.FC<{ items: InventoryItem[] }> = ({ items }) =
                 <td className="py-3 text-sm font-medium text-gray-900">{item.productName}</td>
                 <td className="py-3 text-sm text-gray-600">{item.category}</td>
                 <td className="py-3 text-sm text-gray-900">{item.stock}</td>
-                <td className="py-3 text-sm text-gray-900">${item.lastPrice}</td>
+                <td className="py-3 text-sm text-gray-900">₹{item.lastPrice}</td>
                 <td className="py-3">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
                     {item.status}
@@ -289,7 +289,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const kpiData = [
     {
       title: 'Total Revenue',
-      value: '$189,420',
+      value: '₹1,89,420',
       icon: 'dollar-sign',
       iconColor: 'blue' as const,
       trend: { value: 12.5, isPositive: true, period: 'month' }
@@ -310,7 +310,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     },
     {
       title: 'Net Profit',
-      value: '$25,180',
+      value: '₹25,180',
       icon: 'trending-up',
       iconColor: 'purple' as const,
       trend: { value: 15.3, isPositive: true, period: 'month' }

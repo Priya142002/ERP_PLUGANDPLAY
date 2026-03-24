@@ -6,11 +6,11 @@ import Button from "../../../components/ui/Button";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
 
 const MOCK_SUPPLIERS = [
-  { id: '1', name: 'TechNova Solutions', contact: 'John Carter',   email: 'JOHN@TECHNOVA.COM',    phone: '+1 234 567 890', location: 'San Francisco, CA', status: 'Available',  outstanding: '$2,400.00', vendorNo: 'VND-001' },
-  { id: '2', name: 'Global Logistics',   contact: 'Sarah Jenkins', email: 'SARAH@GLOBALLOG.COM',  phone: '+1 987 654 321', location: 'Chicago, IL',       status: 'Available',  outstanding: '$0.00',     vendorNo: 'VND-002' },
-  { id: '3', name: 'Office Essentials',  contact: 'Michael Ross',  email: 'MIKE@OFFICE.COM',      phone: '+44 20 7946 0958',location: 'New York, NY',      status: 'Inactive',   outstanding: '$850.00',   vendorNo: 'VND-003' },
-  { id: '4', name: 'Vertex Industries',  contact: 'Harvey Specter', email: 'HARVEY@VERTEX.COM',   phone: '+1 555 010 999', location: 'Austin, TX',        status: 'Available',  outstanding: '$12,400.00',vendorNo: 'VND-004' },
-  { id: '5', name: 'Pure Water Co.',     contact: 'Donna Paulsen', email: 'DONNA@PUREWATER.COM',  phone: '+1 555 010 888', location: 'Miami, FL',         status: 'Available',  outstanding: '$0.00',     vendorNo: 'VND-005' },
+  { id: '1', name: 'TechNova Solutions', contact: 'John Carter',   email: 'JOHN@TECHNOVA.COM',    phone: '+91 98765 43210', location: 'Mumbai, MH', status: 'Available',  outstanding: '₹2,400.00', vendorNo: 'VND-001' },
+  { id: '2', name: 'Global Logistics',   contact: 'Sarah Jenkins', email: 'SARAH@GLOBALLOG.COM',  phone: '+91 98765 43211', location: 'Delhi, DL',       status: 'Available',  outstanding: '₹0.00',     vendorNo: 'VND-002' },
+  { id: '3', name: 'Office Essentials',  contact: 'Michael Ross',  email: 'MIKE@OFFICE.COM',      phone: '+91 98765 43212', location: 'Bengaluru, KA',      status: 'Inactive',   outstanding: '₹850.00',   vendorNo: 'VND-003' },
+  { id: '4', name: 'Vertex Industries',  contact: 'Harvey Specter', email: 'HARVEY@VERTEX.COM',   phone: '+91 98765 43213', location: 'Chennai, TN',        status: 'Available',  outstanding: '₹12,400.00',vendorNo: 'VND-004' },
+  { id: '5', name: 'Pure Water Co.',     contact: 'Donna Paulsen', email: 'DONNA@PUREWATER.COM',  phone: '+91 98765 43214', location: 'Hyderabad, TS',         status: 'Available',  outstanding: '₹0.00',     vendorNo: 'VND-005' },
 ];
 
 const TABS = ['All Suppliers', 'Critical Partners', 'Active Vendors', 'Recent Contracts'] as const;
