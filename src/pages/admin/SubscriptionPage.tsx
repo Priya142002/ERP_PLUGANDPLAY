@@ -98,18 +98,18 @@ export function SubscriptionPage() {
   };
 
   return (
-    <motion.div {...pageMotion} className="p-6 space-y-8 max-w-7xl mx-auto">
+    <motion.div {...pageMotion} className="p-6 space-y-6 max-w-6xl mx-auto min-h-0">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+      <div className="text-center space-y-3">
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
           Choose Your Plan
         </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+        <p className="text-base text-slate-600 max-w-xl mx-auto">
           Select the perfect plan for your business. Upgrade or downgrade anytime.
         </p>
 
         {/* Billing Toggle */}
-        <div className="flex items-center justify-center gap-4 mt-6">
+        <div className="flex items-center justify-center gap-4 mt-4">
           <span className={`text-sm font-medium ${billingCycle === "monthly" ? "text-slate-900" : "text-slate-500"}`}>
             Monthly
           </span>
@@ -136,16 +136,16 @@ export function SubscriptionPage() {
       </div>
 
       {/* Current Plan Info */}
-      <div className="max-w-3xl mx-auto p-6 rounded-2xl border-2 border-dashed"
+      <div className="max-w-2xl mx-auto p-4 rounded-xl border-2 border-dashed"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Crown className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <Crown className="h-5 w-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+                <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
                   Current Plan: Pro
                 </h3>
                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
@@ -153,21 +153,36 @@ export function SubscriptionPage() {
                 </span>
               </div>
               <p className="text-sm text-slate-600 mt-1">
-                Next billing: April 30, 2026 • ₹{(6499).toLocaleString('en-IN')}/month • 12 modules enabled
+                Next billing: April 30, 2026 • ₹{(6499).toLocaleString('en-IN')}/month
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" size="sm">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Billing History
-            </Button>
-          </div>
+          <button 
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            style={{ 
+              backgroundColor: '#1a2744',
+              color: '#ffffff',
+              border: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.color = '#1a2744';
+              e.currentTarget.style.border = '1px solid #1a2744';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#1a2744';
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.border = 'none';
+            }}
+          >
+            <CreditCard className="h-4 w-4" />
+            Billing History
+          </button>
         </div>
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto admin-cards-grid">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto admin-cards-grid">
         {PLANS.map((plan, index) => {
           const Icon = plan.icon;
           const isCurrentPlan = plan.id === currentPlan;
@@ -179,80 +194,105 @@ export function SubscriptionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className={`relative rounded-2xl overflow-hidden ${
-                plan.popular ? "ring-2 ring-purple-500 shadow-2xl scale-105" : "shadow-lg"
+              className={`relative rounded-xl overflow-hidden ${
+                plan.popular ? "ring-2 ring-purple-500 shadow-xl scale-102" : "shadow-md"
               }`}
-              style={{ backgroundColor: "var(--card)" }}
+              style={{ backgroundColor: "var(--card)", maxHeight: "500px" }}
             >
               {/* Popular Badge */}
               {plan.popular && (
-                <div className="absolute top-0 right-0 px-4 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-bl-xl">
-                  MOST POPULAR
+                <div className="absolute top-0 right-0 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-bl-lg">
+                  POPULAR
                 </div>
               )}
 
               {/* Card Header */}
-              <div className={`p-6 bg-gradient-to-br ${plan.color} text-white`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Icon className="h-6 w-6" />
+              <div className={`p-4 bg-gradient-to-br ${plan.color} text-white`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold">{plan.name}</h3>
+                    <h3 className="text-xl font-bold">{plan.name}</h3>
                   </div>
                 </div>
-                <p className="text-white/90 text-sm mb-4">{plan.description}</p>
+                <p className="text-white/90 text-sm mb-3">{plan.description}</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">₹{price.toLocaleString('en-IN')}</span>
-                  <span className="text-white/80">/{billingCycle === "monthly" ? "month" : "year"}</span>
+                  <span className="text-2xl font-bold">₹{price.toLocaleString('en-IN')}</span>
+                  <span className="text-white/80 text-sm">/{billingCycle === "monthly" ? "month" : "year"}</span>
                 </div>
               </div>
 
               {/* Card Body */}
-              <div className="p-6 space-y-6">
+              <div className="p-4 space-y-4 overflow-y-auto" style={{ maxHeight: "300px" }}>
                 {/* Modules Included */}
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
-                    Modules Included ({plan.modules.length})
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                    Modules ({plan.modules.length})
                   </h4>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {plan.modules.slice(0, 4).map((module, i) => (
-                      <span key={i} className="px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {plan.modules.slice(0, 3).map((module, i) => (
+                      <span key={i} className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
                         {module}
                       </span>
                     ))}
-                    {plan.modules.length > 4 && (
-                      <span className="px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
-                        +{plan.modules.length - 4} more
+                    {plan.modules.length > 3 && (
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                        +{plan.modules.length - 3} more
                       </span>
                     )}
                   </div>
                 </div>
 
                 {/* Features List */}
-                <ul className="space-y-3">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3">
+                <ul className="space-y-2">
+                  {plan.features.slice(0, 6).map((feature, i) => (
+                    <li key={i} className="flex items-start gap-2">
                       <div className="mt-0.5">
-                        <Check className="h-5 w-5 text-green-500" />
+                        <Check className="h-4 w-4 text-green-500" />
                       </div>
-                      <span className="text-sm text-slate-700">{feature}</span>
+                      <span className="text-xs text-slate-700">{feature}</span>
                     </li>
                   ))}
+                  {plan.features.length > 6 && (
+                    <li className="text-xs text-slate-500 pl-6">
+                      +{plan.features.length - 6} more features
+                    </li>
+                  )}
                 </ul>
 
                 {/* CTA Button */}
                 {isCurrentPlan ? (
-                  <Button variant="secondary" className="w-full" disabled>
+                  <button 
+                    className="w-full py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200"
+                    style={{ 
+                      backgroundColor: '#1a2744',
+                      color: '#ffffff',
+                      opacity: '0.7'
+                    }}
+                    disabled
+                  >
                     Current Plan
-                  </Button>
+                  </button>
                 ) : (
-                  <Button 
-                    variant={plan.popular ? "primary" : "secondary"} 
-                    className="w-full"
+                  <button 
+                    className="w-full py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200"
+                    style={{ 
+                      backgroundColor: '#1a2744',
+                      color: '#ffffff',
+                      border: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0f172a';
+                      e.currentTarget.style.color = '#ffffff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#1a2744';
+                      e.currentTarget.style.color = '#ffffff';
+                    }}
                   >
                     {plan.id === "basic" ? "Downgrade" : "Upgrade"} to {plan.name}
-                  </Button>
+                  </button>
                 )}
               </div>
             </motion.div>
@@ -261,18 +301,18 @@ export function SubscriptionPage() {
       </div>
 
       {/* Features Comparison */}
-      <div className="max-w-5xl mx-auto mt-12">
-        <h2 className="text-2xl font-bold text-center mb-8" style={{ color: "var(--text-primary)" }}>
+      <div className="max-w-4xl mx-auto mt-8">
+        <h2 className="text-xl font-bold text-center mb-6" style={{ color: "var(--text-primary)" }}>
           Compare Plans
         </h2>
-        <div className="rounded-xl border overflow-hidden admin-table-container" style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}>
+        <div className="rounded-lg border overflow-hidden admin-table-container" style={{ backgroundColor: "var(--card)", borderColor: "var(--border)", maxHeight: "400px", overflowY: "auto" }}>
           <table className="w-full admin-table">
-            <thead>
+            <thead className="sticky top-0">
               <tr className="border-b" style={{ borderColor: "var(--border)", backgroundColor: "var(--hover)" }}>
-                <th className="p-4 text-left text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Feature</th>
-                <th className="p-4 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Basic</th>
-                <th className="p-4 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Pro</th>
-                <th className="p-4 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Enterprise</th>
+                <th className="p-3 text-left text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Feature</th>
+                <th className="p-3 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Basic</th>
+                <th className="p-3 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Pro</th>
+                <th className="p-3 text-center text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Enterprise</th>
               </tr>
             </thead>
             <tbody>
@@ -284,16 +324,13 @@ export function SubscriptionPage() {
                 { feature: "Data Backup", basic: "Weekly", pro: "Daily", enterprise: "Real-time" },
                 { feature: "API Access", basic: "—", pro: "✓", enterprise: "Full Access" },
                 { feature: "Multi-branch", basic: "—", pro: "✓", enterprise: "✓" },
-                { feature: "Custom Workflows", basic: "—", pro: "✓", enterprise: "✓" },
-                { feature: "White Label", basic: "—", pro: "—", enterprise: "✓" },
-                { feature: "SLA Guarantee", basic: "—", pro: "—", enterprise: "99.9%" },
-                { feature: "On-premise", basic: "—", pro: "—", enterprise: "✓" }
+                { feature: "Custom Workflows", basic: "—", pro: "✓", enterprise: "✓" }
               ].map((row, i) => (
                 <tr key={i} className="border-b" style={{ borderColor: "var(--border)" }}>
-                  <td className="p-4 text-sm font-medium" style={{ color: "var(--text-primary)" }}>{row.feature}</td>
-                  <td className="p-4 text-sm text-center text-slate-600">{row.basic}</td>
-                  <td className="p-4 text-sm text-center text-slate-600">{row.pro}</td>
-                  <td className="p-4 text-sm text-center text-slate-600">{row.enterprise}</td>
+                  <td className="p-3 text-sm font-medium" style={{ color: "var(--text-primary)" }}>{row.feature}</td>
+                  <td className="p-3 text-sm text-center text-slate-600">{row.basic}</td>
+                  <td className="p-3 text-sm text-center text-slate-600">{row.pro}</td>
+                  <td className="p-3 text-sm text-center text-slate-600">{row.enterprise}</td>
                 </tr>
               ))}
             </tbody>
@@ -302,17 +339,31 @@ export function SubscriptionPage() {
       </div>
 
       {/* FAQ Section */}
-      <div className="max-w-3xl mx-auto mt-12 text-center">
-        <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+      <div className="max-w-2xl mx-auto mt-8 text-center">
+        <h2 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
           Need Help Choosing?
         </h2>
-        <p className="text-slate-600 mb-6">
+        <p className="text-slate-600 mb-4 text-sm">
           Our team is here to help you find the perfect plan for your business needs.
         </p>
-        <Button variant="primary">
-          <Headphones className="h-4 w-4 mr-2" />
+        <button 
+          className="flex items-center gap-2 mx-auto px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+          style={{ 
+            backgroundColor: '#1a2744',
+            color: '#ffffff'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#0f172a';
+            e.currentTarget.style.color = '#ffffff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#1a2744';
+            e.currentTarget.style.color = '#ffffff';
+          }}
+        >
+          <Headphones className="h-4 w-4" />
           Contact Sales
-        </Button>
+        </button>
       </div>
     </motion.div>
   );
