@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, RotateCcw, Download, Edit, Trash2, Calendar, FileText } from "lucide-react";
+import { Plus, RotateCcw, Download, Edit, Trash2, Calendar, FileText, AlertTriangle } from "lucide-react";
 import Button from "../../../components/ui/Button";
+import Modal from "../../../components/ui/Modal";
 import { DataTableWrapper, TableFilters } from "../../../components/common";
 import Badge from "../../../components/ui/Badge";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June', 
@@ -39,6 +41,10 @@ export const SalesReturnsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; returnItem: any | null }>({ 
+    isOpen: false, 
+    returnItem: null 
+  });
 
   const customerOptions = useMemo(() => Array.from(new Set(returns.map(r => r.customer))), [returns]);
 
@@ -74,9 +80,27 @@ export const SalesReturnsPage: React.FC = () => {
   };
 
   const handleDeleteClick = (item: any) => {
-    if (window.confirm(`Are you sure you want to delete ${item.returnNo}?`)) {
-      setReturns(returns.filter(r => r.id !== item.id));
+    setDeleteModal({ isOpen: true, returnItem: item });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteModal.returnItem) {
+      setReturns(returns.filter(r => r.id !== deleteModal.returnItem.id));
+      setDeleteModal({ isOpen: false, returnItem: null });
     }
+  };
+
+  const handleExport = () => {
+    const headers = ['Return #', 'Date', 'Ref Invoice', 'Customer', 'Refund Amount', 'Status'];
+    const data = displayed.map(ret => [
+      ret.returnNo,
+      ret.date,
+      ret.invoiceRef,
+      ret.customer,
+      ret.amount,
+      ret.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Sales_Returns');
   };
 
   const columns = [
@@ -141,7 +165,7 @@ export const SalesReturnsPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Return</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 
@@ -202,6 +226,43 @@ export const SalesReturnsPage: React.FC = () => {
           }
         ]}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, returnItem: null })}
+        title="Delete Return"
+        size="sm"
+      >
+        <div className="space-y-6">
+          <div className="flex items-start gap-3 p-4">
+            <AlertTriangle className="text-slate-600 flex-shrink-0 mt-0.5" size={24} />
+            <div>
+              <p className="text-base font-semibold text-slate-900">
+                Are you sure you want to delete "{deleteModal.returnItem?.returnNo}"?
+              </p>
+              <p className="text-sm text-slate-600 mt-2">This cannot be undone.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-4 pt-2 px-4">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteModal({ isOpen: false, returnItem: null })}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteConfirm}
+              className="flex-1"
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 };

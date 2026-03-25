@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Download, Edit, Trash2, Mail, Phone, MapPin } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MOCK_SUPPLIERS = [
   { id: '1', name: 'TechNova Solutions', contact: 'John Carter',   email: 'JOHN@TECHNOVA.COM',    phone: '+91 98765 43210', location: 'Mumbai, MH', status: 'Available',  outstanding: '₹2,400.00', vendorNo: 'VND-001' },
@@ -33,6 +34,21 @@ export const SuppliersPage: React.FC = () => {
     if (filterStatus) list = list.filter(s => s.status === filterStatus);
     return list;
   }, [activeTab, search, filterStatus]);
+
+  const handleExport = () => {
+    const headers = ['Vendor #', 'Vendor Name', 'Contact Person', 'Email', 'Phone', 'Location', 'Status', 'Outstanding Balance'];
+    const data = displayed.map(supplier => [
+      supplier.vendorNo,
+      supplier.name,
+      supplier.contact,
+      supplier.email,
+      supplier.phone,
+      supplier.location,
+      supplier.status,
+      supplier.outstanding
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Vendors');
+  };
 
   const columns = [
     {
@@ -99,7 +115,7 @@ export const SuppliersPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Vendor</h1>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>Export</Button>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>Export</Button>
           <Button variant="primary"
             className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10"
             leftIcon={<Plus size={14} />}

@@ -4,6 +4,7 @@ import { Plus, Play, Download, Edit, Trash2, Calendar, Warehouse } from "lucide-
 import Button from "../../../components/ui/Button";
 import DataTable from "../../../components/ui/DataTable";
 import Badge from "../../../components/ui/Badge";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 // Mock data for Opening Stock
 const MOCK_OPENING_STOCK = [
@@ -14,6 +15,19 @@ const MOCK_OPENING_STOCK = [
 
 export const OpeningStockPage: React.FC = () => {
   const [entries] = useState(MOCK_OPENING_STOCK);
+
+  const handleExport = () => {
+    const headers = ['Entry No', 'Date', 'Warehouse', 'Total Items', 'Total Value', 'Status'];
+    const data = entries.map(entry => [
+      entry.entryNo,
+      entry.date,
+      entry.warehouse,
+      entry.totalItems,
+      entry.totalValue,
+      entry.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Opening_Stock');
+  };
 
   const columns = [
     {
@@ -94,6 +108,7 @@ export const OpeningStockPage: React.FC = () => {
             variant="secondary" 
             className="rounded-xl px-4 md:px-6 h-9 md:h-10 text-[10px] md:text-xs font-bold transition-all border-slate-200"
             leftIcon={<Download size={14} />}
+            onClick={handleExport}
           >
             Export
           </Button>

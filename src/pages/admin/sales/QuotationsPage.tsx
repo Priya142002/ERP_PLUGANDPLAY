@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Download, Edit, Trash2, Calendar, User, FileText } from "lucide-react";
+import { Plus, Download, Edit, Trash2, Calendar, User, FileText, AlertTriangle } from "lucide-react";
 import Button from "../../../components/ui/Button";
+import Modal from "../../../components/ui/Modal";
 import { DataTableWrapper, TableFilters } from "../../../components/common";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June', 
@@ -46,6 +48,10 @@ export const QuotationsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; quotation: any | null }>({ 
+    isOpen: false, 
+    quotation: null 
+  });
 
   const customerOptions = useMemo(() => Array.from(new Set(quotations.map(q => q.customer))), [quotations]);
 
@@ -82,9 +88,27 @@ export const QuotationsPage: React.FC = () => {
   };
 
   const handleDeleteClick = (item: any) => {
-    if (window.confirm(`Are you sure you want to delete ${item.quoteNo}?`)) {
-      setQuotations(quotations.filter(q => q.id !== item.id));
+    setDeleteModal({ isOpen: true, quotation: item });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteModal.quotation) {
+      setQuotations(quotations.filter(q => q.id !== deleteModal.quotation.id));
+      setDeleteModal({ isOpen: false, quotation: null });
     }
+  };
+
+  const handleExport = () => {
+    const headers = ['Quotation No', 'Date', 'Customer', 'Total Amount', 'Valid Until', 'Status'];
+    const data = displayed.map(q => [
+      q.quoteNo,
+      q.date,
+      q.customer,
+      q.amount,
+      q.validUntil,
+      q.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Quotations');
   };
 
   const columns = [
@@ -170,7 +194,7 @@ export const QuotationsPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Quotation</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 
@@ -237,6 +261,43 @@ export const QuotationsPage: React.FC = () => {
           }
         ]}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, quotation: null })}
+        title="Delete Quotation"
+        size="sm"
+      >
+        <div className="space-y-6">
+          <div className="flex items-start gap-3 p-4">
+            <AlertTriangle className="text-slate-600 flex-shrink-0 mt-0.5" size={24} />
+            <div>
+              <p className="text-base font-semibold text-slate-900">
+                Are you sure you want to delete "{deleteModal.quotation?.quoteNo}"?
+              </p>
+              <p className="text-sm text-slate-600 mt-2">This cannot be undone.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-4 pt-2 px-4">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteModal({ isOpen: false, quotation: null })}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteConfirm}
+              className="flex-1"
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 };

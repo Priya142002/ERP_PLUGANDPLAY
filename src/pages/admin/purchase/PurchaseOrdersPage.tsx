@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Download, Edit, Trash2, Calendar, User, FileCheck } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MOCK_ORDERS = [
   { id: '1', date: '2026-03-16', orderNo: 'PO-9001', vendor: 'TechNova Solutions', amount: 3500.00,  expectedDate: '2026-03-25', status: 'Approved'  },
@@ -37,6 +38,19 @@ export const PurchaseOrdersPage: React.FC = () => {
     if (filterStatus) list = list.filter(o => o.status === filterStatus);
     return list;
   }, [activeTab, search, filterVendor, filterStatus]);
+
+  const handleExport = () => {
+    const headers = ['Order #', 'Order Date', 'Vendor', 'Amount', 'Expected Date', 'Status'];
+    const data = displayed.map(order => [
+      order.orderNo,
+      order.date,
+      order.vendor,
+      order.amount,
+      order.expectedDate,
+      order.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Purchase_Orders');
+  };
 
   const columns = [
     {
@@ -105,7 +119,7 @@ export const PurchaseOrdersPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Purchase Orders</h1>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>Export</Button>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>Export</Button>
           <Button variant="primary"
             className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10"
             leftIcon={<Plus size={14} />}

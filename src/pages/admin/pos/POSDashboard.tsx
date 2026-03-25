@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
+import { exportSingleSheetToExcel } from '../../../utils/reportGenerator';
 
 export const POSDashboard: React.FC = () => {
   const todayStats = [
@@ -25,6 +26,20 @@ export const POSDashboard: React.FC = () => {
     { id: 'ORD-004', customer: 'Alice Brown', items: 4, amount: 180.75, payment: 'Card', status: 'Completed', time: '10:35 AM' },
     { id: 'ORD-005', customer: 'Charlie Davis', items: 1, amount: 45.00, payment: 'Cash', status: 'Completed', time: '10:30 AM' },
   ];
+
+  const handleExportReport = () => {
+    const headers = ['Order ID', 'Customer', 'Items', 'Amount', 'Payment', 'Status', 'Time'];
+    const data = recentOrders.map(order => [
+      order.id,
+      order.customer,
+      order.items,
+      order.amount,
+      order.payment,
+      order.status,
+      order.time
+    ]);
+    exportSingleSheetToExcel(headers, data, 'POS_Orders');
+  };
 
   return (
     <motion.div 
@@ -43,6 +58,7 @@ export const POSDashboard: React.FC = () => {
             variant="secondary" 
             className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" 
             leftIcon={<Download size={14} />}
+            onClick={handleExportReport}
           >
             Export Report
           </Button>

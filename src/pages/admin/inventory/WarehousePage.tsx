@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Plus, Building2, MapPin, Phone, User, Download, Edit, Trash2 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import DataTable from "../../../components/ui/DataTable";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 // Mock data for warehouses
 const MOCK_WAREHOUSES = [
@@ -15,6 +16,19 @@ const MOCK_WAREHOUSES = [
 
 export const WarehousePage: React.FC = () => {
   const [warehouses] = useState(MOCK_WAREHOUSES);
+
+  const handleExport = () => {
+    const headers = ['Warehouse Code', 'Warehouse Name', 'Location', 'Manager', 'Phone', 'Status'];
+    const data = warehouses.map(wh => [
+      wh.code,
+      wh.name,
+      wh.location,
+      wh.manager,
+      wh.phone,
+      wh.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Warehouses');
+  };
 
   const columns = [
     {
@@ -96,7 +110,7 @@ export const WarehousePage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Warehouses</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 

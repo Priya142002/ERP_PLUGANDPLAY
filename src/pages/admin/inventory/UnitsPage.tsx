@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Plus, Scale, Download, Edit, Trash2 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import DataTable from "../../../components/ui/DataTable";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 // Mock data for units
 const MOCK_UNITS = [
@@ -18,6 +19,17 @@ const MOCK_UNITS = [
 
 export const UnitsPage: React.FC = () => {
   const [units] = useState(MOCK_UNITS);
+
+  const handleExport = () => {
+    const headers = ['Unit Name', 'Short Name', 'Allow Decimal', 'Status'];
+    const data = units.map(unit => [
+      unit.name,
+      unit.shortName,
+      unit.allowDecimal,
+      unit.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Units_of_Measure');
+  };
 
   const columns = [
     {
@@ -85,7 +97,7 @@ export const UnitsPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Units of Measure</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 

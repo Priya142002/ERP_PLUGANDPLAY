@@ -8,8 +8,6 @@ import {
   ShoppingCart,
   Clock,
   Briefcase,
-  ChevronRight,
-  Target,
   Download
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
@@ -24,27 +22,27 @@ const SALES_STATS = [
     title: "Projected Revenue",
     value: "Rs. 425,800",
     icon: <DollarSign size={24} />,
-    color: "bg-emerald-600",
+    color: "bg-cyan-600",
     trend: "+12.5% High",
-    trendColor: "text-emerald-500",
+    trendColor: "text-cyan-500",
     description: "Total invoice throughput"
   },
   {
     title: "Processed Orders",
     value: "1,240",
     icon: <ShoppingCart size={24} />,
-    color: "bg-teal-600",
+    color: "bg-cyan-600",
     trend: "+5.2% Yield",
-    trendColor: "text-teal-500",
+    trendColor: "text-cyan-500",
     description: "Order fulfillment volume"
   },
   {
     title: "Market Expansion",
     value: "+85",
     icon: <Users size={24} />,
-    color: "bg-emerald-500",
+    color: "bg-cyan-600",
     trend: "+18% Alpha",
-    trendColor: "text-emerald-500",
+    trendColor: "text-cyan-500",
     description: "Unique new client entities"
   },
   {
@@ -115,7 +113,7 @@ export const SalesDashboard: React.FC = () => {
       {/* Page Title Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Revenue Intelligence</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sales Dashboard</h1>
         </div>
         <div className="flex flex-row items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-2.5 bg-white border border-slate-200 px-3 md:px-4 py-1.5 md:py-2 rounded-xl shadow-sm">
@@ -193,7 +191,6 @@ export const SalesDashboard: React.FC = () => {
               </div>
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Transaction Ledger</h3>
             </div>
-            <button className="text-[9px] font-bold text-[#334e68] uppercase tracking-widest hover:underline px-3 py-1.5 bg-indigo-50/50 rounded-lg transition-colors">View Detailed Journal</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -235,11 +232,6 @@ export const SalesDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-center">
-            <button className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] hover:text-[#3b4cb8] transition-colors group">
-              Explore Full Sales Matrix <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
         </div>
 
         <div className="bg-white rounded-xl md:rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -276,19 +268,6 @@ export const SalesDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-          
-          <div className="mt-10 p-5 bg-indigo-50/30 rounded-2xl border border-indigo-100/50 relative overflow-hidden group">
-            <div className="relative z-10 flex items-center gap-4">
-              <div className="p-3 bg-white rounded-xl text-[#3b4cb8] shadow-sm border border-indigo-50 group-hover:rotate-6 transition-transform">
-                <Target size={20} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900 leading-tight border-b border-indigo-100/50 pb-1 mb-1">Growth Forecast</p>
-                <p className="text-[11px] text-[#3b4cb8] font-bold">14% Projected Upswing</p>
-                <p className="text-[10px] text-slate-500 leading-relaxed font-medium mt-1">Direct Enterprise channel is scaling rapidly.</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

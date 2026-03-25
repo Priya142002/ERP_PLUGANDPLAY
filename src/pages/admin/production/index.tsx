@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
+import { exportSingleSheetToExcel } from '../../../utils/reportGenerator';
 
 // 1. Production Dashboard - Simplified and improved
 export const ProductionDashboard: React.FC = () => {
@@ -328,6 +329,19 @@ export const BOMPage: React.FC = () => {
     bom.productCode.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleExportBOM = () => {
+    const headers = ['Product Code', 'Product Name', 'Version', 'Status', 'Total Cost', 'Last Updated'];
+    const data = filteredBOMs.map(bom => [
+      bom.productCode,
+      bom.productName,
+      bom.version,
+      bom.status,
+      bom.totalCost,
+      bom.lastUpdated
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Bill_of_Materials');
+  };
+
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
@@ -342,6 +356,7 @@ export const BOMPage: React.FC = () => {
               variant="secondary" 
               className="px-4 h-10 rounded-xl" 
               leftIcon={<Download size={14} />}
+              onClick={handleExportBOM}
             >
               Export BOM
             </Button>

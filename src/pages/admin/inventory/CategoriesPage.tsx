@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Plus, Tag, Download, Edit, Trash2, FolderTree } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import DataTable from "../../../components/ui/DataTable";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 // Mock data for categories
 const MOCK_CATEGORIES = [
@@ -18,6 +19,18 @@ const MOCK_CATEGORIES = [
 
 export const CategoriesPage: React.FC = () => {
   const [categories] = useState(MOCK_CATEGORIES);
+
+  const handleExport = () => {
+    const headers = ['Category Name', 'Description', 'Parent Category', 'Products Count', 'Status'];
+    const data = categories.map(cat => [
+      cat.name,
+      cat.description,
+      cat.parentCategory,
+      cat.productsCount,
+      cat.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Product_Categories');
+  };
 
   const columns = [
     {
@@ -92,7 +105,7 @@ export const CategoriesPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Product Categories</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 

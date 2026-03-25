@@ -194,8 +194,16 @@ export const EditCustomerCreditNotePage: React.FC = () => {
             <Textarea label="Remarks" placeholder="Internal notes for accounting..." rows={4} />
           </div>
 
-          <div className="bg-teal-50 border border-teal-100 p-4 rounded-xl flex gap-3 text-sm">
-             <span className="text-teal-600 font-bold uppercase tracking-tighter">Total Adjustment: ${totalAdjustment.toLocaleString()}</span>
+          <div className="bg-teal-50 border border-teal-100 p-4 rounded-xl flex gap-3 text-sm mb-4">
+            <AlertTriangle size={16} className="text-teal-600 flex-shrink-0 mt-0.5" />
+            <p className="text-teal-700 text-xs leading-relaxed">
+              <span className="font-bold">Note:</span> Providing a credit note will decrease the amount that the customer owes to your company.
+            </p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4">
+            <div className="text-xs text-blue-600 font-medium mb-1">Total Credit Adjustment</div>
+            <div className="text-2xl font-bold text-blue-900">${totalAdjustment.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
 
           <div className="space-y-3">
