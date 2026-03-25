@@ -1139,3 +1139,99 @@ aside svg {
     font-size: 0.7rem;
   }
 }
+
+
+/* Custom Export/Generate Button Styles */
+.inventory-dashboard-btn {
+  background-color: #002147 !important;
+  color: #ffffff !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.inventory-dashboard-btn:hover {
+  background-color: #002147 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 33, 71, 0.4) !important;
+}
+
+.inventory-dashboard-btn:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.inventory-dashboard-btn:hover span {
+  color: #ffffff !important;
+}
+
+/* Edit Product Modal Button - Navy Blue with White Text/Icon */
+.edit-product-save-btn {
+  background-color: #002147 !important;
+  color: #ffffff !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+}
+
+.edit-product-save-btn:hover {
+  background-color: #002147 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 33, 71, 0.4) !important;
+}
+
+.edit-product-save-btn svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
+.edit-product-save-btn:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
+/* Common Admin Button Style - Navy Blue with White Text/Icons */
+.admin-action-btn {
+  background-color: #002147 !important;
+  color: #ffffff !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.5rem 1rem !important;
+}
+
+.admin-action-btn:hover {
+  background-color: #002147 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 33, 71, 0.4) !important;
+}
+
+.admin-action-btn:hover svg,
+.admin-action-btn:hover svg * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
+.admin-action-btn:hover span {
+  color: #ffffff !important;
+}
+
+.admin-action-btn svg,
+.admin-action-btn svg * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
+.admin-action-btn span {
+  color: #ffffff !important;
+}

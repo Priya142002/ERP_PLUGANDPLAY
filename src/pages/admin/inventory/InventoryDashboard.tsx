@@ -35,7 +35,7 @@ const STAT_CARDS = [
     title: "Minimum Level",
     value: "42",
     icon: <AlertTriangle size={24} />,
-    color: "bg-amber-500",
+    color: "bg-indigo-600",
     hoverColor: "group-hover:bg-amber-50/30",
     accentColor: "group-hover:border-amber-500",
     trend: "8 Attention Items",
@@ -46,7 +46,7 @@ const STAT_CARDS = [
     title: "Reorder Required",
     value: "15",
     icon: <RefreshCcw size={24} />,
-    color: "bg-rose-500",
+    color: "bg-indigo-600",
     hoverColor: "group-hover:bg-rose-50/30",
     accentColor: "group-hover:border-rose-600",
     trend: "Critical Priority",
@@ -139,8 +139,11 @@ export const InventoryDashboard: React.FC = () => {
           </div>
           <Button 
             onClick={handleExportExcel}
-            className="bg-emerald-600 hover:bg-emerald-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-emerald-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
-            style={{ color: '#ffffff' }}
+            className="inventory-dashboard-btn px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl"
+            style={{
+              backgroundColor: '#002147',
+              color: '#ffffff'
+            }}
           >
             <Download size={14} style={{ color: '#ffffff' }} />
             <span className="hidden md:inline" style={{ color: '#ffffff' }}>Export Excel</span>
@@ -148,8 +151,11 @@ export const InventoryDashboard: React.FC = () => {
           </Button>
           <Button 
             onClick={handleGenerateMetaReport}
-            className="bg-[#002147] hover:bg-[#003366] px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
-            style={{ color: '#ffffff' }}
+            className="inventory-dashboard-btn px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl"
+            style={{
+              backgroundColor: '#002147',
+              color: '#ffffff'
+            }}
           >
             <FileText size={14} style={{ color: '#ffffff' }} />
             <span className="hidden md:inline" style={{ color: '#ffffff' }}>Generate Meta-Report</span>
@@ -268,7 +274,7 @@ export const InventoryDashboard: React.FC = () => {
           </div>
           <div className="p-4 md:p-6 space-y-3 md:space-y-4 flex-1">
             {RECENT_ACTIVITIES.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 md:p-4 rounded-2xl bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10 transition-all group relative overflow-hidden shadow-sm">
+              <div key={activity.id} className="flex items-center justify-between p-3 md:p-4 rounded-2xl bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-[#002147]/30 hover:shadow-lg hover:shadow-[#002147]/20 transition-all group relative overflow-hidden shadow-sm">
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#002147] group-hover:w-2 transition-all" />
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className={`h-9 w-9 md:h-11 md:w-11 rounded-xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-110 ${

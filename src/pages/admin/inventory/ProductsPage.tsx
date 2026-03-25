@@ -177,15 +177,20 @@ const EditModal: React.FC<EditModalProps> = ({ product, categories, brands, unit
 
         {/* Footer */}
         <div className="flex gap-3 px-6 py-4 border-t border-slate-100 sticky bottom-0 bg-white">
-          <button onClick={onClose} 
-            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
-            className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
+          <button 
+            onClick={onClose}
+            style={{ height: '40px', minHeight: '40px', borderRadius: '12px' }}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition"
+          >
             Cancel
           </button>
-          <button onClick={() => { onSave(form); onClose(); }}
-            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
-            className="flex-1 bg-[#002147] text-white text-sm font-semibold transition flex items-center justify-center gap-2">
-            <Save size={15} /> Update Product
+          <button 
+            onClick={() => { onSave(form); onClose(); }}
+            style={{ height: '40px', minHeight: '40px', borderRadius: '12px' }}
+            className="flex-1 bg-[#002147] hover:bg-[#003366] text-white text-sm font-semibold transition flex items-center justify-center gap-2"
+          >
+            <Save size={15} /> 
+            Update Product
           </button>
         </div>
       </motion.div>
@@ -207,14 +212,18 @@ const DeleteModal: React.FC<{ name: string; onClose: () => void; onConfirm: () =
       </div>
       <p className="text-sm text-slate-500 mb-6">Are you sure you want to delete <span className="font-semibold text-slate-700">"{name}"</span>? This cannot be undone.</p>
       <div className="flex gap-3">
-        <button onClick={onClose} 
-          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
-          className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
+        <button 
+          onClick={onClose}
+          style={{ height: '40px', minHeight: '40px', borderRadius: '12px' }}
+          className="flex-1 bg-[#002147] hover:bg-[#003366] text-white text-sm font-semibold transition"
+        >
           Cancel
         </button>
-        <button onClick={() => { onConfirm(); onClose(); }} 
-          style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
-          className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] transition flex items-center justify-center">
+        <button 
+          onClick={() => { onConfirm(); onClose(); }}
+          style={{ height: '40px', minHeight: '40px', borderRadius: '12px' }}
+          className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition"
+        >
           Delete
         </button>
       </div>
@@ -298,15 +307,21 @@ const StockModal: React.FC<StockModalProps> = ({ product, onClose, onSave }) => 
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button onClick={onClose} 
-            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
-            className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
+          <button 
+            onClick={onClose}
+            style={{ height: '40px', minHeight: '40px', borderRadius: '12px' }}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition"
+          >
             Cancel
           </button>
-          <button onClick={handleSave} disabled={qty === ''}
-            style={{ minHeight: '40px', height: '40px', borderRadius: '12px' }}
-            className="flex-1 bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
-            <Save size={14} /> Update Stock
+          <button 
+            onClick={handleSave}
+            disabled={qty === ''}
+            style={{ height: '40px', minHeight: '40px', borderRadius: '12px' }}
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <Save size={14} /> 
+            Update Stock
           </button>
         </div>
       </motion.div>
@@ -422,6 +437,21 @@ export const ProductsPage: React.FC = () => {
 
   return (
     <>
+      <style>
+        {`
+          button.export-btn-hover:hover,
+          button.export-btn-hover:hover * {
+            color: #000000 !important;
+          }
+          button.export-btn-hover:hover svg,
+          button.export-btn-hover:hover svg *{
+            stroke: #000000 !important;
+            color: #000000 !important;
+            fill: none !important;
+            opacity: 1 !important;
+          }
+        `}
+      </style>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
 
         {/* Header */}
@@ -429,14 +459,15 @@ export const ProductsPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Product Catalog</h1>
           <div className="flex items-center gap-3">
             <Button 
+              variant="secondary"
+              className="export-btn-hover px-4 h-10 text-xs font-bold rounded-xl border-slate-200"
+              leftIcon={<Download size={14} color="currentColor" />}
               onClick={handleExportExcel}
-              variant="secondary" 
-              className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" 
-              leftIcon={<Download size={14} />}
             >
               Export
             </Button>
-            <Button variant="primary"
+            <Button 
+              variant="primary"
               className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10"
               leftIcon={<Plus size={14} />}
               onClick={() => navigate('/admin/inventory/products/add')}>

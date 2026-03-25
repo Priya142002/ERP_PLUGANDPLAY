@@ -142,7 +142,18 @@ export function ModulesPage() {
           </div>
           <button
             onClick={() => window.location.href = '/admin/subscription'}
-            className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm transition"
+            className="admin-action-btn"
+            style={{
+              backgroundColor: '#002147',
+              color: '#ffffff',
+              padding: '0.5rem 1.25rem',
+              borderRadius: '0.75rem',
+              fontSize: '0.875rem',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
           >
             Subscribe Now
           </button>
@@ -164,7 +175,18 @@ export function ModulesPage() {
           </div>
           <button
             onClick={() => window.location.href = '/admin/subscription'}
-            className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition"
+            className="admin-action-btn"
+            style={{
+              backgroundColor: '#002147',
+              color: '#ffffff',
+              padding: '0.5rem 1.25rem',
+              borderRadius: '0.75rem',
+              fontSize: '0.875rem',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
           >
             Choose a Plan
           </button>
@@ -194,7 +216,18 @@ export function ModulesPage() {
             </div>
             <button
               onClick={() => window.location.href = '/admin/subscription'}
-              className="px-4 py-2 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm font-medium text-sm transition"
+              className="admin-action-btn"
+              style={{
+                backgroundColor: '#002147',
+                color: '#ffffff',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
             >
               Upgrade Plan
             </button>
@@ -314,8 +347,20 @@ export function ModulesPage() {
                 <p className="text-sm text-slate-600 mt-2">{plan.moduleList}</p>
                 <button
                   onClick={() => window.location.href = '/admin/subscription'}
-                  className="mt-4 w-full py-2 rounded-lg text-white text-sm font-bold transition"
-                  style={{ backgroundColor: plan.color }}
+                  className="admin-action-btn"
+                  style={{
+                    backgroundColor: '#002147',
+                    color: '#ffffff',
+                    marginTop: '1rem',
+                    width: '100%',
+                    padding: '0.5rem',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   Get {plan.name}
                 </button>
