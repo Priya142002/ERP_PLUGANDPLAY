@@ -151,3 +151,27 @@ export const superAdminApi = {
   toggleUser: (id: number) =>
     request<any>(`/api/superadmin/users/${id}/toggle`, { method: 'PUT' }),
 };
+
+/* ── Inventory API ─────────────────────────────────────── */
+export const inventoryApi = {
+  getDashboard: (companyId: number, lowStockThreshold?: number) =>
+    request<any>(`/api/inventory/dashboard/${companyId}${lowStockThreshold ? `?lowStockThreshold=${lowStockThreshold}` : ''}`),
+  
+  getProducts: (companyId: number, search?: string) =>
+    request<any>(`/api/inventory/products/${companyId}${search ? `?search=${search}` : ''}`),
+  createProduct: (data: any) =>
+    request<any>('/api/inventory/products', { method: 'POST', body: JSON.stringify(data) }),
+  updateProduct: (id: string, data: any) =>
+    request<any>(`/api/inventory/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProduct: (id: string) =>
+    request<any>(`/api/inventory/products/${id}`, { method: 'DELETE' }),
+
+  updateStock: (data: any) =>
+    request<any>('/api/inventory/stock/update', { method: 'POST', body: JSON.stringify(data) }),
+  getStockHistory: (productId: string) =>
+    request<any>(`/api/inventory/stock/history/${productId}`),
+
+  getCategories: () =>
+    request<any>('/api/inventory/categories'),
+};
+

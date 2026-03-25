@@ -49,9 +49,9 @@ namespace ERPPlugandPlay.Controllers
         public async Task<IActionResult> AddCategory([FromBody] CreateCategoryDto dto)
             => Ok(await _svc.AddCategoryAsync(dto));
 
-        [HttpGet("categories")]
-        public async Task<IActionResult> ListCategories()
-            => Ok(await _svc.ListCategoriesAsync());
+        [HttpGet("categories/{companyId}")]
+        public async Task<IActionResult> ListCategories(int companyId)
+            => Ok(await _svc.ListCategoriesAsync(companyId));
 
         // ── Material Dispatch ─────────────────────────────────
         [HttpPost("dispatch")]

@@ -5,6 +5,8 @@ import {
   Plus, ArrowLeft, Tag, DollarSign, Database,
   Image as ImageIcon, Save, RotateCcw, X
 } from "lucide-react";
+import { useNotifications, useCurrentUser } from "../../../context/AppContext";
+import { inventoryApi } from "../../../services/api";
 import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Input";
 import Textarea from "../../../components/ui/Textarea";
@@ -108,17 +110,68 @@ const QuickAddModal: React.FC<QuickAddModalProps> = ({ title, label, onClose, on
 export const AddProductPage: React.FC = () => {
   const navigate = useNavigate();
 
+  const currentUser = useCurrentUser();
+  const companyId = parseInt((currentUser as any)?.companyId || '1');
+  const { showNotification } = useNotifications();
+  const [loading, setLoading] = useState(false);
+
   // dropdown options state
   const [categories, setCategories] = useState(["Electronics", "Furniture", "Clothing", "Accessories"]);
   const [brands, setBrands] = useState(["Sony", "Apple", "Logitech", "Samsung"]);
   const [units, setUnits] = useState(["Pcs (Piece)", "Kg (Kilogram)", "Box", "Litre"]);
   const [warehouses, setWarehouses] = useState(["Main Warehouse", "North Store", "South Store"]);
 
-  // selected values
+  // form state
+  const [name, setName] = useState("");
+  const [sku, setSku] = useState("");
   const [category, setCategory] = useState("");
   const [brand, setBrand] = useState("");
   const [unit, setUnit] = useState("");
   const [warehouse, setWarehouse] = useState("");
+  const [price, setPrice] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
+  const [stock, setStock] = useState("");
+  const [tax, setTax] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("active");
+
+  const handleSaveProduct = async () => {
+    if (!name || !sku || !category) {
+      showNotification({ type: 'error', title: 'Validation', message: 'Name, SKU, and Category are required.' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = {
+        name,
+        sku,
+        category,
+        brand,
+        unit,
+        price: parseFloat(price) || 0,
+        stock: parseInt(stock) || 0,
+        status: status === 'active' ? 'Active' : status === 'draft' ? 'Draft' : 'Inactive'
+      };
+      
+      const res = await inventoryApi.createProduct(payload);
+      if (res.success) {
+        showNotification({ type: 'success', title: 'Success', message: 'Product created successfully!' });
+        navigate('/admin/inventory/products');
+      } else {
+        showNotification({ type: 'error', title: 'Failed', message: res.message || 'Failed to create product.' });
+      }
+    } catch (e) {
+      console.error(e);
+      showNotification({ type: 'error', title: 'Error', message: 'An unexpected error occurred.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClear = () => {
+    setName(""); setSku(""); setCategory(""); setBrand(""); setUnit(""); setWarehouse("");
+    setPrice(""); setSellingPrice(""); setStock(""); setTax(""); setDescription(""); setStatus("active");
+  };
 
   // modal state
   const [modal, setModal] = useState<null | 'category' | 'brand' | 'unit' | 'warehouse'>(null);
@@ -159,10 +212,10 @@ export const AddProductPage: React.FC = () => {
                 <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Primary Metadata</h3>
               </div>
 
-              <Input label="Product Name" placeholder="e.g. Wireless Headphones" required />
+              <Input label="Product Name" placeholder="e.g. Wireless Headphones" value={name} onChange={e => setName(e.target.value)} required />
 
               <div className="grid grid-cols-2 gap-4">
-                <Input label="SKU" placeholder="PROD-10293" required />
+                <Input label="SKU" placeholder="PROD-10293" value={sku} onChange={e => setSku(e.target.value)} required />
                 {/* Category with + */}
                 <CreatableSelect
                   label="Category"
@@ -213,18 +266,18 @@ export const AddProductPage: React.FC = () => {
                 <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Financial Dimensions</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <Input label="Purchase Price" type="number" placeholder="0.00" leftIcon={<DollarSign size={14} />} />
-                <Input label="Selling Price"  type="number" placeholder="0.00" leftIcon={<DollarSign size={14} />} />
+                <Input label="Purchase Price" type="number" placeholder="0.00" value={price} onChange={e => setPrice(e.target.value)} leftIcon={<DollarSign size={14} />} />
+                <Input label="Selling Price"  type="number" placeholder="0.00" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} leftIcon={<DollarSign size={14} />} />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <Input label="Tax Percentage (%)" type="number" placeholder="5" />
-                <Input label="Opening Stock"      type="number" placeholder="0" leftIcon={<Database size={14} />} />
+                <Input label="Tax Percentage (%)" type="number" placeholder="5" value={tax} onChange={e => setTax(e.target.value)} />
+                <Input label="Opening Stock"      type="number" placeholder="0" value={stock} onChange={e => setStock(e.target.value)} leftIcon={<Database size={14} />} />
               </div>
             </div>
 
             {/* Description */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <Textarea label="Product Description" placeholder="Write detailed information about the product…" rows={4} />
+              <Textarea label="Product Description" placeholder="Write detailed information about the product…" rows={4} value={description} onChange={e => setDescription(e.target.value)} />
             </div>
           </div>
 
@@ -233,7 +286,8 @@ export const AddProductPage: React.FC = () => {
             {/* Status */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
               <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Initial Status</label>
-              <select className="w-full h-10 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
+              <select className="w-full h-10 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition"
+                      value={status} onChange={e => setStatus(e.target.value)}>
                 <option value="active">Active</option>
                 <option value="draft">Draft</option>
                 <option value="inactive">Inactive</option>
@@ -257,11 +311,11 @@ export const AddProductPage: React.FC = () => {
 
             {/* Actions */}
             <div className="space-y-3">
-              <Button variant="primary" fullWidth leftIcon={<Save size={18} />}
+              <Button variant="primary" fullWidth leftIcon={<Save size={18} />} onClick={handleSaveProduct} disabled={loading}
                 className="py-4 bg-[#002147] hover:bg-[#003366] border-none shadow-lg rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
-                Commit Product
+                {loading ? 'Commiting...' : 'Commit Product'}
               </Button>
-              <Button variant="secondary" fullWidth leftIcon={<RotateCcw size={18} />}
+              <Button variant="secondary" fullWidth leftIcon={<RotateCcw size={18} />} onClick={handleClear}
                 className="py-4 rounded-xl font-bold text-xs uppercase tracking-widest border-slate-200 text-slate-500 hover:bg-slate-50 transition-all">
                 Clear Workspace
               </Button>

@@ -25,19 +25,10 @@ interface Product {
 /* ─────────────────────────────────────────
    Mock Data
 ───────────────────────────────────────── */
-const now = new Date();
-const daysAgo = (d: number) => new Date(now.getTime() - d * 86400000).toISOString();
+import { inventoryApi } from '../../../services/api';
+import { useCurrentUser } from '../../../context/AppContext';
 
-const INITIAL_PRODUCTS: Product[] = [
-  { id: '1', name: 'Premium Wireless Headphones', sku: 'WHP-001', category: 'Electronics', brand: 'Sony',         unit: 'pcs', stock: 45,  price: 299.99, status: 'Active',       addedAt: daysAgo(2)  },
-  { id: '2', name: 'Smart Fitness Tracker',        sku: 'SFT-002', category: 'Wearables',   brand: 'Fitbit',       unit: 'pcs', stock: 12,  price: 149.50, status: 'Low Stock',   addedAt: daysAgo(5)  },
-  { id: '3', name: 'Ergonomic Office Chair',       sku: 'EOC-003', category: 'Furniture',   brand: 'Herman Miller',unit: 'pcs', stock: 8,   price: 899.00, status: 'Active',       addedAt: daysAgo(10) },
-  { id: '4', name: 'Mechanical Gaming Keyboard',   sku: 'MGK-004', category: 'Accessories', brand: 'Logitech',     unit: 'pcs', stock: 0,   price: 129.99, status: 'Out of Stock', addedAt: daysAgo(15) },
-  { id: '5', name: '4K Ultra HD Monitor',          sku: 'MON-005', category: 'Electronics', brand: 'Dell',         unit: 'pcs', stock: 25,  price: 449.00, status: 'Active',       addedAt: daysAgo(20) },
-  { id: '6', name: 'Leather Travel Backpack',      sku: 'BPK-006', category: 'Fashion',     brand: 'Bellroy',      unit: 'pcs', stock: 15,  price: 189.00, status: 'Active',       addedAt: daysAgo(3)  },
-  { id: '7', name: 'Stainless Steel Water Bottle', sku: 'WBT-007', category: 'Home',        brand: 'Hydro Flask',  unit: 'pcs', stock: 120, price: 34.95,  status: 'Active',       addedAt: daysAgo(1)  },
-  { id: '8', name: 'Noise-Cancelling Earbuds',     sku: 'NCE-008', category: 'Electronics', brand: 'Bose',         unit: 'pcs', stock: 5,   price: 199.00, status: 'Low Stock',    addedAt: daysAgo(7)  },
-];
+const INITIAL_PRODUCTS: Product[] = [];
 
 const TABS = ['All Products', 'In Stock', 'Recently Added'] as const;
 type Tab = typeof TABS[number];
@@ -359,14 +350,36 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 ───────────────────────────────────────── */
 export const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
+  const currentUser = useCurrentUser();
+  const companyId = parseInt((currentUser as any)?.companyId || '1');
   const { showNotification } = useNotifications();
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('All Products');
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
+
+  // Fetch products
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await inventoryApi.getProducts(companyId, search);
+      if (res.success && res.data) {
+        setProducts(res.data.items || res.data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadProducts();
+  }, [companyId, search]);
 
   // Extra options added by user (merged with product-derived ones)
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
@@ -427,13 +440,58 @@ export const ProductsPage: React.FC = () => {
     }
   };
 
-  const handleSave = (updated: Product) => setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
-  const handleDelete = (id: string) => setProducts(prev => prev.filter(p => p.id !== id));
-  const handleStockUpdate = (id: string, newStock: number) =>
-    setProducts(prev => prev.map(p => p.id === id ? {
-      ...p, stock: newStock,
-      status: newStock === 0 ? 'Out of Stock' : newStock <= 10 ? 'Low Stock' : 'Active'
-    } : p));
+  const handleSave = async (updated: Product) => {
+    try {
+      const payload = {
+        name: updated.name,
+        sku: updated.sku,
+        category: updated.category,
+        brand: updated.brand,
+        unit: updated.unit,
+        price: updated.price,
+        stock: updated.stock,
+        status: updated.status,
+      };
+      const res = await inventoryApi.updateProduct(updated.id, payload);
+      if (res.success && res.data) {
+        setProducts(prev => prev.map(p => p.id === updated.id ? res.data : p));
+        showNotification({ type: 'success', title: 'Product Updated', message: 'Product updated successfully.' });
+      } else {
+        showNotification({ type: 'error', title: 'Update Failed', message: res.message || 'Failed to update.' });
+      }
+    } catch(e) { console.error(e); }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await inventoryApi.deleteProduct(id);
+      if (res.success) {
+        setProducts(prev => prev.filter(p => p.id !== id));
+        showNotification({ type: 'success', title: 'Deleted', message: 'Product deleted.' });
+      }
+    } catch(e) { console.error(e); }
+  };
+
+  const handleStockUpdate = async (id: string, newStock: number) => {
+    try {
+      const p = products.find(x => x.id === id);
+      if(!p) return;
+      const diff = newStock - p.stock;
+      if (diff === 0) return;
+      const type = diff > 0 ? 'IN' : 'OUT';
+      
+      const res = await inventoryApi.updateStock({
+        productId: parseInt(id),
+        quantity: Math.abs(diff),
+        type,
+        remarks: 'Manual update'
+      });
+      if (res.success) {
+        loadProducts(); // reload full list to get correct status
+        showNotification({ type: 'success', title: 'Stock Updated', message: 'New stock quantity applied.' });
+      }
+    } catch(e) { console.error(e); }
+  };
 
   return (
     <>

@@ -2,12 +2,68 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ERPPlugandPlay.DTOs
 {
+    // ── Setup (Configuration) ──────────────────────────────
+    public class CategoryDto
+    {
+        public int Id { get; set; }
+        public int CompanyId { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+    }
+
+    public class CreateCategoryDto
+    {
+        [Required] public int CompanyId { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+    }
+
+    public class BrandDto
+    {
+        public int Id { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+    }
+
+    public class UnitDto
+    {
+        public int Id { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+        public string Abbreviation { get; set; } = string.Empty;
+    }
+
+    public class WarehouseDto
+    {
+        public int Id { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public string Status { get; set; } = "Active";
+    }
+
+    // ── Product ──────────────────────────────────────────────
+    public class ProductDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string SKU { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public int Stock { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime AddedAt { get; set; }
+    }
+
     public class CreateProductDto
     {
+        [Required] public int CompanyId { get; set; }
         [Required] public string Name { get; set; } = string.Empty;
-        [Required] public int CategoryId { get; set; }
+        [Required] public string SKU { get; set; } = string.Empty;
+        [Required] public string Category { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public decimal Price { get; set; }
-        public int StockQty { get; set; }
+        public int Stock { get; set; }
+        public string Status { get; set; } = "Active";
     }
 
     public class UpdateProductDto : CreateProductDto
@@ -15,18 +71,9 @@ namespace ERPPlugandPlay.DTOs
         public int Id { get; set; }
     }
 
-    public class ProductDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public int CategoryId { get; set; }
-        public string CategoryName { get; set; } = string.Empty;
-        public decimal Price { get; set; }
-        public int StockQty { get; set; }
-    }
-
     public class UpdateStockDto
     {
+        [Required] public int CompanyId { get; set; }
         [Required] public int ProductId { get; set; }
         [Required] public int Quantity { get; set; }
         [Required] public string Type { get; set; } = string.Empty; // IN / OUT
@@ -36,6 +83,7 @@ namespace ERPPlugandPlay.DTOs
     public class StockTransactionDto
     {
         public int Id { get; set; }
+        public int CompanyId { get; set; }
         public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; }
@@ -44,16 +92,7 @@ namespace ERPPlugandPlay.DTOs
         public string? Remarks { get; set; }
     }
 
-    public class CreateCategoryDto
-    {
-        [Required] public string Name { get; set; } = string.Empty;
-    }
 
-    public class CategoryDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-    }
 
     // ── Inventory Dashboard ───────────────────────────────────────
     public class InventoryDashboardDto

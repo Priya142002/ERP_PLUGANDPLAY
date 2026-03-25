@@ -22,7 +22,7 @@ namespace ERPPlugandPlay.Services
 
         // Categories
         Task<ApiResponse<CategoryDto>> AddCategoryAsync(CreateCategoryDto dto);
-        Task<ApiResponse<List<CategoryDto>>> ListCategoriesAsync();
+        Task<ApiResponse<List<CategoryDto>>> ListCategoriesAsync(int companyId);
 
         // Material Dispatch
         Task<ApiResponse<MaterialDispatchDto>> CreateDispatchAsync(CreateDispatchDto dto);
@@ -47,13 +47,13 @@ namespace ERPPlugandPlay.Services
         // ── Dashboard ────────────────────────────────────────
         public async Task<ApiResponse<InventoryDashboardDto>> GetDashboardAsync(int companyId, int lowStockThreshold = 10)
         {
-            var products = await _db.Products.Include(p => p.Category).ToListAsync();
+            var products = await _db.Products.Where(p => p.CompanyId == companyId).Include(p => p.Category).ToListAsync();
             var today = DateTime.UtcNow.Date;
 
             var dashboard = new InventoryDashboardDto
             {
                 TotalProducts = products.Count,
-                TotalCategories = await _db.Categories.CountAsync(),
+                TotalCategories = await _db.Categories.CountAsync(c => c.CompanyId == companyId),
                 LowStockCount = products.Count(p => p.StockQty > 0 && p.StockQty <= lowStockThreshold),
                 OutOfStockCount = products.Count(p => p.StockQty == 0),
                 TotalInventoryValue = products.Sum(p => p.Price * p.StockQty),
@@ -65,15 +65,24 @@ namespace ERPPlugandPlay.Services
                     .Take(10)
                     .Select(p => new LowStockItemDto
                     {
-                        ProductId = p.Id, ProductName = p.Name,
-                        CategoryName = p.Category?.Name ?? "", StockQty = p.StockQty, Price = p.Price
+                        ProductId = p.Id,
+                        ProductName = p.Name,
+                        CategoryName = p.Category?.Name ?? "",
+                        StockQty = p.StockQty,
+                        Price = p.Price
                     }).ToList(),
                 RecentTransactions = await _db.StockTransactions.Include(t => t.Product)
                     .OrderByDescending(t => t.Date).Take(10)
                     .Select(t => new StockTransactionDto
                     {
-                        Id = t.Id, ProductId = t.ProductId, ProductName = t.Product.Name,
-                        Quantity = t.Quantity, Type = t.Type, Date = t.Date, Remarks = t.Remarks
+                        Id = t.Id,
+                        CompanyId = t.CompanyId,
+                        ProductId = t.ProductId,
+                        ProductName = t.Product.Name,
+                        Quantity = t.Quantity,
+                        Type = t.Type,
+                        Date = t.Date,
+                        Remarks = t.Remarks
                     }).ToListAsync()
             };
 
@@ -81,29 +90,97 @@ namespace ERPPlugandPlay.Services
         }
 
         // ── Products ─────────────────────────────────────────
+        private async Task<int> GetOrCreateCategory(int companyId, string name)
+        {
+            var cat = await _db.Categories.FirstOrDefaultAsync(c => c.CompanyId == companyId && c.Name.ToLower() == name.ToLower());
+            if (cat == null) { cat = new Category { CompanyId = companyId, Name = name }; _db.Categories.Add(cat); await _db.SaveChangesAsync(); }
+            return cat.Id;
+        }
+
+        private async Task<int?> GetOrCreateBrand(int companyId, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var b = await _db.Brands.FirstOrDefaultAsync(x => x.CompanyId == companyId && x.Name.ToLower() == name.ToLower());
+            if (b == null) { b = new Brand { CompanyId = companyId, Name = name }; _db.Brands.Add(b); await _db.SaveChangesAsync(); }
+            return b.Id;
+        }
+
+        private async Task<int?> GetOrCreateUnit(int companyId, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var u = await _db.Units.FirstOrDefaultAsync(x => x.CompanyId == companyId && x.Name.ToLower() == name.ToLower());
+            if (u == null) { u = new Unit { CompanyId = companyId, Name = name, Abbreviation = name }; _db.Units.Add(u); await _db.SaveChangesAsync(); }
+            return u.Id;
+        }
+
         public async Task<ApiResponse<ProductDto>> AddProductAsync(CreateProductDto dto)
         {
-            var product = new Product { Name = dto.Name, CategoryId = dto.CategoryId, Price = dto.Price, StockQty = dto.StockQty };
+            if (await _db.Products.AnyAsync(p => p.SKU == dto.SKU))
+                return ApiResponse<ProductDto>.Fail("SKU already exists.");
+
+            var categoryId = await GetOrCreateCategory(dto.CompanyId, dto.Category);
+            var brandId = await GetOrCreateBrand(dto.CompanyId, dto.Brand);
+            var unitId = await GetOrCreateUnit(dto.CompanyId, dto.Unit);
+
+            var product = new Product
+            {
+                CompanyId = dto.CompanyId,
+                Name = dto.Name,
+                SKU = dto.SKU,
+                CategoryId = categoryId,
+                BrandId = brandId,
+                UnitId = unitId,
+                Price = dto.Price,
+                StockQty = dto.Stock,
+                Status = dto.Status,
+                AddedAt = DateTime.UtcNow
+            };
+
             _db.Products.Add(product);
             await _db.SaveChangesAsync();
-            await _db.Entry(product).Reference(p => p.Category).LoadAsync();
+
+            product = await _db.Products
+                .Include(p => p.Category).Include(p => p.Brand).Include(p => p.Unit)
+                .FirstAsync(p => p.Id == product.Id);
+
             return ApiResponse<ProductDto>.Ok(MapProduct(product), "Product added.");
         }
 
         public async Task<ApiResponse<ProductDto>> UpdateProductAsync(int id, UpdateProductDto dto)
         {
-            var product = await _db.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _db.Products
+                .Include(p => p.Category).Include(p => p.Brand).Include(p => p.Unit)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (product == null) return ApiResponse<ProductDto>.Fail("Product not found.");
-            product.Name = dto.Name; product.CategoryId = dto.CategoryId; product.Price = dto.Price;
+
+            if (product.SKU != dto.SKU && await _db.Products.AnyAsync(p => p.SKU == dto.SKU))
+                return ApiResponse<ProductDto>.Fail("SKU already exists.");
+
+            product.Name = dto.Name;
+            product.SKU = dto.SKU;
+            product.CategoryId = await GetOrCreateCategory(product.CompanyId, dto.Category);
+            product.BrandId = await GetOrCreateBrand(product.CompanyId, dto.Brand);
+            product.UnitId = await GetOrCreateUnit(product.CompanyId, dto.Unit);
+            product.Price = dto.Price;
+            product.StockQty = dto.Stock;
+            product.Status = dto.Status;
+
             await _db.SaveChangesAsync();
+
+            product = await _db.Products
+                .Include(p => p.Category).Include(p => p.Brand).Include(p => p.Unit)
+                .FirstAsync(p => p.Id == product.Id);
+
             return ApiResponse<ProductDto>.Ok(MapProduct(product));
         }
 
         public async Task<ApiResponse<PagedResult<ProductDto>>> ListProductsAsync(int companyId, PaginationParams p)
         {
-            var query = _db.Products.Include(pr => pr.Category).AsQueryable();
+            var query = _db.Products.Where(p => p.CompanyId == companyId)
+                .Include(pr => pr.Category).Include(pr => pr.Brand).Include(pr => pr.Unit).AsQueryable();
             if (!string.IsNullOrEmpty(p.Search))
-                query = query.Where(pr => pr.Name.Contains(p.Search));
+                query = query.Where(pr => pr.Name.Contains(p.Search) || pr.SKU.Contains(p.Search));
 
             var total = await query.CountAsync();
             var items = await query.Skip((p.Page - 1) * p.PageSize).Take(p.PageSize)
@@ -125,20 +202,26 @@ namespace ERPPlugandPlay.Services
         // ── Stock ─────────────────────────────────────────────
         public async Task<ApiResponse<StockTransactionDto>> UpdateStockAsync(UpdateStockDto dto)
         {
-            var product = await _db.Products.FindAsync(dto.ProductId);
-            if (product == null) return ApiResponse<StockTransactionDto>.Fail("Product not found.");
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId && p.CompanyId == dto.CompanyId);
+            if (product == null) return ApiResponse<StockTransactionDto>.Fail("Product not found or access denied.");
             if (dto.Type == "OUT" && product.StockQty < dto.Quantity)
                 return ApiResponse<StockTransactionDto>.Fail("Insufficient stock.");
 
             product.StockQty += dto.Type == "IN" ? dto.Quantity : -dto.Quantity;
-            var tx = new StockTransaction { ProductId = dto.ProductId, Quantity = dto.Quantity, Type = dto.Type, Remarks = dto.Remarks };
+            var tx = new StockTransaction { CompanyId = dto.CompanyId, ProductId = dto.ProductId, Quantity = dto.Quantity, Type = dto.Type, Remarks = dto.Remarks };
             _db.StockTransactions.Add(tx);
             await _db.SaveChangesAsync();
 
             return ApiResponse<StockTransactionDto>.Ok(new StockTransactionDto
             {
-                Id = tx.Id, ProductId = tx.ProductId, ProductName = product.Name,
-                Quantity = tx.Quantity, Type = tx.Type, Date = tx.Date, Remarks = tx.Remarks
+                Id = tx.Id,
+                CompanyId = tx.CompanyId,
+                ProductId = tx.ProductId,
+                ProductName = product.Name,
+                Quantity = tx.Quantity,
+                Type = tx.Type,
+                Date = tx.Date,
+                Remarks = tx.Remarks
             }, "Stock updated.");
         }
 
@@ -148,23 +231,30 @@ namespace ERPPlugandPlay.Services
                 .Where(t => t.ProductId == productId).OrderByDescending(t => t.Date).ToListAsync();
             return ApiResponse<List<StockTransactionDto>>.Ok(txs.Select(t => new StockTransactionDto
             {
-                Id = t.Id, ProductId = t.ProductId, ProductName = t.Product.Name,
-                Quantity = t.Quantity, Type = t.Type, Date = t.Date, Remarks = t.Remarks
+                Id = t.Id,
+                CompanyId = t.CompanyId,
+                ProductId = t.ProductId,
+                ProductName = t.Product.Name,
+                Quantity = t.Quantity,
+                Type = t.Type,
+                Date = t.Date,
+                Remarks = t.Remarks
             }).ToList());
         }
 
         // ── Categories ────────────────────────────────────────
         public async Task<ApiResponse<CategoryDto>> AddCategoryAsync(CreateCategoryDto dto)
         {
-            var cat = new Category { Name = dto.Name };
+            var cat = new Category { CompanyId = dto.CompanyId, Name = dto.Name };
             _db.Categories.Add(cat);
             await _db.SaveChangesAsync();
-            return ApiResponse<CategoryDto>.Ok(new CategoryDto { Id = cat.Id, Name = cat.Name }, "Category added.");
+            return ApiResponse<CategoryDto>.Ok(new CategoryDto { Id = cat.Id, CompanyId = cat.CompanyId, Name = cat.Name }, "Category added.");
         }
 
-        public async Task<ApiResponse<List<CategoryDto>>> ListCategoriesAsync()
+        public async Task<ApiResponse<List<CategoryDto>>> ListCategoriesAsync(int companyId)
         {
-            var cats = await _db.Categories.Select(c => new CategoryDto { Id = c.Id, Name = c.Name }).ToListAsync();
+            var cats = await _db.Categories.Where(c => c.CompanyId == companyId)
+                .Select(c => new CategoryDto { Id = c.Id, CompanyId = c.CompanyId, Name = c.Name }).ToListAsync();
             return ApiResponse<List<CategoryDto>>.Ok(cats);
         }
 
@@ -174,8 +264,11 @@ namespace ERPPlugandPlay.Services
             var dispatchNumber = $"DSP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
             var dispatch = new MaterialDispatch
             {
-                CompanyId = dto.CompanyId, DispatchNumber = dispatchNumber,
-                DispatchedTo = dto.DispatchedTo, Notes = dto.Notes, DispatchDate = dto.DispatchDate
+                CompanyId = dto.CompanyId,
+                DispatchNumber = dispatchNumber,
+                DispatchedTo = dto.DispatchedTo,
+                Notes = dto.Notes,
+                DispatchDate = dto.DispatchDate
             };
 
             foreach (var item in dto.Items)
@@ -188,8 +281,11 @@ namespace ERPPlugandPlay.Services
                 product.StockQty -= item.Quantity;
                 _db.StockTransactions.Add(new StockTransaction
                 {
-                    ProductId = item.ProductId, Quantity = item.Quantity,
-                    Type = "OUT", Remarks = $"Dispatch {dispatchNumber} to {dto.DispatchedTo}"
+                    CompanyId = dto.CompanyId,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Type = "OUT",
+                    Remarks = $"Dispatch {dispatchNumber} to {dto.DispatchedTo}"
                 });
             }
 
@@ -229,9 +325,12 @@ namespace ERPPlugandPlay.Services
             var transferNumber = $"TRF-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
             var transfer = new ProductTransfer
             {
-                CompanyId = dto.CompanyId, TransferNumber = transferNumber,
-                FromLocation = dto.FromLocation, ToLocation = dto.ToLocation,
-                TransferDate = dto.TransferDate, Notes = dto.Notes
+                CompanyId = dto.CompanyId,
+                TransferNumber = transferNumber,
+                FromLocation = dto.FromLocation,
+                ToLocation = dto.ToLocation,
+                TransferDate = dto.TransferDate,
+                Notes = dto.Notes
             };
 
             foreach (var item in dto.Items)
@@ -243,8 +342,11 @@ namespace ERPPlugandPlay.Services
                 transfer.Items.Add(new ProductTransferItem { ProductId = item.ProductId, Quantity = item.Quantity });
                 _db.StockTransactions.Add(new StockTransaction
                 {
-                    ProductId = item.ProductId, Quantity = item.Quantity,
-                    Type = "OUT", Remarks = $"Transfer {transferNumber}: {dto.FromLocation} → {dto.ToLocation}"
+                    CompanyId = dto.CompanyId,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Type = "OUT",
+                    Remarks = $"Transfer {transferNumber}: {dto.FromLocation} → {dto.ToLocation}"
                 });
             }
 
@@ -284,16 +386,22 @@ namespace ERPPlugandPlay.Services
             var grnNumber = $"GRN-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
             var receive = new ProductReceive
             {
-                CompanyId = dto.CompanyId, GrnNumber = grnNumber, VendorId = dto.VendorId,
-                PurchaseOrderRef = dto.PurchaseOrderRef, ReceivedDate = dto.ReceivedDate, Notes = dto.Notes
+                CompanyId = dto.CompanyId,
+                GrnNumber = grnNumber,
+                VendorId = dto.VendorId,
+                PurchaseOrderRef = dto.PurchaseOrderRef,
+                ReceivedDate = dto.ReceivedDate,
+                Notes = dto.Notes
             };
 
             foreach (var item in dto.Items)
             {
                 receive.Items.Add(new ProductReceiveItem
                 {
-                    ProductId = item.ProductId, OrderedQty = item.OrderedQty,
-                    ReceivedQty = item.ReceivedQty, UnitCost = item.UnitCost
+                    ProductId = item.ProductId,
+                    OrderedQty = item.OrderedQty,
+                    ReceivedQty = item.ReceivedQty,
+                    UnitCost = item.UnitCost
                 });
 
                 var product = await _db.Products.FindAsync(item.ProductId);
@@ -302,8 +410,11 @@ namespace ERPPlugandPlay.Services
                     product.StockQty += item.ReceivedQty;
                     _db.StockTransactions.Add(new StockTransaction
                     {
-                        ProductId = item.ProductId, Quantity = item.ReceivedQty,
-                        Type = "IN", Remarks = $"GRN {grnNumber}"
+                        CompanyId = dto.CompanyId,
+                        ProductId = item.ProductId,
+                        Quantity = item.ReceivedQty,
+                        Type = "IN",
+                        Remarks = $"GRN {grnNumber}"
                     });
                 }
             }
@@ -349,37 +460,67 @@ namespace ERPPlugandPlay.Services
 
         private static ProductDto MapProduct(Product p) => new()
         {
-            Id = p.Id, Name = p.Name, CategoryId = p.CategoryId,
-            CategoryName = p.Category?.Name ?? "", Price = p.Price, StockQty = p.StockQty
+            Id = p.Id.ToString(),
+            CompanyId = p.CompanyId,
+            Name = p.Name,
+            SKU = p.SKU,
+            Category = p.Category?.Name ?? "",
+            Brand = p.Brand?.Name ?? "",
+            Unit = p.Unit?.Name ?? "",
+            Price = p.Price,
+            Stock = p.StockQty,
+            Status = p.Status,
+            AddedAt = p.AddedAt
         };
 
         private static MaterialDispatchDto MapDispatch(MaterialDispatch d) => new()
         {
-            Id = d.Id, CompanyId = d.CompanyId, DispatchNumber = d.DispatchNumber,
-            DispatchedTo = d.DispatchedTo, Status = d.Status, DispatchDate = d.DispatchDate,
-            Notes = d.Notes, CreatedAt = d.CreatedAt,
+            Id = d.Id,
+            CompanyId = d.CompanyId,
+            DispatchNumber = d.DispatchNumber,
+            DispatchedTo = d.DispatchedTo,
+            Status = d.Status,
+            DispatchDate = d.DispatchDate,
+            Notes = d.Notes,
+            CreatedAt = d.CreatedAt,
             Items = d.Items.Select(i => new DispatchItemResultDto
             { ProductId = i.ProductId, ProductName = i.Product?.Name ?? "", Quantity = i.Quantity }).ToList()
         };
 
         private static ProductTransferDto MapTransfer(ProductTransfer t) => new()
         {
-            Id = t.Id, CompanyId = t.CompanyId, TransferNumber = t.TransferNumber,
-            FromLocation = t.FromLocation, ToLocation = t.ToLocation, Status = t.Status,
-            TransferDate = t.TransferDate, Notes = t.Notes, CreatedAt = t.CreatedAt,
+            Id = t.Id,
+            CompanyId = t.CompanyId,
+            TransferNumber = t.TransferNumber,
+            FromLocation = t.FromLocation,
+            ToLocation = t.ToLocation,
+            Status = t.Status,
+            TransferDate = t.TransferDate,
+            Notes = t.Notes,
+            CreatedAt = t.CreatedAt,
             Items = t.Items.Select(i => new TransferItemResultDto
             { ProductId = i.ProductId, ProductName = i.Product?.Name ?? "", Quantity = i.Quantity }).ToList()
         };
 
         private static ProductReceiveDto MapReceive(ProductReceive r) => new()
         {
-            Id = r.Id, CompanyId = r.CompanyId, GrnNumber = r.GrnNumber,
-            VendorId = r.VendorId, VendorName = r.Vendor?.Name, PurchaseOrderRef = r.PurchaseOrderRef,
-            Status = r.Status, ReceivedDate = r.ReceivedDate, Notes = r.Notes, CreatedAt = r.CreatedAt,
+            Id = r.Id,
+            CompanyId = r.CompanyId,
+            GrnNumber = r.GrnNumber,
+            VendorId = r.VendorId,
+            VendorName = r.Vendor?.Name,
+            PurchaseOrderRef = r.PurchaseOrderRef,
+            Status = r.Status,
+            ReceivedDate = r.ReceivedDate,
+            Notes = r.Notes,
+            CreatedAt = r.CreatedAt,
             Items = r.Items.Select(i => new ReceiveItemResultDto
             {
-                ProductId = i.ProductId, ProductName = i.Product?.Name ?? "",
-                OrderedQty = i.OrderedQty, ReceivedQty = i.ReceivedQty, UnitCost = i.UnitCost
+                ProductId = i.ProductId,
+                ProductName = i.Product?.Name ?? "",
+                OrderedQty = i.OrderedQty,
+                ReceivedQty = i.ReceivedQty,
+                UnitCost = i.UnitCost
             }).ToList()
         };
     }
