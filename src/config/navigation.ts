@@ -18,6 +18,13 @@ export const superAdminNavigation: NavigationItem[] = [
     roles: ['super_admin']
   },
   {
+    id: 'all-users',
+    label: 'Users',
+    icon: 'users',
+    path: '/superadmin/all-users',
+    roles: ['super_admin']
+  },
+  {
     id: 'subscriptions',
     label: 'Subscriptions & Plans',
     icon: 'credit-card',

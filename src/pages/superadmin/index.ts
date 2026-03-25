@@ -7,3 +7,4 @@ export { default as AuditLogsPage } from './AuditLogsPage';
 export { default as SettingsPage } from './SettingsPage';
 export { default as ModulesManagementPage } from './ModulesManagementPage';
 export { default as SystemPage } from './SystemPage';
+export { default as UserManagementPage } from './UserManagementPage';

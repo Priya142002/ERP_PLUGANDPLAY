@@ -236,4 +236,39 @@ namespace ERPPlugandPlay.DTOs
         public string Version { get; set; } = string.Empty;
         public string Environment { get; set; } = string.Empty;
     }
+    // ── User Management ────────────────────────────────────────
+    public class UserManagementDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        // Company info
+        public int? CompanyId { get; set; }
+        public string? CompanyName { get; set; }
+        public string? Industry { get; set; }
+
+        // Trial info
+        public bool IsTrialActive { get; set; }
+        public DateTime? TrialStartDate { get; set; }
+        public DateTime? TrialEndDate { get; set; }
+        public int DaysRemaining { get; set; }
+
+        // Subscription
+        public bool HasActiveSubscription { get; set; }
+        public string? PlanName { get; set; }
+
+        // Modules
+        public List<UserModuleDto> Modules { get; set; } = new();
+    }
+
+    public class UserModuleDto
+    {
+        public string ModuleId { get; set; } = string.Empty;
+        public bool IsEnabled { get; set; }
+        public bool IsTrialAccess { get; set; }
+    }
 }

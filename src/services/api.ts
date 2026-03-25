@@ -142,4 +142,12 @@ export const superAdminApi = {
     request<any>('/api/superadmin/system/settings', { method: 'POST', body: JSON.stringify(settings) }),
   getSystemHealth: () =>
     request<any>('/api/superadmin/system/health'),
+
+  // Users
+  getUsers: (filter?: string) =>
+    request<any>(`/api/superadmin/users${filter ? `?filter=${filter}` : ''}`),
+  getUserById: (id: number) =>
+    request<any>(`/api/superadmin/users/${id}`),
+  toggleUser: (id: number) =>
+    request<any>(`/api/superadmin/users/${id}/toggle`, { method: 'PUT' }),
 };

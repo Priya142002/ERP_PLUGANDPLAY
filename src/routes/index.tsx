@@ -12,6 +12,7 @@ import {
   SettingsPage as SuperAdminSettingsPage,
   ModulesManagementPage,
   SystemPage,
+  UserManagementPage,
 } from '../pages/superadmin';
 import {
   AdminDashboardPage,
@@ -189,6 +190,7 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="audit-logs" element={<AuditLogsPage />} />
             <Route path="system" element={<SystemPage />} />
+            <Route path="all-users" element={<UserManagementPage />} />
           </>
         )}
 

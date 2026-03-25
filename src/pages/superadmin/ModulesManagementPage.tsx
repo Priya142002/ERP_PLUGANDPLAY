@@ -92,7 +92,7 @@ function CreateModuleModal({ onClose, onSave }: { onClose: () => void; onSave: (
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm border"
               style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-primary)", backgroundColor: "var(--sa-hover)" }}>Cancel</button>
             <button type="submit" disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold sa-btn-primary disabled:opacity-60">
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white sa-btn-primary disabled:opacity-60">
               <Save className="h-4 w-4" />{saving ? 'Creating...' : 'Create Module'}
             </button>
           </div>
@@ -167,7 +167,7 @@ function AssignModulesModal({ company, allModules, onClose, onSave }: {
           <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm border"
             style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-primary)", backgroundColor: "var(--sa-background)" }}>Close</button>
           <button onClick={() => { onSave(); onClose(); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold sa-btn-primary">
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white sa-btn-primary">
             <Save className="h-4 w-4" /> Done
           </button>
         </div>
@@ -246,7 +246,7 @@ export function ModulesManagementPage() {
           <p className="text-slate-500 mt-1">Manage global modules and assign them to companies</p>
         </div>
         <button onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold sa-btn-primary shadow-md">
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white sa-btn-primary shadow-md">
           <Plus className="h-4 w-4" /> Create Module
         </button>
       </div>
