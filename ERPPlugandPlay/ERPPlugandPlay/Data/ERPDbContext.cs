@@ -29,6 +29,9 @@ namespace ERPPlugandPlay.Data
 
         // ── Inventory ─────────────────────────────────────────
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Brand> Brands { get; set; }
+        public DbSet<Unit> Units { get; set; }
+        public DbSet<Warehouse> Warehouses { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<StockTransaction> StockTransactions { get; set; }
         public DbSet<MaterialDispatch> MaterialDispatches { get; set; }
