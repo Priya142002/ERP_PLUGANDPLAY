@@ -152,3 +152,25 @@
     height: 1rem !important;
   }
 }
+
+/* Common SuperAdmin Button Styling */
+.sa-btn-primary {
+  background-color: #1a2744 !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease-in-out !important;
+  border: 1px solid #1a2744 !important;
+}
+
+.sa-btn-primary:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #1a2744 !important;
+}
+
+.sa-btn-primary svg {
+  color: #ffffff !important;
+}
+
+.sa-btn-primary:hover svg {
+  color: #000000 !important;
+}

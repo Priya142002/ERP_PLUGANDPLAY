@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { superAdminApi } from "../../services/api";
 import { 
   Database, Settings, Mail, Bell, Shield, Server, HardDrive, Cpu, Activity, 
   Clock, CheckCircle, AlertTriangle, Download, Upload, RefreshCw, Code,
@@ -106,10 +107,40 @@ export function SystemPage() {
     }
   });
 
+  const [health, setHealth] = useState<any>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    const [hRes, sRes] = await Promise.all([
+      superAdminApi.getSystemHealth(),
+      superAdminApi.getSystemSettings()
+    ]);
+    if (hRes.success) setHealth(hRes.data);
+    if (sRes.success && Array.isArray(sRes.data)) {
+      const dbSettings: any = { ...settings };
+      sRes.data.forEach((s: any) => {
+        dbSettings[s.key] = s.value === 'true' ? true : s.value === 'false' ? false : s.value;
+      });
+      setSettings(dbSettings);
+    }
+  };
+
   const handleCopyApiKey = () => {
     navigator.clipboard.writeText("YOUR_API_KEY_HERE");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const saveSettings = async () => {
+    const payload: Record<string, string> = {};
+    Object.entries(settings).forEach(([k, v]) => {
+      payload[k] = v.toString();
+    });
+    const res = await superAdminApi.updateSystemSettings(payload);
+    if (res.success) alert("Settings saved successfully!");
   };
 
   return (
@@ -162,7 +193,12 @@ export function SystemPage() {
         <div className="space-y-6">
           {/* System Health Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {SYSTEM_HEALTH.map((item, index) => {
+            {[
+              { label: "Database", status: health?.database?.toLowerCase() || "healthy", value: health?.databaseUptime || "99.9%", icon: Database, color: "var(--sa-success)" },
+              { label: "API Server", status: health?.apiServer?.toLowerCase() || "healthy", value: health?.apiUptime || "99.8%", icon: Server, color: "var(--sa-success)" },
+              { label: "Storage", status: "warning", value: health?.storageUsage || "85% used", icon: HardDrive, color: "var(--sa-warning)" },
+              { label: "CPU Usage", status: "healthy", value: health?.cpuUsage || "45%", icon: Cpu, color: "var(--sa-success)" }
+            ].map((item, index) => {
               const Icon = item.icon;
               return (
                 <motion.div
@@ -211,12 +247,12 @@ export function SystemPage() {
               </div>
               <div className="space-y-3">
                 {[
-                  { label: "Platform Version", value: "v2.4.1", icon: Code },
+                  { label: "Platform Version", value: health?.version || "v2.5.0", icon: Code },
                   { label: "Database Version", value: "PostgreSQL 15.2", icon: Database },
                   { label: "Node Version", value: "v20.11.0", icon: Server },
-                  { label: "Last Updated", value: "Mar 15, 2026", icon: Clock },
-                  { label: "Environment", value: "Production", icon: Globe },
-                  { label: "Uptime", value: "45 days", icon: Activity }
+                  { label: "Last Updated", value: "Mar 25, 2026", icon: Clock },
+                  { label: "Environment", value: health?.environment || "Production", icon: Globe },
+                  { label: "Uptime", value: health?.apiUptime || "45 days", icon: Activity }
                 ].map((item, i) => {
                   const Icon = item.icon;
                   return (
@@ -364,14 +400,14 @@ export function SystemPage() {
               </label>
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button className="px-5 py-2.5 rounded-lg border text-sm font-semibold transition hover:bg-[var(--sa-hover)]"
+              <button onClick={() => loadData()} className="px-5 py-2.5 rounded-lg border text-sm font-semibold transition hover:bg-[var(--sa-hover)]"
                 style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}>
                 <RotateCcw className="h-4 w-4 inline mr-2" />
                 Reset
               </button>
-              <button className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition hover:opacity-90"
+              <button onClick={() => saveSettings()} className="px-5 py-2.5 rounded-lg text-sm font-bold !text-white hover:!text-white transition-all hover:brightness-110 active:scale-95 shadow-md flex items-center justify-center gap-2"
                 style={{ backgroundColor: "var(--sa-primary)" }}>
-                <Save className="h-4 w-4 inline mr-2" />
+                <Save className="h-4 w-4" color="#FFFFFF" />
                 Save Changes
               </button>
             </div>
@@ -469,9 +505,9 @@ export function SystemPage() {
                 style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}>
                 Cancel
               </button>
-              <button className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition hover:opacity-90"
+              <button className="px-5 py-2.5 rounded-lg text-sm font-bold !text-white hover:!text-white transition-all hover:brightness-110 active:scale-95 shadow-md flex items-center justify-center gap-2"
                 style={{ backgroundColor: "var(--sa-primary)" }}>
-                <Save className="h-4 w-4 inline mr-2" />
+                <Save className="h-4 w-4" color="#FFFFFF" />
                 Save Security Settings
               </button>
             </div>
@@ -585,9 +621,9 @@ export function SystemPage() {
                   <Upload className="h-4 w-4 inline mr-2" />
                   Restore
                 </button>
-                <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90"
+                <button className="px-4 py-2 rounded-lg text-sm font-bold !text-white hover:!text-white transition-all hover:brightness-110 active:scale-95 shadow-md flex items-center justify-center gap-2"
                   style={{ backgroundColor: "var(--sa-primary)" }}>
-                  <Database className="h-4 w-4 inline mr-2" />
+                  <Database className="h-4 w-4" color="#FFFFFF" />
                   Create Backup
                 </button>
               </div>
@@ -714,9 +750,9 @@ export function SystemPage() {
                 style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}>
                 Test Connection
               </button>
-              <button className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition hover:opacity-90"
+              <button className="px-5 py-2.5 rounded-lg text-sm font-bold !text-white hover:!text-white transition-all hover:brightness-110 active:scale-95 shadow-md flex items-center justify-center gap-2"
                 style={{ backgroundColor: "var(--sa-primary)" }}>
-                <Save className="h-4 w-4 inline mr-2" />
+                <Save className="h-4 w-4" color="#FFFFFF" />
                 Save Email Settings
               </button>
             </div>

@@ -182,7 +182,7 @@ export const OrderManagement: React.FC = () => {
           <Input
             label="Number of Items"
             type="number"
-            value={editFormData.items}
+            value={String(editFormData.items)}
             onChange={(e) => setEditFormData({ ...editFormData, items: Number(e.target.value) })}
             placeholder="0"
             required

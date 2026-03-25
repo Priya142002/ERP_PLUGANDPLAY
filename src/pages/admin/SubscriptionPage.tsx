@@ -3,8 +3,6 @@ import { useState } from "react";
 import { 
   Check, Crown, Zap, Building2, Headphones, CreditCard
 } from "lucide-react";
-import { Button } from "../../components/ui";
-import { PLAN_FEATURES } from "../../utils/subscriptionAccess";
 import "../../styles/admin-mobile.css";
 
 const pageMotion = {

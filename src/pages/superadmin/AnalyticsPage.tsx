@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   BarChart, Bar, XAxis, YAxis, 
@@ -6,6 +6,7 @@ import {
   PieChart, Pie, Cell
 } from "recharts";
 import { Users, HardDrive, PieChart as PieIcon, Activity, FileText, Image } from "lucide-react";
+import { superAdminApi } from "../../services/api";
 
 const pageMotion = {
   initial: { opacity: 0, y: 10 },
@@ -37,17 +38,56 @@ const PLAN_DIST = [
   { name: "Trial", value: 40, color: "var(--sa-warning)" },
 ];
 
-const METRICS = [
-  { label: "Avg Users per Company", value: "27", change: "+12%", color: "var(--sa-primary)" },
-  { label: "Avg Storage per Company", value: "61GB", change: "+8%", color: "var(--sa-info)" },
-  { label: "Trial Conversion Rate", value: "83%", change: "+5%", color: "var(--sa-success)" },
-  { label: "Monthly Active Rate", value: "74%", change: "+3%", color: "var(--sa-warning)" },
-];
+
 
 export function AnalyticsPage() {
   const [selectedCompany, setSelectedCompany] = useState("all");
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const userChartRef = useRef<HTMLDivElement>(null);
   const storageChartRef = useRef<HTMLDivElement>(null);
+
+  const [companies, setCompanies] = useState<any[]>([]);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      superAdminApi.getAnalytics(),
+      superAdminApi.getCompanies(1, 100)
+    ]).then(([anaRes, compRes]) => {
+      if (anaRes.success) setAnalytics(anaRes.data);
+      if (compRes.success) {
+        const items = compRes.data?.items || [];
+        setCompanies(items);
+      }
+    }).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (selectedCompany === "all") {
+      superAdminApi.getAnalytics().then(res => {
+        if (res.success) setAnalytics(res.data);
+      });
+    } else {
+      superAdminApi.getCompanyAnalytics(Number(selectedCompany)).then(res => {
+        if (res.success) setAnalytics(res.data);
+      });
+    }
+  }, [selectedCompany]);
+
+  const displayUserGrowth = analytics?.monthlyGrowth || USER_GROWTH;
+  const displayPlanDist = analytics?.planDistribution?.map((p: any) => ({
+    name: p.planName,
+    value: p.count,
+    color: p.planName === "Enterprise" ? "var(--sa-primary)" : p.planName === "Pro" ? "var(--sa-success)" : "var(--sa-info)"
+  })) || PLAN_DIST;
+
+  const displayMetrics = [
+    { label: "Total Companies", value: analytics?.totalCompanies || 0, change: "+12%", color: "var(--sa-primary)" },
+    { label: "Total Active Users", value: analytics?.totalUsers || 0, change: "+8%", color: "var(--sa-info)" },
+    { label: "Monthly Revenue", value: `₹${(analytics?.monthlyRevenue || 0).toLocaleString()}`, change: "+5%", color: "var(--sa-success)" },
+    { label: "Trials active", value: analytics?.trialCompanies || 0, change: "+3%", color: "var(--sa-warning)" },
+  ];
 
   const exportCompanyReport = () => {
     if (selectedCompany === "all") {
@@ -66,7 +106,9 @@ export function AnalyticsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--sa-text-primary)" }}>Intelligence Hub</h1>
-          <p className="text-slate-500 mt-1">Advanced reporting and cross-platform growth diagnostics</p>
+          <p className="text-slate-500 mt-1">
+            {loading ? "Syncing data nodes..." : "Advanced reporting and cross-platform growth diagnostics"}
+          </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl border shadow-sm"
           style={{ borderColor: "var(--sa-border)", backgroundColor: "var(--sa-card)" }}>
@@ -77,22 +119,22 @@ export function AnalyticsPage() {
       </div>
 
       {/* Premium Info Banner Section */}
-      <div className="py-3 px-6 md:py-4 md:px-8 rounded-2xl md:rounded-[1.5rem] shadow-lg border relative overflow-hidden text-white"
+      <div className="py-3 px-6 md:py-4 md:px-8 rounded-2xl md:rounded-[1.5rem] shadow-lg border relative overflow-hidden"
         style={{ backgroundColor: "var(--sa-primary)", borderColor: "var(--sa-border)" }}>
         <div className="absolute top-0 right-0 p-8 opacity-10 scale-125 rotate-12 pointer-events-none">
-          <PieIcon size={80} />
+          <PieIcon size={80} color="#FFFFFF" />
         </div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center text-white border border-white/10 shadow-inner">
-              <PieIcon size={22} />
+            <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center border border-white/20 shadow-inner">
+              <PieIcon size={22} color="#FFFFFF" />
             </div>
             <div>
-              <p className="text-white/60 font-medium text-[9px] md:text-[10px] uppercase tracking-[0.2em] leading-none mb-1">Analytical Framework</p>
+              <p className="!text-white font-bold text-[9px] md:text-[10px] uppercase tracking-[0.2em] leading-none mb-1">Analytical Framework</p>
               <div className="flex items-center gap-2">
-                <span className="text-white font-bold text-sm">Data Core</span>
+                <span className="!text-[#FFFFFF] font-bold text-sm">Data Core</span>
                 <span className="h-1 w-1 rounded-full bg-white/20" />
-                <span className="text-white/90 font-bold text-sm">{USER_GROWTH[USER_GROWTH.length-1].users} Total Active User Identities</span>
+                <span className="!text-white/95 font-bold text-sm">{(analytics?.totalUsers || 0).toLocaleString()} Total Active User Identities</span>
               </div>
             </div>
           </div>
@@ -109,10 +151,8 @@ export function AnalyticsPage() {
             className="h-9 px-3 rounded-lg border text-sm"
             style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
           >
-            <option value="all">All Companies</option>
-            <option value="BuildSafe Corp">BuildSafe Corp</option>
-            <option value="SteelWorks Ltd">SteelWorks Ltd</option>
-            <option value="AeroCraft Inc">AeroCraft Inc</option>
+            <option value="all">{loading ? "Loading..." : "All Companies"}</option>
+            {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <button
             onClick={exportCompanyReport}
@@ -146,7 +186,7 @@ export function AnalyticsPage() {
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {METRICS.map((metric, i) => (
+        {displayMetrics.map((metric, i) => (
           <motion.div
             key={metric.label}
             initial={{ opacity: 0, y: 20 }}
@@ -176,7 +216,7 @@ export function AnalyticsPage() {
           </div>
           <div ref={userChartRef}>
             <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={USER_GROWTH}>
+              <AreaChart data={displayUserGrowth}>
                 <defs>
                   <linearGradient id="userGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--sa-primary)" stopOpacity={0.3} />
@@ -195,6 +235,7 @@ export function AnalyticsPage() {
                   }}
                 />
                 <Area type="monotone" dataKey="users" stroke="var(--sa-primary)" strokeWidth={2} fill="url(#userGradient)" />
+                <Area type="monotone" dataKey="companies" stroke="var(--sa-info)" strokeWidth={2} fill="none" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -239,7 +280,7 @@ export function AnalyticsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={PLAN_DIST}
+                  data={displayPlanDist}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -247,7 +288,7 @@ export function AnalyticsPage() {
                   paddingAngle={4}
                   dataKey="value"
                 >
-                  {PLAN_DIST.map((entry, index) => (
+                  {displayPlanDist.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -263,7 +304,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </div>
           <div className="flex justify-center gap-6 mt-4">
-            {PLAN_DIST.map((item) => (
+            {displayPlanDist.map((item: any) => (
               <div key={item.name} className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
                 <span className="text-xs" style={{ color: "var(--sa-text-secondary)" }}>{item.name}</span>
@@ -279,7 +320,7 @@ export function AnalyticsPage() {
             <h3 className="text-sm font-semibold" style={{ color: "var(--sa-text-primary)" }}>Performance Metrics</h3>
           </div>
           <div className="space-y-4">
-            {METRICS.map((metric) => (
+            {displayMetrics.map((metric) => (
               <div key={metric.label}>
                 <div className="flex justify-between mb-1">
                   <span className="text-xs" style={{ color: "var(--sa-text-secondary)" }}>{metric.label}</span>
@@ -290,7 +331,7 @@ export function AnalyticsPage() {
                     className="h-full rounded-full"
                     style={{ backgroundColor: metric.color }}
                     initial={{ width: 0 }}
-                    animate={{ width: metric.value.toString().replace('%', '') + '%' }}
+                    animate={{ width: "75%" }}
                     transition={{ duration: 1 }}
                   />
                 </div>

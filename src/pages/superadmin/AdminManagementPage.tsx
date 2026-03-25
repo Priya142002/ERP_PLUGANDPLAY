@@ -65,22 +65,22 @@ export function AdminManagementPage() {
       </div>
 
       {/* Premium Info Banner Section */}
-      <div className="py-3 px-6 md:py-4 md:px-8 rounded-2xl md:rounded-[1.5rem] shadow-lg border relative overflow-hidden text-white"
+      <div className="py-3 px-6 md:py-4 md:px-8 rounded-2xl md:rounded-[1.5rem] shadow-lg border relative overflow-hidden"
         style={{ backgroundColor: "var(--sa-primary)", borderColor: "var(--sa-border)" }}>
         <div className="absolute top-0 right-0 p-8 opacity-10 scale-125 rotate-12 pointer-events-none">
-          <Users size={80} />
+          <Users size={80} color="#FFFFFF" />
         </div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center text-white border border-white/10 shadow-inner">
-              <Users size={22} />
+            <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center border border-white/20 shadow-inner">
+              <Users size={22} color="#FFFFFF" />
             </div>
             <div>
-              <p className="text-white/60 font-medium text-[9px] md:text-[10px] uppercase tracking-[0.2em] leading-none mb-1">Human Capital Registry</p>
+              <p className="!text-white font-bold text-[9px] md:text-[10px] uppercase tracking-[0.2em] leading-none mb-1">Human Capital Registry</p>
               <div className="flex items-center gap-2">
-                <span className="text-white font-bold text-sm">Personnel Matrix</span>
+                <span className="!text-[#FFFFFF] font-bold text-sm">Personnel Matrix</span>
                 <span className="h-1 w-1 rounded-full bg-white/20" />
-                <span className="text-white/90 font-bold text-sm">{stats.total} Digital Identities Authenticated</span>
+                <span className="!text-white/95 font-bold text-sm">{stats.total} Digital Identities Authenticated</span>
               </div>
             </div>
           </div>

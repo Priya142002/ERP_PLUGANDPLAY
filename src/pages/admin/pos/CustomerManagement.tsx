@@ -237,7 +237,7 @@ export const CustomerManagement: React.FC = () => {
           <Input
             label="Initial Loyalty Points"
             type="number"
-            value={formData.loyaltyPoints}
+            value={String(formData.loyaltyPoints)}
             onChange={(e) => setFormData({ ...formData, loyaltyPoints: Number(e.target.value) })}
             placeholder="0"
           />
@@ -297,7 +297,7 @@ export const CustomerManagement: React.FC = () => {
           <Input
             label="Loyalty Points"
             type="number"
-            value={formData.loyaltyPoints}
+            value={String(formData.loyaltyPoints)}
             onChange={(e) => setFormData({ ...formData, loyaltyPoints: Number(e.target.value) })}
             placeholder="0"
           />

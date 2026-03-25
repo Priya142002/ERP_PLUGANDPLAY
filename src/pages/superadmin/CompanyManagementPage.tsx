@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { 
+import {
   Plus, Building2, Search, Edit, Trash2, Power,
   Users, Download, Filter, X, Save, Upload, Image, Layers
 } from "lucide-react";
-import { useApp } from "../../context/AppContext";
+import { superAdminApi } from "../../services/api";
 import "../../styles/superadmin-mobile.css";
 
 const ALL_MODULES = [
@@ -29,7 +29,7 @@ const pageMotion = {
 };
 
 const INDUSTRIES = [
-  "Manufacturing", "Construction", "Retail", "Healthcare", 
+  "Manufacturing", "Construction", "Retail", "Healthcare",
   "Technology", "Finance", "Education", "Logistics", "Other"
 ];
 
@@ -79,15 +79,16 @@ interface FilterState {
   companyType: string;
 }
 
-function CompanyFormModal({ 
-  company, 
-  onClose, 
-  onSave 
-}: { 
-  company?: any; 
-  onClose: () => void; 
+function CompanyFormModal({
+  company,
+  onClose,
+  onSave
+}: {
+  company?: any;
+  onClose: () => void;
   onSave: (data: CompanyFormData) => void;
 }) {
+  const [isSubmitHovered, setIsSubmitHovered] = useState(false);
   const [formData, setFormData] = useState<CompanyFormData>(() => {
     if (company) {
       return {
@@ -135,7 +136,7 @@ function CompanyFormModal({
         alert('Please upload an image file');
         return;
       }
-      
+
       // Validate file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         alert('File size should be less than 2MB');
@@ -183,7 +184,7 @@ function CompanyFormModal({
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold" style={{ color: "var(--sa-text-primary)" }}>Basic Information</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
@@ -258,7 +259,7 @@ function CompanyFormModal({
             <h3 className="text-sm font-semibold" style={{ color: "var(--sa-text-primary)" }}>
               Company Logo
             </h3>
-            
+
             <div className="flex items-start gap-4">
               {/* Logo Preview */}
               <div className="flex-shrink-0">
@@ -307,7 +308,7 @@ function CompanyFormModal({
           {/* Contact Information */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold" style={{ color: "var(--sa-text-primary)" }}>Contact Information</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
@@ -350,7 +351,7 @@ function CompanyFormModal({
             <p className="text-xs" style={{ color: "var(--sa-text-secondary)" }}>
               Primary administrator who will manage this company
             </p>
-            
+
             <div>
               <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
                 Admin Name <span className="text-red-500">*</span>
@@ -402,7 +403,7 @@ function CompanyFormModal({
           {/* Address Information */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold" style={{ color: "var(--sa-text-primary)" }}>Address</h3>
-            
+
             <div>
               <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
                 Street Address <span className="text-red-500">*</span>
@@ -489,7 +490,7 @@ function CompanyFormModal({
           {/* Tax Information */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold" style={{ color: "var(--sa-text-primary)" }}>Tax Information (Optional)</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>GST Number</label>
@@ -586,11 +587,18 @@ function CompanyFormModal({
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
-              style={{ backgroundColor: "var(--sa-primary)" }}
+              onMouseEnter={() => setIsSubmitHovered(true)}
+              onMouseLeave={() => setIsSubmitHovered(false)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent hover:border-slate-200"
+              style={{
+                backgroundColor: isSubmitHovered ? "#FFFFFF" : "var(--sa-primary)",
+                color: isSubmitHovered ? "#000000" : "#FFFFFF"
+              }}
             >
-              <Save className="h-4 w-4" />
-              {company ? 'Update Company' : 'Create Company'}
+              <Save className="h-4 w-4" style={{ color: isSubmitHovered ? "#000000" : "#FFFFFF" }} />
+              <span style={{ color: isSubmitHovered ? "#000000" : "#FFFFFF" }}>
+                {company ? 'Update Company' : 'Create Company'}
+              </span>
             </button>
           </div>
         </form>
@@ -608,6 +616,7 @@ function TrialAccessModal({
   onClose: () => void;
   onSave: (modules: string[]) => void;
 }) {
+  const [isSaveHovered, setIsSaveHovered] = useState(false);
   const [selected, setSelected] = useState<string[]>(
     company.allowedModules && company.allowedModules.length > 0
       ? company.allowedModules
@@ -689,11 +698,18 @@ function TrialAccessModal({
             </button>
             <button
               onClick={() => onSave(selected)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-              style={{ backgroundColor: "#6366f1" }}
+              onMouseEnter={() => setIsSaveHovered(true)}
+              onMouseLeave={() => setIsSaveHovered(false)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border border-transparent hover:border-slate-200"
+              style={{
+                backgroundColor: isSaveHovered ? "#FFFFFF" : "var(--sa-primary)",
+                color: isSaveHovered ? "#000000" : "#FFFFFF"
+              }}
             >
-              <Save className="h-4 w-4" />
-              Save ({selected.length})
+              <Save className="h-4 w-4" style={{ color: isSaveHovered ? "#000000" : "#FFFFFF" }} />
+              <span style={{ color: isSaveHovered ? "#000000" : "#FFFFFF" }}>
+                Save ({selected.length})
+              </span>
             </button>
           </div>
         </div>
@@ -703,117 +719,112 @@ function TrialAccessModal({
 }
 
 export function CompanyManagementPage() {
-  const { state, dispatch } = useApp();
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState<any>(null);
   const [trialAccessCompany, setTrialAccessCompany] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    industry: '',
-    status: '',
-    country: '',
-    companyType: ''
-  });
+  const [isAddBtnHovered, setIsAddBtnHovered] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [filters, setFilters] = useState<FilterState>({ industry: '', status: '', country: '', companyType: '' });
 
-  // Get companies with their admin info
-  const companiesWithDetails = state.companies.map(company => {
-    // Find admin for this company
-    const admin = state.admins.find(a => a.companyId === company.id);
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-    return {
-      ...company,
-      adminName: admin?.fullName || 'N/A',
-      adminEmail: admin?.email || 'N/A',
-      adminPhone: admin?.phone || 'N/A'
-    };
-  });
+  const loadCompanies = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await superAdminApi.getCompanies(1, 100, debouncedSearch);
+      if (res.success) {
+        const items = res.data?.items ?? res.data ?? [];
+        setCompanies(Array.isArray(items) ? items : []);
+      }
+    } catch (e) { 
+      console.error(e); 
+      setCompanies([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch]);
 
-  // Filter companies
-  const filteredCompanies = companiesWithDetails.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(search.toLowerCase()) ||
-                         company.code?.toLowerCase().includes(search.toLowerCase()) ||
-                         company.email.toLowerCase().includes(search.toLowerCase());
-    
+  useEffect(() => { loadCompanies(); }, [loadCompanies]);
+
+  const filteredCompanies = companies.filter(company => {
+    const matchesSearch = !search || company.name?.toLowerCase().includes(search.toLowerCase()) ||
+      company.code?.toLowerCase().includes(search.toLowerCase()) ||
+      company.email?.toLowerCase().includes(search.toLowerCase());
     const matchesIndustry = !filters.industry || company.industry === filters.industry;
     const matchesStatus = !filters.status || company.status === filters.status;
-    const matchesCountry = !filters.country || company.address.country === filters.country;
+    const matchesCountry = !filters.country || company.country === filters.country || company.address?.country === filters.country;
     const matchesType = !filters.companyType || company.companyType === filters.companyType;
-
     return matchesSearch && matchesIndustry && matchesStatus && matchesCountry && matchesType;
   });
 
-  const handleSaveCompany = (data: CompanyFormData) => {
-    if (editingCompany) {
-      // Update existing company
-      dispatch({
-        type: 'UPDATE_COMPANY',
-        payload: {
-          id: editingCompany.id,
-          updates: {
-            ...data,
-            allowedModules: data.allowedModules,
-            updatedAt: new Date(),
-          }
-        }
-      });
-    } else {
-      // Create new company with trial start date
-      const now = new Date();
-      const newCompany = {
-        id: `company_${Date.now()}`,
-        ...data,
-        trialStartDate: now,
+  const handleSaveCompany = async (data: CompanyFormData) => {
+    try {
+      const payload = {
+        code: data.code, name: data.name, companyType: data.companyType,
+        industry: data.industry, email: data.email, phone: data.phone,
+        street: data.address.street, city: data.address.city,
+        state: data.address.state, country: data.address.country,
+        postalCode: data.address.postalCode,
+        gstNumber: data.gstNumber, taxNumber: data.taxNumber,
+        status: data.status, logo: data.logo,
+        adminName: data.adminName, adminEmail: data.adminEmail,
+        adminPhone: data.adminPhone, adminPassword: 'Admin@123',
         allowedModules: data.allowedModules,
-        createdAt: now,
-        updatedAt: now,
       };
-      dispatch({ type: 'ADD_COMPANY', payload: newCompany });
-    }
+      if (editingCompany) {
+        await superAdminApi.updateCompany(editingCompany.id, payload);
+      } else {
+        await superAdminApi.createCompany(payload);
+      }
+      await loadCompanies();
+    } catch (e) { console.error(e); }
     setShowFormModal(false);
     setEditingCompany(null);
   };
 
-  const handleSaveTrialAccess = (modules: string[]) => {
+  const handleSaveTrialAccess = async (modules: string[]) => {
     if (!trialAccessCompany) return;
-    dispatch({
-      type: 'UPDATE_COMPANY',
-      payload: { id: trialAccessCompany.id, updates: { allowedModules: modules, updatedAt: new Date() } }
-    });
+    try {
+      await superAdminApi.setTrialModules(trialAccessCompany.id, modules);
+      await loadCompanies();
+    } catch (e) { console.error(e); }
     setTrialAccessCompany(null);
   };
 
-  const handleToggleStatus = (companyId: string, currentStatus: 'active' | 'inactive', companyName: string) => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    const action = newStatus === 'active' ? 'activate' : 'deactivate';
-    
-    if (window.confirm(`Are you sure you want to ${action} "${companyName}"?`)) {
-      // TODO: Implement actual status toggle with AppContext
-      // dispatch(actionCreators.updateCompany(companyId, { status: newStatus }));
-      console.log(`Toggling company ${companyId} status to ${newStatus}`);
-    }
+  const handleToggleStatus = async (companyId: number, currentStatus: string, companyName: string) => {
+    if (!window.confirm(`Are you sure you want to ${currentStatus === 'active' ? 'deactivate' : 'activate'} "${companyName}"?`)) return;
+    try {
+      await superAdminApi.toggleCompanyStatus(companyId);
+      await loadCompanies();
+    } catch (e) { console.error(e); }
   };
 
-  const handleDeleteCompany = (companyId: string, companyName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${companyName}"? This action cannot be undone.`)) {
-      // TODO: Implement actual delete logic with AppContext
-      // dispatch(actionCreators.deleteCompany(companyId));
-      console.log('Deleting company:', companyId);
-    }
+  const handleDeleteCompany = async (companyId: number, companyName: string) => {
+    if (!window.confirm(`Delete "${companyName}"? This cannot be undone.`)) return;
+    try {
+      await superAdminApi.deleteCompany(companyId);
+      await loadCompanies();
+    } catch (e) { console.error(e); }
   };
 
   const handleExport = () => {
-    // TODO: Implement export functionality (CSV/Excel)
+    const csv = ['Code,Name,Industry,Email,Status,Created']
+      .concat(filteredCompanies.map(c => `${c.code},${c.name},${c.industry},${c.email},${c.status},${c.createdAt}`))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'companies.csv'; a.click();
   };
 
-  const clearFilters = () => {
-    setFilters({
-      industry: '',
-      status: '',
-      country: '',
-      companyType: ''
-    });
-  };
+  const clearFilters = () => setFilters({ industry: '', status: '', country: '', companyType: '' });
 
   return (
     <motion.div {...pageMotion} className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -837,30 +848,35 @@ export function CompanyManagementPage() {
           </button>
           <button
             onClick={() => setShowFormModal(true)}
-            className="flex items-center gap-2 px-6 h-10 rounded-xl text-xs font-bold text-white transition-all shadow-lg"
-            style={{ backgroundColor: "var(--sa-primary)" }}
+            onMouseEnter={() => setIsAddBtnHovered(true)}
+            onMouseLeave={() => setIsAddBtnHovered(false)}
+            className="group flex items-center gap-2 px-6 h-10 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 border border-transparent hover:border-slate-200"
+            style={{
+              backgroundColor: isAddBtnHovered ? "#FFFFFF" : "var(--sa-primary)",
+              color: isAddBtnHovered ? "#000000" : "#FFFFFF"
+            }}
           >
-            <Plus className="h-4 w-4" />
-            Add Company
+            <Plus className="h-4 w-4" style={{ color: isAddBtnHovered ? "#000000" : "#FFFFFF" }} />
+            <span style={{ color: isAddBtnHovered ? "#000000" : "#FFFFFF" }}>Add Company</span>
           </button>
         </div>
       </div>
 
       {/* Stats Banner */}
-      <div className="py-4 px-6 rounded-2xl shadow-lg border relative overflow-hidden text-white"
+      <div className="py-4 px-6 rounded-2xl shadow-lg border relative overflow-hidden"
         style={{ backgroundColor: "var(--sa-primary)", borderColor: "var(--sa-border)" }}>
         <div className="absolute top-0 right-0 p-8 opacity-10 scale-125 rotate-12 pointer-events-none">
-          <Building2 size={80} />
+          <Building2 size={80} color="#FFFFFF" />
         </div>
         <div className="relative z-10 flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-            <Building2 size={24} />
+          <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
+            <Building2 size={24} color="#FFFFFF" />
           </div>
           <div>
-            <p className="text-white/60 font-medium text-xs uppercase tracking-wider">Total Companies</p>
+            <p className="font-bold text-xs uppercase tracking-wider" style={{ color: "#FFFFFF" }}>Total Companies</p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-white font-bold text-xl">{filteredCompanies.length}</span>
-              <span className="text-white/80 text-sm">registered organizations</span>
+              <span className="font-bold text-2xl tracking-tighter" style={{ color: "#FFFFFF" }}>{filteredCompanies.length}</span>
+              <span className="text-sm font-medium" style={{ color: "rgba(255, 255, 255, 0.9)" }}>registered organizations</span>
             </div>
           </div>
         </div>
@@ -993,10 +1009,19 @@ export function CompanyManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredCompanies.length === 0 ? (
+              {loading && companies.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="p-8 text-center" style={{ color: "var(--sa-text-secondary)" }}>
-                    No companies found
+                  <td colSpan={11} className="p-12 text-center" style={{ color: "var(--sa-text-secondary)" }}>
+                    <div className="flex flex-col items-center gap-3 animate-pulse">
+                      <div className="h-8 w-8 border-4 border-[var(--sa-primary)] border-t-transparent rounded-full animate-spin" />
+                      <p className="text-sm font-medium">Synchronizing company records...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredCompanies.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="p-12 text-center" style={{ color: "var(--sa-text-secondary)" }}>
+                    <p className="text-sm font-medium">No results found matching your current filter criteria.</p>
                   </td>
                 </tr>
               ) : (
@@ -1005,7 +1030,7 @@ export function CompanyManagementPage() {
                     key={company.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: Math.min(index * 0.02, 0.4) }}
                     className="border-b hover:bg-[var(--sa-hover)] transition"
                     style={{ borderColor: "var(--sa-border)" }}
                   >
@@ -1029,7 +1054,7 @@ export function CompanyManagementPage() {
                     </td>
                     <td className="p-4">
                       <span className="px-2 py-1 rounded-full text-xs font-medium"
-                        style={{ 
+                        style={{
                           backgroundColor: "rgba(59, 130, 246, 0.1)",
                           color: "#3b82f6"
                         }}>
@@ -1060,7 +1085,7 @@ export function CompanyManagementPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-1">
                         <div className={`h-2 w-2 rounded-full ${company.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`} />
-                        <span className="text-xs capitalize" style={{ 
+                        <span className="text-xs capitalize" style={{
                           color: company.status === 'active' ? 'var(--sa-success)' : 'var(--sa-error)'
                         }}>
                           {company.status}
@@ -1071,8 +1096,8 @@ export function CompanyManagementPage() {
                       <div className="text-xs" style={{ color: "var(--sa-text-secondary)" }}>
                         {company.allowedModules && company.allowedModules.length > 0
                           ? <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: "rgba(99,102,241,0.1)", color: "#6366f1" }}>
-                              {company.allowedModules.length} modules
-                            </span>
+                            {company.allowedModules.length} modules
+                          </span>
                           : <span className="text-slate-400">None</span>
                         }
                       </div>
@@ -1091,17 +1116,17 @@ export function CompanyManagementPage() {
                         >
                           <Layers className="h-4 w-4" style={{ color: "#6366f1" }} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleToggleStatus(company.id, company.status, company.name)}
                           className="p-1.5 rounded-lg hover:bg-[var(--sa-hover)] transition"
                           title={company.status === 'active' ? 'Deactivate company' : 'Activate company'}
                         >
-                          <Power 
-                            className="h-4 w-4" 
-                            style={{ color: company.status === 'active' ? 'var(--sa-success)' : 'var(--sa-text-secondary)' }} 
+                          <Power
+                            className="h-4 w-4"
+                            style={{ color: company.status === 'active' ? 'var(--sa-success)' : 'var(--sa-text-secondary)' }}
                           />
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setEditingCompany(company);
                             setShowFormModal(true);
@@ -1111,7 +1136,7 @@ export function CompanyManagementPage() {
                         >
                           <Edit className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteCompany(company.id, company.name)}
                           className="p-1.5 rounded-lg hover:bg-[var(--sa-hover)] transition"
                           title="Delete company"

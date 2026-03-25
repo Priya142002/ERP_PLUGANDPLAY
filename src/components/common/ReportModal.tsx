@@ -207,7 +207,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 </p>
                 <div className="flex items-center gap-3">
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     onClick={onClose}
                     className="px-4 py-2 text-sm border-slate-300 hover:bg-slate-100"
                   >

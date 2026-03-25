@@ -78,6 +78,9 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // Create new company with timestamps
       const newCompany: Company = {
+        code: '',
+        companyType: 'private_limited',
+        industry: '',
         ...validationResult.data,
         id: uuidv4(),
         status: 'active',

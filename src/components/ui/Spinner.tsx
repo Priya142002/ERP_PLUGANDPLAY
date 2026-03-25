@@ -74,6 +74,16 @@ export const Loading: React.FC<LoadingProps> = ({
   overlay = false,
   className = ''
 }) => {
+  const colorClasses = {
+    primary: 'text-primary-600',
+    secondary: 'text-gray-600',
+    success: 'text-success-600',
+    error: 'text-error-600',
+    warning: 'text-warning-600',
+    info: 'text-info-600',
+    white: 'text-white'
+  };
+
   const content = (
     <div className={`flex items-center ${text ? 'space-x-3' : ''} ${className}`}>
       <Spinner size={size} color={color} />
@@ -84,16 +94,6 @@ export const Loading: React.FC<LoadingProps> = ({
       )}
     </div>
   );
-
-  const colorClasses = {
-    primary: 'text-primary-600',
-    secondary: 'text-gray-600',
-    success: 'text-success-600',
-    error: 'text-error-600',
-    warning: 'text-warning-600',
-    info: 'text-info-600',
-    white: 'text-white'
-  };
 
   if (overlay) {
     return (

@@ -201,11 +201,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // Auto-update status if dates are being changed
-      let finalUpdates = { ...validationResult.data };
+      const finalUpdates: any = { ...validationResult.data };
       if (updates.startDate || updates.expiryDate) {
         const startDate = updates.startDate || existingSubscription.startDate;
         const expiryDate = updates.expiryDate || existingSubscription.expiryDate;
         const now = new Date();
+        void startDate; // used for context
 
         if (expiryDate < now) {
           finalUpdates.status = 'expired';

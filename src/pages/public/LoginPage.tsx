@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../../types';
-import { handleGoogleSignInResponse } from '../../services/GoogleAuthService';
+import { authApi } from '../../services/api';
 
 declare global {
   interface Window { google: any; }
@@ -73,17 +73,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
     if (!response.credential) return;
     setLoading(true);
     try {
-      const result = await handleGoogleSignInResponse(response);
-      localStorage.setItem('google_token', result.token);
-      localStorage.setItem('user_email', result.user.email);
-      setTimeout(() => {
+      const result = await authApi.googleLogin(response.credential);
+
+      if (!result.success || !result.data) {
+        setErrors({ email: result.message || 'Google Sign-In failed. Please try again.' });
         setLoading(false);
-        onLogin(result.role, rememberMe);
-        navigate(result.role === 'super_admin' ? '/superadmin/dashboard' : '/admin/dashboard');
-      }, 600);
+        return;
+      }
+
+      const { token, role, allowedModules, companyId, companyName,
+              isTrialActive, trialEndDate, hasActiveSubscription, daysRemaining, name, email: userEmail } = result.data;
+
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem('erp_token', token);
+      storage.setItem('erp_user', JSON.stringify({
+        name, email: userEmail, role,
+        companyId, companyName,
+        allowedModules,
+        isTrialActive, trialEndDate,
+        hasActiveSubscription, daysRemaining,
+      }));
+
+      const appRole = role === 'SuperAdmin' ? 'super_admin' : 'admin';
+      onLogin(appRole, rememberMe, userEmail);
+      navigate(appRole === 'super_admin' ? '/superadmin/dashboard' : '/admin/dashboard');
     } catch {
-      setLoading(false);
       setErrors({ email: 'Google Sign-In failed. Please try again.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,20 +108,46 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
     if (user) navigate(user.role === 'super_admin' ? '/superadmin/dashboard' : '/admin/dashboard');
   }, [user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const eps: { email?: string; password?: string } = {};
     if (!email.trim()) eps.email = 'Email is required';
     if (!password.trim()) eps.password = 'Password is required';
     setErrors(eps);
     if (Object.keys(eps).length) return;
+
     setLoading(true);
-    const role = email.toLowerCase().includes('superadmin') ? 'super_admin' : 'admin';
-    setTimeout(() => {
+    try {
+      const result = await authApi.login(email.trim(), password);
+
+      if (!result.success || !result.data) {
+        setErrors({ email: result.message || 'Login failed. Please check your credentials.' });
+        setLoading(false);
+        return;
+      }
+
+      const { token, role, allowedModules, companyId, companyName,
+              isTrialActive, trialEndDate, hasActiveSubscription, daysRemaining, name } = result.data;
+
+      // Persist token
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem('erp_token', token);
+      storage.setItem('erp_user', JSON.stringify({
+        name, email: email.trim(), role,
+        companyId, companyName,
+        allowedModules,
+        isTrialActive, trialEndDate,
+        hasActiveSubscription, daysRemaining,
+      }));
+
+      const appRole = role === 'SuperAdmin' ? 'super_admin' : 'admin';
+      onLogin(appRole, rememberMe, email.trim());
+      navigate(appRole === 'super_admin' ? '/superadmin/dashboard' : '/admin/dashboard');
+    } catch {
+      setErrors({ email: 'Unable to connect to server. Please try again.' });
+    } finally {
       setLoading(false);
-      onLogin(role, rememberMe, email);
-      navigate(role === 'super_admin' ? '/superadmin/dashboard' : '/admin/dashboard');
-    }, 600);
+    }
   };
 
   const LoginForm = React.useMemo(() => {
