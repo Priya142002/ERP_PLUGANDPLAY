@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Download, Edit, Trash2, Calendar, User, AlertTriangle } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MOCK_RECEIPTS = [
   { id: '1', date: '2026-03-16', voucherNo: 'RV-10201', receivedFrom: 'Nexus Enterprises', account: 'Accounts Receivable', amount: 13020.00, method: 'Bank Transfer', status: 'Recognized' },
@@ -62,6 +63,20 @@ export const ReceiptsPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     setReceipts(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleExport = () => {
+    const headers = ['Voucher #', 'Date', 'Received From', 'Credit Account', 'Amount', 'Method', 'Status'];
+    const data = displayed.map(receipt => [
+      receipt.voucherNo,
+      receipt.date,
+      receipt.receivedFrom,
+      receipt.account,
+      receipt.amount,
+      receipt.method,
+      receipt.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Receipt_Vouchers');
   };
 
   const columns = [
@@ -132,7 +147,7 @@ export const ReceiptsPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Receipt Vouchers</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 

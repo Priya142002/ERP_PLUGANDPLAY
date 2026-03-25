@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Download, Edit, Trash2, Calendar, AlertTriangle } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MOCK_JOURNALS = [
   { id: '1', date: '2026-03-15', voucherNo: 'JV-30201', reference: 'ADJ/2026/01', totalAmount: 1200.00, createdBy: 'Admin', status: 'Authorized', description: 'Depreciation adjustment for Q1' },
@@ -61,6 +62,20 @@ export const JournalVoucherPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     setJournals(prev => prev.filter(j => j.id !== id));
+  };
+
+  const handleExport = () => {
+    const headers = ['Voucher #', 'Date', 'Reference', 'Total Amount', 'Created By', 'Status', 'Description'];
+    const data = displayed.map(journal => [
+      journal.voucherNo,
+      journal.date,
+      journal.reference,
+      journal.totalAmount,
+      journal.createdBy,
+      journal.status,
+      journal.description
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Journal_Vouchers');
   };
 
   const columns = [
@@ -121,7 +136,7 @@ export const JournalVoucherPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Journal Vouchers</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 

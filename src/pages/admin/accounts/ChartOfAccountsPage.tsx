@@ -6,6 +6,7 @@ import Badge from "../../../components/ui/Badge";
 import Modal from "../../../components/ui/Modal";
 import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
+import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
 
 const MOCK_COA = [
   { 
@@ -161,6 +162,38 @@ export const ChartOfAccountsPage: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [nodeToDelete, setNodeToDelete] = useState<any>(null);
 
+  const handleExport = () => {
+    // Flatten the tree structure for export
+    const flattenAccounts = (accounts: any[], parentCode = ''): any[] => {
+      let result: any[] = [];
+      accounts.forEach(account => {
+        result.push({
+          code: account.code,
+          name: account.name,
+          type: account.type,
+          balance: account.balance,
+          parent: parentCode
+        });
+        if (account.children && account.children.length > 0) {
+          result = result.concat(flattenAccounts(account.children, account.code));
+        }
+      });
+      return result;
+    };
+
+    const flatData = flattenAccounts(MOCK_COA);
+    const headers = ['Code', 'Account Name', 'Type', 'Balance', 'Parent Code'];
+    const data = flatData.map(account => [
+      account.code,
+      account.name,
+      account.type,
+      account.balance,
+      account.parent
+    ]);
+    
+    exportSingleSheetToExcel(headers, data, 'Chart_of_Accounts');
+  };
+
   const handleEdit = (node: any) => {
     setEditingNode(node);
     setIsAddingSubAccount(false);
@@ -203,7 +236,7 @@ export const ChartOfAccountsPage: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Financial Taxonomies</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="px-4 h-10 text-[10px] md:text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />}>
+          <Button variant="secondary" className="px-4 h-10 text-[10px] md:text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>
             Export
           </Button>
           <Button 

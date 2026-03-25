@@ -9,10 +9,13 @@ import {
   Clock,
   ChevronRight,
   ShieldCheck,
-  CreditCard
+  CreditCard,
+  Download,
+  FileText
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
+import { exportSingleSheetToExcel, generatePDFReport, ReportData } from "../../../utils/reportGenerator";
 
 const ACCOUNTS_STATS = [
   {
@@ -62,6 +65,71 @@ const RECENT_VOUCHERS = [
 ];
 
 export const AccountsDashboard: React.FC = () => {
+  const handleExport = () => {
+    const headers = ['Date', 'Voucher No', 'Type', 'Reference', 'Amount', 'Status'];
+    const data = RECENT_VOUCHERS.map(voucher => [
+      voucher.date,
+      voucher.voucherNo,
+      voucher.type,
+      voucher.ref,
+      voucher.amount,
+      voucher.status
+    ]);
+    exportSingleSheetToExcel(headers, data, 'Account_Dashboard_Data');
+  };
+
+  const handleGenerateStatement = () => {
+    const reportData: ReportData = {
+      metadata: {
+        companyName: 'Your Company',
+        reportTitle: 'Account Dashboard Statement',
+        reportType: 'accounts',
+        generatedBy: 'Admin User',
+        dateRange: 'March 2026'
+      },
+      sections: [
+        {
+          title: 'Financial Overview',
+          type: 'stats',
+          data: [
+            { title: 'Capital Assets', value: '₹12,45,000', trend: '+4.2% Growth' },
+            { title: 'Net Net Profit', value: '₹1,58,400', trend: '+12.1% Alpha' },
+            { title: 'Accounts Payable', value: '₹42,500', trend: '-5.4% Delta' },
+            { title: 'Liquid Cash', value: '₹3,84,200', trend: '+2.8% Flow' }
+          ]
+        },
+        {
+          title: 'Recent Vouchers',
+          type: 'table',
+          data: {
+            headers: ['Date', 'Voucher No', 'Type', 'Reference', 'Amount', 'Status'],
+            rows: RECENT_VOUCHERS.map(v => [v.date, v.voucherNo, v.type, v.ref, v.amount, v.status])
+          }
+        },
+        {
+          title: 'Resource Drainage Breakdown',
+          type: 'table',
+          data: {
+            headers: ['Category', 'Amount', 'Percentage'],
+            rows: [
+              ['Procurement Gap', '₹18,500', '45%'],
+              ['Infrastructure', '₹10,250', '25%'],
+              ['Payroll & HR', '₹8,200', '20%'],
+              ['Taxation Matrix', '₹4,100', '10%']
+            ]
+          }
+        },
+        {
+          title: 'Summary',
+          type: 'text',
+          data: 'This statement provides a comprehensive overview of the account dashboard metrics for the current period. All figures are subject to audit verification and compliance checks.'
+        }
+      ]
+    };
+    
+    generatePDFReport(reportData);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -78,7 +146,19 @@ export const AccountsDashboard: React.FC = () => {
             <Clock size={14} className="text-blue-600" />
             <span className="text-[10px] md:text-xs font-bold text-slate-600">Audit: 2m ago</span>
           </div>
-          <Button className="bg-[#002147] text-white text-[10px] md:text-xs font-bold rounded-xl hover:bg-[#003366] transition-all shadow-lg shadow-blue-900/10 border-none px-4 md:px-6 h-10">
+          <Button 
+            variant="secondary" 
+            className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-black active:scale-95 transition-all" 
+            leftIcon={<Download size={14} />} 
+            onClick={handleExport}
+          >
+            Export
+          </Button>
+          <Button 
+            className="bg-[#002147] text-white text-[10px] md:text-xs font-bold rounded-xl hover:bg-[#003366] transition-all shadow-lg shadow-blue-900/10 border-none px-4 md:px-6 h-10"
+            leftIcon={<FileText size={14} />}
+            onClick={handleGenerateStatement}
+          >
             Generate Statement
           </Button>
         </div>
@@ -124,7 +204,6 @@ export const AccountsDashboard: React.FC = () => {
               </div>
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Authorization Journal</h3>
             </div>
-            <button className="text-[9px] font-bold text-[#334e68] uppercase tracking-widest hover:underline px-3 py-1.5 bg-indigo-50/50 rounded-lg transition-colors">Audit Full Trail</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -172,11 +251,6 @@ export const AccountsDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-center">
-            <button className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] hover:text-[#334e68] transition-colors group">
-              Review Global Ledger <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
         </div>
 
         <div className="bg-white rounded-xl md:rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -213,19 +287,6 @@ export const AccountsDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-          
-          <div className="mt-10 p-5 bg-white rounded-2xl border border-slate-200 relative overflow-hidden group shadow-sm">
-            <div className="relative z-10 flex items-center gap-4">
-              <div className="p-3 bg-slate-50 rounded-xl text-emerald-600 shadow-sm border border-slate-200 group-hover:rotate-6 transition-transform">
-                <CreditCard size={20} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900 leading-tight border-b border-slate-200 pb-1 mb-1">Budget Status</p>
-                <p className="text-[11px] text-emerald-600 font-bold">In-Compliance Range</p>
-                <p className="text-[10px] text-slate-500 leading-relaxed font-medium mt-1">Operational burn rate is within the seasonal projection.</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
