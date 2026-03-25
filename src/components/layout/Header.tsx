@@ -275,7 +275,11 @@ export const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onLogout, onS
 
           {/* Logout - always visible */}
           <button
-            onClick={onLogout}
+            onClick={() => {
+              if (window.confirm('Are you sure you want to log out?')) {
+                onLogout();
+              }
+            }}
             className="flex items-center justify-center rounded-lg transition-all"
             style={{ width: '36px', height: '36px', color: '#ef4444' }}
             title="Logout"

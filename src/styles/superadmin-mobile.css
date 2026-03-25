@@ -163,7 +163,7 @@
 
 .sa-btn-primary:hover {
   background-color: #ffffff !important;
-  color: #000000 !important;
+  color: #1a2744 !important;
   border-color: #1a2744 !important;
 }
 
@@ -172,5 +172,5 @@
 }
 
 .sa-btn-primary:hover svg {
-  color: #000000 !important;
+  color: #1a2744 !important;
 }

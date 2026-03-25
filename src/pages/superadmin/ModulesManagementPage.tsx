@@ -36,7 +36,7 @@ function CreateModuleModal({ onClose, onSave }: { onClose: () => void; onSave: (
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden bg-white">
+        className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" style={{ backgroundColor: "var(--sa-card)" }}>
         <div className="flex items-center justify-between px-6 py-4" style={{ backgroundColor: "#1a2744" }}>
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center">
@@ -49,42 +49,48 @@ function CreateModuleModal({ onClose, onSave }: { onClose: () => void; onSave: (
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && <p className="text-xs text-red-500 bg-red-50 p-2 rounded-lg">{error}</p>}
+          {error && <p className="text-xs text-white bg-red-500/80 p-2 rounded-lg">{error}</p>}
           <div>
-            <label className="block text-xs font-semibold mb-1 text-slate-700">Module ID *</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: "var(--sa-text-primary)" }}>Module ID *</label>
             <input type="text" value={form.moduleId}
               onChange={e => setForm({ ...form, moduleId: e.target.value.toLowerCase().replace(/\s+/g,'_') })}
-              placeholder="e.g. custom_reports" className="w-full h-10 rounded-lg border px-3 text-sm border-slate-200 text-slate-800" />
-            <p className="text-xs text-slate-400 mt-1">Lowercase, underscores only</p>
+              placeholder="e.g. custom_reports" className="w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+              style={{ backgroundColor: "var(--sa-background)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }} />
+            <p className="text-xs mt-1" style={{ color: "var(--sa-text-secondary)" }}>Lowercase, underscores only</p>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1 text-slate-700">Module Name *</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: "var(--sa-text-primary)" }}>Module Name *</label>
             <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-              placeholder="e.g. Custom Reports" className="w-full h-10 rounded-lg border px-3 text-sm border-slate-200 text-slate-800" />
+              placeholder="e.g. Custom Reports" className="w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+              style={{ backgroundColor: "var(--sa-background)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }} />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1 text-slate-700">Description</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: "var(--sa-text-primary)" }}>Description</label>
             <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              placeholder="Brief description" className="w-full h-10 rounded-lg border px-3 text-sm border-slate-200 text-slate-800" />
+              placeholder="Brief description" className="w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+              style={{ backgroundColor: "var(--sa-background)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold mb-1 text-slate-700">Category</label>
+              <label className="block text-xs font-semibold mb-1" style={{ color: "var(--sa-text-primary)" }}>Category</label>
               <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                className="w-full h-10 rounded-lg border px-3 text-sm border-slate-200 text-slate-800">
+                className="w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                style={{ backgroundColor: "var(--sa-background)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}>
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold mb-1 text-slate-700">Icon</label>
+              <label className="block text-xs font-semibold mb-1" style={{ color: "var(--sa-text-primary)" }}>Icon</label>
               <select value={form.icon} onChange={e => setForm({ ...form, icon: e.target.value })}
-                className="w-full h-10 rounded-lg border px-3 text-sm border-slate-200 text-slate-800">
+                className="w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                style={{ backgroundColor: "var(--sa-background)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}>
                 {Object.keys(ICON_MAP).map(k => <option key={k}>{k}</option>)}
               </select>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-700">Cancel</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm border"
+              style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-primary)", backgroundColor: "var(--sa-hover)" }}>Cancel</button>
             <button type="submit" disabled={saving}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold sa-btn-primary disabled:opacity-60">
               <Save className="h-4 w-4" />{saving ? 'Creating...' : 'Create Module'}
@@ -125,7 +131,7 @@ function AssignModulesModal({ company, allModules, onClose, onSave }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden bg-white">
+        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" style={{ backgroundColor: "var(--sa-card)" }}>
         <div className="flex items-center justify-between px-6 py-4" style={{ backgroundColor: "#1a2744" }}>
           <div>
             <h2 className="text-base font-bold text-white">Module Access — {company.name}</h2>
@@ -157,8 +163,9 @@ function AssignModulesModal({ company, allModules, onClose, onSave }: {
             );
           })}
         </div>
-        <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-slate-50">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-700">Close</button>
+        <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ backgroundColor: "var(--sa-hover)", borderColor: "var(--sa-border)" }}>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm border"
+            style={{ borderColor: "var(--sa-border)", color: "var(--sa-text-primary)", backgroundColor: "var(--sa-background)" }}>Close</button>
           <button onClick={() => { onSave(); onClose(); }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold sa-btn-primary">
             <Save className="h-4 w-4" /> Done
@@ -317,9 +324,9 @@ export function ModulesManagementPage() {
       </div>
 
       <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
+        <div className="overflow-auto" style={{ maxHeight: "560px" }}>
+          <table className="w-full relative">
+            <thead className="sticky top-0 z-10" style={{ backgroundColor: "var(--sa-card)" }}>
               <tr className="border-b" style={{ borderColor: "var(--sa-border)", backgroundColor: "var(--sa-hover)" }}>
                 {['Module', 'Category', 'Description', 'Type', 'Status', 'Actions'].map(h => (
                   <th key={h} className="p-4 text-left text-xs font-semibold" style={{ color: "var(--sa-text-secondary)" }}>{h}</th>
