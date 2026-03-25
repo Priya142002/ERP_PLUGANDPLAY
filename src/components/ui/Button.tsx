@@ -2,7 +2,7 @@ import React from 'react';
 
 interface ButtonProps {
   children?: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ghost' | 'export';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   onClick?: () => void;
   disabled?: boolean;
@@ -44,13 +44,14 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   const variantClasses = {
-    primary: 'text-white bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent focus:ring-[#002147] shadow-sm transition-all text-xs font-bold rounded-xl',
-    secondary: 'text-slate-600 bg-white border border-slate-200 focus:ring-primary-500 shadow-sm hover:text-black hover:bg-slate-50 transition-all text-xs font-bold rounded-xl',
+    primary: 'text-white bg-[#002147] hover:bg-white hover:text-black hover:border-[#002147] border border-transparent focus:ring-[#002147] shadow-sm transition-all text-xs font-bold rounded-xl [&_svg]:stroke-white [&_svg]:hover:stroke-black',
+    secondary: 'text-slate-600 bg-white border border-slate-200 focus:ring-primary-500 shadow-sm hover:!text-black hover:bg-slate-50 transition-all text-xs font-bold rounded-xl [&_svg]:stroke-slate-600 [&_svg]:hover:!stroke-black [&:has(>*:contains("Export"))]:text-white [&:has(>*:contains("Export"))_svg]:!stroke-white [&:has(>*:contains("Export")):hover]:text-black [&:has(>*:contains("Export")):hover_svg]:!stroke-black',
     danger: 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-sm',
     success: 'text-white bg-success-600 hover:bg-success-700 focus:ring-success-500 shadow-sm',
     warning: 'text-white bg-warning-600 hover:bg-warning-700 focus:ring-warning-500 shadow-sm',
     info: 'text-white bg-info-600 hover:bg-info-700 focus:ring-info-500 shadow-sm',
-    ghost: 'text-gray-700 hover:bg-gray-100 hover:text-black focus:ring-primary-500'
+    ghost: 'text-gray-700 hover:bg-gray-100 hover:text-black focus:ring-primary-500',
+    export: 'export-btn'
   };
 
   const widthClass = fullWidth ? 'w-full' : '';
@@ -62,6 +63,7 @@ const Button: React.FC<ButtonProps> = ({
     if (React.isValidElement(icon)) {
       return React.cloneElement(icon as React.ReactElement<any>, {
         color: 'currentColor',
+        stroke: 'currentColor',
         className: `${(icon.props as any).className || ''}`
       });
     }
@@ -90,9 +92,9 @@ const Button: React.FC<ButtonProps> = ({
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
       )}
-      {!loading && leftIcon && <span className={`inline-flex ${children ? "mr-2" : ""}`} style={{ color: 'inherit' }}>{renderIcon(leftIcon)}</span>}
+      {!loading && leftIcon && <span className={`inline-flex ${children ? "mr-2" : ""}`}>{renderIcon(leftIcon)}</span>}
       {children}
-      {!loading && rightIcon && <span className={`inline-flex ${children ? "ml-2" : ""}`} style={{ color: 'inherit' }}>{renderIcon(rightIcon)}</span>}
+      {!loading && rightIcon && <span className={`inline-flex ${children ? "ml-2" : ""}`}>{renderIcon(rightIcon)}</span>}
     </button>
   );
 };

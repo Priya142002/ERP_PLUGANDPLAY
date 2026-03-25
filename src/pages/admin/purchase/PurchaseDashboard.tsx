@@ -24,7 +24,7 @@ const STAT_CARDS = [
     title: "Procurement Capital",
     value: "₹1,24,500",
     icon: <ShoppingBag size={24} />,
-    color: "bg-blue-600",
+    color: "bg-[#002147]",
     iconBg: "bg-blue-50",
     iconText: "text-blue-600",
     trend: "+8.4% Rise",
@@ -35,7 +35,7 @@ const STAT_CARDS = [
     title: "Strategic Vendors",
     value: "48",
     icon: <Users size={24} />,
-    color: "bg-indigo-600",
+    color: "bg-[#002147]",
     iconBg: "bg-indigo-50",
     iconText: "text-indigo-600",
     trend: "+2 Active",
@@ -46,9 +46,9 @@ const STAT_CARDS = [
     title: "Capital Outflow",
     value: "₹12,380",
     icon: <CreditCard size={24} />,
-    color: "bg-rose-500",
-    iconBg: "bg-rose-50",
-    iconText: "text-rose-500",
+    color: "bg-[#002147]",
+    iconBg: "bg-blue-50",
+    iconText: "text-blue-600",
     trend: "-5.2% Drop",
     trendColor: "text-rose-500",
     description: "Pending settlements"
@@ -57,7 +57,7 @@ const STAT_CARDS = [
     title: "Doc Compliance",
     value: "156",
     icon: <FileText size={24} />,
-    color: "bg-violet-600",
+    color: "bg-[#002147]",
     iconBg: "bg-violet-50",
     iconText: "text-violet-600",
     trend: "+12% Vol",
@@ -133,7 +133,7 @@ export const PurchaseDashboard: React.FC = () => {
           </div>
           <Button 
             onClick={handleExportExcel}
-            className="bg-emerald-600 hover:bg-emerald-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-emerald-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            className="bg-emerald-600 hover:bg-emerald-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-emerald-900/10 active:scale-[0.98] transition-all flex items-center gap-2 hover:!text-black [&_svg]:hover:!text-black [&_span]:hover:!text-black"
             style={{ color: '#ffffff' }}
           >
             <Download size={14} style={{ color: '#ffffff' }} />
@@ -141,7 +141,7 @@ export const PurchaseDashboard: React.FC = () => {
           </Button>
           <Button 
             onClick={handleGenerateMetaReport}
-            className="bg-violet-600 hover:bg-violet-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-violet-900/10 active:scale-[0.98] transition-all flex items-center gap-2"
+            className="bg-violet-600 hover:bg-violet-700 px-4 md:px-6 h-10 text-[10px] md:text-xs font-bold rounded-xl border-none shadow-lg shadow-violet-900/10 active:scale-[0.98] transition-all flex items-center gap-2 hover:!text-black [&_svg]:hover:!text-black [&_span]:hover:!text-black"
             style={{ color: '#ffffff' }}
           >
             <FileText size={14} style={{ color: '#ffffff' }} />

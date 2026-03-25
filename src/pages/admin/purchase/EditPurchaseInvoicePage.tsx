@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, FileText, Calendar, Plus, Trash2, Save,
-  RotateCcw, PlusCircle, Calculator, Percent
+  RotateCcw, PlusCircle, Calculator, Percent, Printer
 } from "lucide-react";
 import { AddVendorModal } from "./AddVendorModal";
 
@@ -65,10 +65,42 @@ export const EditPurchaseInvoicePage: React.FC = () => {
     setVendor(name);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <React.Fragment>
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-area, .print-area * {
+            visibility: visible;
+          }
+          .print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+          button {
+            display: none !important;
+          }
+          .bg-slate-50, .bg-slate-100, .bg-indigo-50, .bg-blue-50 {
+            background-color: white !important;
+          }
+          .shadow-sm, .shadow-lg {
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl mx-auto space-y-6 pb-12">
+        className="max-w-6xl mx-auto space-y-6 pb-12 print-area">
 
         {/* Header */}
         <div className="flex items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
@@ -252,6 +284,10 @@ export const EditPurchaseInvoicePage: React.FC = () => {
             <div className="space-y-3">
               <button className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-[#002147] hover:bg-[#003366] text-white text-sm font-bold transition shadow-lg shadow-blue-900/10">
                 <Save size={16} /> Update Invoice
+              </button>
+              <button onClick={handlePrint}
+                className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 text-sm font-bold hover:bg-indigo-100 transition">
+                <Printer size={16} /> Print Invoice
               </button>
               <button onClick={() => navigate('/admin/purchase/invoices')}
                 className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition">

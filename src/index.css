@@ -1235,3 +1235,84 @@ aside svg {
 .admin-action-btn span {
   color: #ffffff !important;
 }
+
+/* ========================================
+   EXPORT BUTTON COMMON STYLE
+   White text/icon before hover, Black text/icon on hover
+   
+   Usage Example:
+   <Button 
+     variant="secondary" 
+     className="export-btn px-4 h-10 text-xs font-bold rounded-xl border-slate-200" 
+     leftIcon={<Download size={14} />}
+     onClick={handleExport}
+   >
+     Export
+   </Button>
+   
+   Or use variant="export" directly:
+   <Button 
+     variant="export" 
+     leftIcon={<Download size={14} />}
+     onClick={handleExport}
+   >
+     Export
+   </Button>
+   ======================================== */
+
+/* Base export button styles */
+.export-btn,
+button.export-btn {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.2s ease !important;
+  color: #ffffff !important;
+}
+
+/* Export button text - white before hover */
+.export-btn,
+.export-btn * {
+  color: #ffffff !important;
+}
+
+/* Export button SVG icons - white stroke before hover (override any other styles) */
+.export-btn svg,
+.export-btn svg *,
+.export-btn svg path,
+.export-btn svg line,
+.export-btn svg polyline,
+.export-btn svg circle,
+.export-btn svg rect {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+  stroke-width: 2 !important;
+}
+
+/* Export button on hover */
+.export-btn:hover {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #000000 !important;
+}
+
+/* Export button text on hover - black */
+.export-btn:hover,
+.export-btn:hover * {
+  color: #000000 !important;
+}
+
+/* Export button SVG icons on hover - black stroke (override any other styles) */
+.export-btn:hover svg,
+.export-btn:hover svg *,
+.export-btn:hover svg path,
+.export-btn:hover svg line,
+.export-btn:hover svg polyline,
+.export-btn:hover svg circle,
+.export-btn:hover svg rect {
+  color: #000000 !important;
+  stroke: #000000 !important;
+  fill: none !important;
+  stroke-width: 2 !important;
+}

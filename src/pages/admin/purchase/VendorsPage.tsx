@@ -541,15 +541,15 @@ export const VendorsPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Button 
               variant="secondary" 
-              className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200" 
+              className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 [&_svg]:!stroke-black" 
               leftIcon={<Download size={14} />}
               onClick={handleExportExcel}
             >
               Export
             </Button>
             <Button variant="primary"
-              className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10"
-              leftIcon={<Plus size={14} />}
+              className="bg-[#002147] hover:bg-[#003366] text-white px-6 h-10 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 [&_svg]:!stroke-white"
+              leftIcon={<Plus size={14} style={{ stroke: 'white' }} />}
               onClick={() => navigate('/admin/purchase/vendors/add')}>
               New Vendor
             </Button>
@@ -580,7 +580,7 @@ export const VendorsPage: React.FC = () => {
           data={displayed}
           columns={columns}
           actions={[
-            { label: 'Edit', icon: <Edit size={14} />, onClick: item => setEditVendor(item), variant: 'primary', title: 'Edit' },
+            { label: 'Edit', icon: <Edit size={14} />, onClick: () => navigate('/admin/purchase/vendors/add'), variant: 'primary', title: 'Edit' },
             { label: 'Delete', icon: <Trash2 size={14} />, onClick: item => setDeleteVendor(item), variant: 'danger', title: 'Delete' }
           ]}
           emptyMessage="No vendors found"
