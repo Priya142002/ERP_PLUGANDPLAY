@@ -239,6 +239,18 @@ export const adminNavigation: NavigationItem[] = [
     ]
   },
   {
+    id: 'admin',
+    label: 'Admin',
+    icon: 'shield-check',
+    roles: ['admin'],
+    children: [
+      { id: 'admin-company', label: 'Company', path: '/admin/admin/company', roles: ['admin'], icon: 'building' },
+      { id: 'admin-user', label: 'User', path: '/admin/admin/user', roles: ['admin'], icon: 'users' },
+      { id: 'admin-user-access', label: 'User Access', path: '/admin/admin/user-access', roles: ['admin'], icon: 'lock' },
+      { id: 'admin-audit', label: 'Audit Logs', path: '/admin/admin/audit-logs', roles: ['admin'], icon: 'clipboard-list' },
+    ]
+  },
+  {
     id: 'subscription',
     label: 'My Subscription',
     icon: 'credit-card',
@@ -253,13 +265,61 @@ export const adminNavigation: NavigationItem[] = [
     roles: ['admin']
   },
   {
-    id: 'admin',
-    label: 'Admin Settings',
+    id: 'settings',
+    label: 'Settings',
     icon: 'cog',
     path: '/admin/settings',
     roles: ['admin']
   }
 ];
+
+// Helper function to get custom module order from localStorage
+function getCustomModuleOrder(): string[] | null {
+  try {
+    const saved = localStorage.getItem('moduleOrder');
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Helper function to sort navigation items by custom order
+function sortNavigationByCustomOrder(navigation: NavigationItem[]): NavigationItem[] {
+  const customOrder = getCustomModuleOrder();
+  if (!customOrder) return navigation;
+
+  const moduleItems = navigation.filter(item => 
+    item.id !== 'dashboard' && 
+    item.id !== 'subscription' && 
+    item.id !== 'modules' && 
+    item.id !== 'settings'
+  );
+  
+  const fixedItems = navigation.filter(item => 
+    item.id === 'dashboard' || 
+    item.id === 'subscription' || 
+    item.id === 'modules' || 
+    item.id === 'settings'
+  );
+
+  const sortedModules = customOrder
+    .map(id => moduleItems.find(item => item.id === id))
+    .filter(Boolean) as NavigationItem[];
+
+  // Add any modules not in custom order at the end
+  const remainingModules = moduleItems.filter(
+    item => !customOrder.includes(item.id)
+  );
+
+  return [
+    fixedItems.find(item => item.id === 'dashboard')!,
+    ...sortedModules,
+    ...remainingModules,
+    fixedItems.find(item => item.id === 'subscription')!,
+    fixedItems.find(item => item.id === 'modules')!,
+    fixedItems.find(item => item.id === 'settings')!,
+  ].filter(Boolean);
+}
 
 // Helper function to filter navigation items based on user role
 export function getNavigationForRole(role: 'super_admin' | 'admin', subscriptionPlan?: SubscriptionPlan): NavigationItem[] {
@@ -268,10 +328,11 @@ export function getNavigationForRole(role: 'super_admin' | 'admin', subscription
   }
   
   // For admin role, filter based on subscription plan
+  let navigation = adminNavigation;
   if (subscriptionPlan) {
-    return filterNavigationByPlan(adminNavigation, subscriptionPlan);
+    navigation = filterNavigationByPlan(adminNavigation, subscriptionPlan);
   }
   
-  // Default to all modules if no plan specified (for backward compatibility)
-  return adminNavigation;
+  // Apply custom order
+  return sortNavigationByCustomOrder(navigation);
 }

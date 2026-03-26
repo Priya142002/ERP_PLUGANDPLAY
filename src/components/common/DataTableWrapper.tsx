@@ -105,10 +105,10 @@ export function DataTableWrapper<T extends { id: string }>({
                           <button 
                             key={idx}
                             onClick={() => action.onClick(row)}
-                            className={`h-8 w-8 flex items-center justify-center rounded-lg transition ${
+                            className={`h-8 w-8 flex items-center justify-center rounded-xl transition ${
                               action.variant === 'danger' 
-                                ? 'bg-red-600 hover:bg-red-700 text-white border border-red-600'
-                                : 'bg-[#002147] hover:bg-[#003366] text-white border border-[#002147]'
+                                ? 'bg-red-600 hover:bg-red-700 text-white'
+                                : 'bg-[#002147] hover:bg-[#003366] text-white'
                             }`}
                             title={action.title || action.label}
                           >

@@ -104,3 +104,9 @@ export * from './production';
 
 // POS Module
 export * from './pos';
+
+// Admin Module
+export { default as AdminCompanyPage } from './admin/CompanyPage';
+export { default as AdminUserPage } from './admin/UserPage';
+export { default as AdminUserAccessPage } from './admin/UserAccessPage';
+export { default as AdminAuditLogsPage } from './admin/AuditLogsPage';

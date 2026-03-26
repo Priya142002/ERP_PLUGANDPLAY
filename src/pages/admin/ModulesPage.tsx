@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { 
   Puzzle, ToggleLeft, ToggleRight, Archive, ShoppingCart, 
   TrendingUp, BookOpen, Users, Briefcase, Headphones, 
-  Truck, Factory, Receipt, Lock, Crown, Clock, AlertTriangle, CheckCircle
+  Truck, Factory, Receipt, Lock, Crown, Clock, AlertTriangle, CheckCircle, GripVertical
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { useModulesSafe } from "../../context/ModuleContext";
@@ -27,7 +27,8 @@ const MODULE_ICONS: Record<string, any> = {
   "support": Headphones,
   "truck": Truck,
   "factory": Factory,
-  "receipt-tax": Receipt
+  "receipt-tax": Receipt,
+  "shield-check": Lock
 };
 
 const ALL_MODULES = [
@@ -43,18 +44,44 @@ const ALL_MODULES = [
   { id: "assets", name: "Assets", description: "Asset tracking, depreciation, maintenance", icon: "archive", plan: "pro" as SubscriptionPlan },
   { id: "logistics", name: "Logistics", description: "Shipment tracking, delivery management", icon: "truck", plan: "pro" as SubscriptionPlan },
   { id: "production", name: "Production", description: "BOM, work orders, quality control", icon: "factory", plan: "pro" as SubscriptionPlan },
-  { id: "billing", name: "Billing", description: "Invoice management, payment reminders", icon: "receipt-tax", plan: "pro" as SubscriptionPlan }
+  { id: "billing", name: "Billing", description: "Invoice management, payment reminders", icon: "receipt-tax", plan: "pro" as SubscriptionPlan },
+  { id: "admin", name: "Admin", description: "Company, users, access control, audit logs", icon: "shield-check", plan: "basic" as SubscriptionPlan }
 ];
 
 const PLAN_INFO: Record<SubscriptionPlan, { name: string; color: string; maxModules: number }> = {
   basic: { name: "Basic", color: "blue", maxModules: 4 },
-  pro: { name: "Pro", color: "purple", maxModules: 12 },
-  enterprise: { name: "Enterprise", color: "orange", maxModules: 12 }
+  pro: { name: "Pro", color: "purple", maxModules: 14 },
+  enterprise: { name: "Enterprise", color: "orange", maxModules: 14 }
 };
 
 export function ModulesPage() {
   const { state } = useApp();
   const { toggleModule, isModuleEnabled, isModuleLocked } = useModulesSafe();
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  
+  // Load module order from localStorage or use default
+  const [moduleOrder, setModuleOrder] = useState<string[]>(() => {
+    const saved = localStorage.getItem('moduleOrder');
+    const defaultOrder = ALL_MODULES.map(m => m.id);
+    
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Check if admin module is in the saved order
+        if (!parsed.includes('admin')) {
+          // Add admin to the order and save it
+          const newOrder = [...parsed, 'admin'];
+          localStorage.setItem('moduleOrder', JSON.stringify(newOrder));
+          return newOrder;
+        }
+        return parsed;
+      } catch {
+        return defaultOrder;
+      }
+    }
+    
+    return defaultOrder;
+  });
 
   // --- Trial status ---
   const userEmail = state.user?.email || '';
@@ -92,7 +119,14 @@ export function ModulesPage() {
 
   const currentPlanInfo = PLAN_INFO[CURRENT_PLAN];
 
-  const modules = ALL_MODULES.map(module => ({
+  // Sort modules by custom order
+  const sortedModules = useMemo(() => {
+    return moduleOrder
+      .map(id => ALL_MODULES.find(m => m.id === id))
+      .filter(Boolean) as typeof ALL_MODULES;
+  }, [moduleOrder]);
+
+  const modules = sortedModules.map(module => ({
     ...module,
     enabled: isModuleEnabled(module.id),
     locked: isModuleLocked(module.id)
@@ -107,6 +141,31 @@ export function ModulesPage() {
   const handleToggleModule = (id: string) => {
     if (isModuleLocked(id)) return;
     toggleModule(id);
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newOrder = [...moduleOrder];
+    const draggedId = newOrder[draggedIndex];
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(index, 0, draggedId);
+    
+    setModuleOrder(newOrder);
+    setDraggedIndex(index);
+    
+    // Save to localStorage and trigger storage event
+    localStorage.setItem('moduleOrder', JSON.stringify(newOrder));
+    window.dispatchEvent(new Event('moduleOrderChanged'));
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   return (
@@ -253,17 +312,32 @@ export function ModulesPage() {
 
       {/* Available Modules */}
       <div>
-        <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>Available Modules</h2>
+        <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+          Available Modules
+          <span className="text-sm font-normal text-slate-500 ml-2">(Drag to reorder)</span>
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {availableModules.map((module, index) => {
             const IconComponent = MODULE_ICONS[module.icon] || Puzzle;
             const canToggle = true;
+            const actualIndex = moduleOrder.indexOf(module.id);
             return (
-              <motion.div key={module.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }} className="p-5 rounded-xl border hover:shadow-lg transition-all"
+              <motion.div 
+                key={module.id} 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }} 
+                draggable
+                onDragStart={() => handleDragStart(actualIndex)}
+                onDragOver={(e) => handleDragOver(e, actualIndex)}
+                onDragEnd={handleDragEnd}
+                className={`p-5 rounded-xl border hover:shadow-lg transition-all cursor-move ${
+                  draggedIndex === actualIndex ? 'opacity-50' : ''
+                }`}
                 style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
+                    <GripVertical className="h-4 w-4 text-slate-400 cursor-grab active:cursor-grabbing" />
                     <div className="h-10 w-10 rounded-lg flex items-center justify-center"
                       style={{ backgroundColor: `color-mix(in srgb, var(--primary), transparent 90%)` }}>
                       <IconComponent className="h-5 w-5" style={{ color: "var(--primary)" }} />
@@ -333,8 +407,8 @@ export function ModulesPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               { name: 'Basic', price: 49, modules: 4, color: '#3b82f6', moduleList: 'Inventory, Purchase, Sales, Accounts' },
-              { name: 'Pro', price: 99, modules: 12, color: '#a855f7', moduleList: 'All 12 modules', popular: true },
-              { name: 'Enterprise', price: 499, modules: 12, color: '#f97316', moduleList: 'All modules + Premium support' },
+              { name: 'Pro', price: 99, modules: 14, color: '#a855f7', moduleList: 'All 14 modules', popular: true },
+              { name: 'Enterprise', price: 499, modules: 14, color: '#f97316', moduleList: 'All modules + Premium support' },
             ].map(plan => (
               <div key={plan.name} className={`p-5 rounded-xl border-2 relative ${plan.popular ? 'border-purple-400' : 'border-slate-200'}`}>
                 {plan.popular && (

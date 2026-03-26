@@ -103,11 +103,26 @@ const NavigationItemComponent: React.FC<NavigationItemComponentProps> = ({
 export const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
   const location = useLocation();
   const { isModuleEnabled, isModuleLocked } = useModulesSafe();
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Get subscription plan from user context (default to 'pro' for demo)
   // In production, this would come from the user's actual subscription
   const subscriptionPlan = (user as any).subscriptionPlan || 'pro';
-  const navigationItems = getNavigationForRole(user.role, subscriptionPlan);
+  // Use refreshKey to force re-render when module order changes
+  const navigationItems = React.useMemo(
+    () => getNavigationForRole(user.role, subscriptionPlan),
+    [user.role, subscriptionPlan, refreshKey]
+  );
+
+  // Listen for module order changes
+  useEffect(() => {
+    const handleModuleOrderChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+    
+    window.addEventListener('moduleOrderChanged', handleModuleOrderChange);
+    return () => window.removeEventListener('moduleOrderChanged', handleModuleOrderChange);
+  }, []);
 
   // Find which parent menu should be expanded based on current path
   const getInitialExpandedItems = () => {

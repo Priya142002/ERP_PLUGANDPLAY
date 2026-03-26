@@ -138,6 +138,10 @@ import {
 } from '../pages/admin';
 import TaskBoardPage from '../pages/admin/projects/TaskBoardPage';
 import ProjectDashboardPage from '../pages/admin/projects/ProjectDashboardPage';
+import AdminCompanyPage from '../pages/admin/admin/CompanyPage';
+import AdminUserPage from '../pages/admin/admin/UserPage';
+import AdminUserAccessPage from '../pages/admin/admin/UserAccessPage';
+import AdminAuditLogsPage from '../pages/admin/admin/AuditLogsPage';
 
 interface AppRoutesProps {
   user: User | null;
@@ -410,6 +414,14 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route path="orders" element={<OrderManagement />} />
           <Route path="inventory-sync" element={<InventorySync />} />
           <Route path="invoice" element={<InvoiceReceipt />} />
+        </Route>
+
+        {/* Admin */}
+        <Route path="admin">
+          <Route path="company" element={<AdminCompanyPage />} />
+          <Route path="user" element={<AdminUserPage />} />
+          <Route path="user-access" element={<AdminUserAccessPage />} />
+          <Route path="audit-logs" element={<AdminAuditLogsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

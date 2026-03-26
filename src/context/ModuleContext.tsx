@@ -18,6 +18,8 @@ interface ModuleContextType {
 const ModuleContext = createContext<ModuleContextType | undefined>(undefined);
 
 // Default module states - these would be persisted in localStorage or backend
+const MODULE_VERSION = '1.2'; // Increment this when module structure changes
+
 const DEFAULT_MODULES: ModuleState[] = [
   { id: 'dashboard',  name: 'Dashboard',            enabled: true,  locked: false },
   { id: 'inventory',  name: 'Inventory Management', enabled: true,  locked: false },
@@ -31,13 +33,23 @@ const DEFAULT_MODULES: ModuleState[] = [
   { id: 'assets',     name: 'Assets',               enabled: true,  locked: false },
   { id: 'logistics',  name: 'Logistics',            enabled: true,  locked: false },
   { id: 'production', name: 'Production',           enabled: true,  locked: false },
-  { id: 'billing',    name: 'Billing',              enabled: true,  locked: true  }, // locked — hidden from sidebar
+  { id: 'billing',    name: 'Billing',              enabled: true,  locked: false },
+  { id: 'admin',      name: 'Admin',                enabled: true,  locked: false },
 ];
 
 export const ModuleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [modules, setModules] = useState<ModuleState[]>(() => {
     try {
+      const storedVersion = localStorage.getItem('moduleVersion');
       const stored = localStorage.getItem('enabledModules');
+      
+      // If version doesn't match or no version, reset to defaults
+      if (storedVersion !== MODULE_VERSION) {
+        localStorage.setItem('moduleVersion', MODULE_VERSION);
+        localStorage.setItem('enabledModules', JSON.stringify(DEFAULT_MODULES));
+        return DEFAULT_MODULES;
+      }
+      
       if (stored) {
         const parsed: ModuleState[] = JSON.parse(stored);
         // If stored data is missing the locked field, discard it and use defaults
