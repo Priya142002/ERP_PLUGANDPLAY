@@ -75,7 +75,7 @@ export const OpeningStockPage: React.FC = () => {
       key: 'totalValue' as const,
       label: 'Total Value',
       align: 'right' as const,
-      render: (val: number) => <span className="font-bold text-slate-900">${val.toLocaleString()}</span>
+      render: (val: number) => <span className="font-bold text-slate-900">Rs. {val.toLocaleString()}</span>
     },
     {
       key: 'status' as const,

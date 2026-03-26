@@ -1,44 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Calendar, Package, MapPin, Save, RotateCcw,
-  Plus, Trash2, AlertCircle, X, DollarSign
+  Plus, Trash2, AlertCircle, X, IndianRupee
 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Textarea from "../../../components/ui/Textarea";
+import { useNotifications, useCurrentUser } from "../../../context/AppContext";
+import { inventoryApi } from "../../../services/api";
 
 /* ─────────────────────────────────────────
-   Constants
-───────────────────────────────────────── */
-const INIT_WAREHOUSES = [
-  'Main Warehouse', 'West Coast Hub', 'Central Distribution',
-  'South Export Terminal', 'East Logistics Center'
-];
-const PRODUCTS = [
-  { name: 'Premium Wireless Headphones', sku: 'WHP-001', stock: 45 },
-  { name: 'Smart Fitness Tracker',        sku: 'SFT-002', stock: 12 },
-  { name: '4K Ultra HD Monitor',          sku: 'MON-005', stock: 25 },
-  { name: 'Ergonomic Office Chair',       sku: 'EOC-003', stock: 8  },
-];
-
-interface TransferItem { id: string; product: string; sku: string; stock: number; qty: number; }
+   Types
+ ───────────────────────────────────────── */
+interface TransferItem { id: string; productId: string; qty: number; }
 
 const fieldCls = "w-full h-10 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition bg-white";
 const labelCls = "block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5";
 
 /* ─────────────────────────────────────────
    Creatable Warehouse Select
-───────────────────────────────────────── */
+ ───────────────────────────────────────── */
 interface CreatableWHProps {
   label: string; value: string; onChange: (v: string) => void;
-  warehouses: string[]; onAddWarehouse: (v: string) => void; required?: boolean;
+  warehouses: any[]; onAddWarehouse: (v: string) => void; required?: boolean;
 }
 const CreatableWHSelect: React.FC<CreatableWHProps> = ({ label, value, onChange, warehouses, onAddWarehouse, required }) => {
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState('');
   const handleAdd = () => {
-    if (newVal.trim()) { onAddWarehouse(newVal.trim()); onChange(newVal.trim()); setNewVal(''); setAdding(false); }
+    if (newVal.trim()) { onAddWarehouse(newVal.trim()); setAdding(false); }
   };
   return (
     <div>
@@ -58,7 +49,7 @@ const CreatableWHSelect: React.FC<CreatableWHProps> = ({ label, value, onChange,
         <div className="flex gap-2">
           <select value={value} onChange={e => onChange(e.target.value)} className={`${fieldCls} flex-1`}>
             <option value="">Select warehouse…</option>
-            {warehouses.map(w => <option key={w} value={w}>{w}</option>)}
+            {warehouses.map(w => <option key={w.id} value={w.name}>{w.name}</option>)}
           </select>
           <button type="button" onClick={() => setAdding(true)} title="Add new warehouse"
             className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 transition">
@@ -72,44 +63,106 @@ const CreatableWHSelect: React.FC<CreatableWHProps> = ({ label, value, onChange,
 
 /* ─────────────────────────────────────────
    Main Page
-───────────────────────────────────────── */
+ ───────────────────────────────────────── */
 export const CreateTransferPage: React.FC = () => {
   const navigate = useNavigate();
+  const currentUser = useCurrentUser();
+  const companyId = parseInt((currentUser as any)?.companyId || '1');
+  const { showNotification } = useNotifications();
 
-  const [warehouses, setWarehouses] = useState<string[]>(INIT_WAREHOUSES);
+  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
+
   const [fromWH, setFromWH] = useState('');
   const [toWH, setToWH]     = useState('');
-  const [refNo]              = useState('TR-2026-006');
   const [date, setDate]      = useState(new Date().toISOString().split('T')[0]);
   const [shippingCharge, setShippingCharge] = useState('');
   const [priority, setPriority] = useState('Normal');
   const [remarks, setRemarks]   = useState('');
 
   const [items, setItems] = useState<TransferItem[]>([
-    { id: '1', product: '', sku: '', stock: 0, qty: 0 }
+    { id: '1', productId: '', qty: 0 }
   ]);
 
-  const addWarehouse = (v: string) => setWarehouses(p => p.includes(v) ? p : [...p, v]);
+  useEffect(() => {
+    fetchInitialData();
+  }, [companyId]);
 
-  const addItem = () => setItems(p => [...p, { id: Date.now().toString(), product: '', sku: '', stock: 0, qty: 0 }]);
+  const fetchInitialData = async () => {
+    try {
+      const [prodRes, whRes] = await Promise.all([
+        inventoryApi.getProducts(companyId),
+        inventoryApi.getWarehouses(companyId)
+      ]);
+      if (prodRes.success) setProducts(prodRes.data.items || []);
+      if (whRes.success) setWarehouses(whRes.data.items || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addWarehouse = async (v: string) => {
+    try {
+      const res = await inventoryApi.createWarehouse({ companyId, name: v, location: 'Unknown' });
+      if (res.success) {
+        setWarehouses(p => [...p, res.data]);
+        showNotification({ type: 'success', title: 'Success', message: 'Warehouse added.' });
+      } else {
+        showNotification({ type: 'error', title: 'Error', message: res.message || 'Failed to add warehouse.' });
+      }
+    } catch (err) {
+      showNotification({ type: 'error', title: 'Error', message: 'Unexpected error.' });
+    }
+  };
+
+  const addItem = () => setItems(p => [...p, { id: Date.now().toString(), productId: '', qty: 0 }]);
   const removeItem = (id: string) => setItems(p => p.filter(i => i.id !== id));
   const updateItem = (id: string, k: keyof TransferItem, v: any) =>
-    setItems(p => p.map(i => {
-      if (i.id !== id) return i;
-      const updated = { ...i, [k]: v };
-      if (k === 'product') {
-        const found = PRODUCTS.find(pr => pr.name === v);
-        updated.sku   = found?.sku   || '';
-        updated.stock = found?.stock || 0;
+    setItems(p => p.map(i => i.id === id ? { ...i, [k]: v } : i));
+
+  const handleExecuteTransfer = async () => {
+    if (!fromWH || !toWH || items.some(i => !i.productId || i.qty <= 0)) {
+      showNotification({ type: 'error', title: 'Validation', message: 'Please select warehouses and add valid items.' });
+      return;
+    }
+    if (fromWH === toWH) {
+      showNotification({ type: 'error', title: 'Validation', message: 'Source and destination warehouses cannot be the same.' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        companyId,
+        fromLocation: fromWH,
+        toLocation: toWH,
+        transferDate: new Date(date).toISOString(),
+        notes: `${remarks}${shippingCharge ? ` | Shipping: Rs. ${shippingCharge}` : ''} | Priority: ${priority}`,
+        items: items.map(i => ({
+          productId: parseInt(i.productId),
+          quantity: i.qty
+        }))
+      };
+
+      const res = await inventoryApi.createTransfer(payload);
+      if (res.success) {
+        showNotification({ type: 'success', title: 'Success', message: 'Product transfer confirmed!' });
+        navigate('/admin/inventory/transfer');
+      } else {
+        showNotification({ type: 'error', title: 'Failed', message: res.message || 'Failed to create transfer.' });
       }
-      return updated;
-    }));
+    } catch (err) {
+        showNotification({ type: 'error', title: 'Error', message: 'Unexpected error occurred.' });
+    } finally {
+        setLoading(false);
+    }
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       className="max-w-5xl mx-auto space-y-6 pb-12">
 
-      {/* Header */}
       <div className="flex items-center gap-4">
         <button onClick={() => navigate('/admin/inventory/transfer')}
           className="p-2.5 bg-white hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 transition-all border border-slate-200 shadow-sm">
@@ -119,11 +172,8 @@ export const CreateTransferPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        {/* ── Left ── */}
         <div className="md:col-span-2 space-y-6">
 
-          {/* Routing */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
               <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600"><MapPin size={16} /></div>
@@ -133,7 +183,7 @@ export const CreateTransferPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Reference No</label>
-                <input className={fieldCls} defaultValue={refNo} readOnly />
+                <input className={fieldCls} readOnly placeholder="Auto-generated (TRF-...)" />
               </div>
               <div>
                 <label className={labelCls}>Transfer Date</label>
@@ -152,7 +202,6 @@ export const CreateTransferPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Items Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -170,41 +219,40 @@ export const CreateTransferPage: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
                     <th className="px-5 py-3">Product Name</th>
-                    <th className="px-5 py-3 w-28">SKU</th>
-                    <th className="px-5 py-3 w-28 text-center">In Stock</th>
+                    <th className="px-5 py-3 text-center">In Stock</th>
                     <th className="px-5 py-3 w-32">Transfer Qty</th>
                     <th className="px-5 py-3 w-12 text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {items.map(item => (
-                    <tr key={item.id} className="group">
-                      <td className="px-5 py-3">
-                        <select className={fieldCls} value={item.product}
-                          onChange={e => updateItem(item.id, 'product', e.target.value)}>
-                          <option value="">Select product…</option>
-                          {PRODUCTS.map(p => <option key={p.sku} value={p.name}>{p.name}</option>)}
-                        </select>
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className="text-xs text-slate-400 font-mono">{item.sku || '—'}</span>
-                      </td>
-                      <td className="px-5 py-3 text-center">
-                        <span className="text-sm font-medium text-slate-500">{item.stock || '—'}</span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <input type="number" min={0} className={fieldCls} placeholder="0"
-                          value={item.qty || ''}
-                          onChange={e => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)} />
-                      </td>
-                      <td className="px-5 py-3 text-center">
-                        <button onClick={() => removeItem(item.id)} disabled={items.length === 1}
-                          className="text-slate-300 hover:text-rose-500 disabled:opacity-30 transition">
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {items.map(item => {
+                    const selProd = products.find(p => p.id === item.productId);
+                    return (
+                      <tr key={item.id} className="group">
+                        <td className="px-5 py-3">
+                          <select className={fieldCls} value={item.productId}
+                            onChange={e => updateItem(item.id, 'productId', e.target.value)}>
+                            <option value="">Select product…</option>
+                            {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
+                          </select>
+                        </td>
+                        <td className="px-5 py-3 text-center">
+                          <span className="text-sm font-medium text-slate-500">{selProd ? selProd.stock : '—'}</span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <input type="number" min={0} className={fieldCls} placeholder="0"
+                            value={item.qty || ''}
+                            onChange={e => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)} />
+                        </td>
+                        <td className="px-5 py-3 text-center">
+                          <button onClick={() => removeItem(item.id)} disabled={items.length === 1}
+                            className="text-slate-300 hover:text-rose-500 disabled:opacity-30 transition">
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -218,15 +266,14 @@ export const CreateTransferPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Sidebar ── */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-              <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600"><DollarSign size={16} /></div>
+              <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600"><IndianRupee size={16} /></div>
               <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Other Details</h3>
             </div>
             <div>
-              <label className={labelCls}>Shipping Charge ($)</label>
+              <label className={labelCls}>Shipping Charge (Rs.)</label>
               <input type="number" min={0} className={fieldCls} placeholder="0.00"
                 value={shippingCharge} onChange={e => setShippingCharge(e.target.value)} />
             </div>
@@ -244,11 +291,15 @@ export const CreateTransferPage: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            <Button variant="primary" fullWidth leftIcon={<Save size={18} />}
+            <Button variant="primary" fullWidth leftIcon={<Save size={18} />} onClick={handleExecuteTransfer} disabled={loading}
               className="py-4 bg-[#002147] hover:bg-[#003366] border-none shadow-lg rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
-              Execute Transfer
+              {loading ? 'Moving Goods...' : 'Execute Transfer'}
             </Button>
             <Button variant="secondary" fullWidth leftIcon={<RotateCcw size={18} />}
+              onClick={() => {
+                  setFromWH(''); setToWH(''); setShippingCharge(''); setPriority('Normal'); setRemarks('');
+                  setItems([{ id: '1', productId: '', qty: 0 }]);
+              }}
               className="py-4 rounded-xl font-bold text-xs uppercase tracking-widest border-slate-200 text-slate-500 hover:bg-slate-50 transition-all">
               Reset Form
             </Button>

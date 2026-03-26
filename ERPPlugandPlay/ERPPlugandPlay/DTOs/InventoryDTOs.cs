@@ -22,9 +22,22 @@ namespace ERPPlugandPlay.DTOs
         [Required] public string Name { get; set; } = string.Empty;
     }
 
+    public class CreateBrandDto
+    {
+        [Required] public int CompanyId { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+    }
+
     public class UnitDto
     {
         public int Id { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+        public string Abbreviation { get; set; } = string.Empty;
+    }
+
+    public class CreateUnitDto
+    {
+        [Required] public int CompanyId { get; set; }
         [Required] public string Name { get; set; } = string.Empty;
         public string Abbreviation { get; set; } = string.Empty;
     }
@@ -37,6 +50,35 @@ namespace ERPPlugandPlay.DTOs
         public string Status { get; set; } = "Active";
     }
 
+    public class CreateWarehouseDto
+    {
+        [Required] public int CompanyId { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+        [Required] public string Location { get; set; } = string.Empty;
+        public string Status { get; set; } = "Active";
+    }
+
+    public class UpdateWarehouseDto
+    {
+        [Required] public string Name { get; set; } = string.Empty;
+        [Required] public string Location { get; set; } = string.Empty;
+        public string Status { get; set; } = "Active";
+    }
+
+    public class TaxTypeDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Percentage { get; set; }
+    }
+
+    public class CreateTaxTypeDto
+    {
+        [Required] public int CompanyId { get; set; }
+        [Required] public string Name { get; set; } = string.Empty;
+        [Required] public decimal Percentage { get; set; }
+    }
+
     // ── Product ──────────────────────────────────────────────
     public class ProductDto
     {
@@ -47,9 +89,13 @@ namespace ERPPlugandPlay.DTOs
         public string Category { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
+        public string TaxType { get; set; } = string.Empty;
         public decimal Price { get; set; }
+        public decimal SellingPrice { get; set; }
+        public decimal TaxPercentage { get; set; }
         public int Stock { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
         public DateTime AddedAt { get; set; }
     }
 
@@ -61,9 +107,13 @@ namespace ERPPlugandPlay.DTOs
         [Required] public string Category { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
+        public string TaxType { get; set; } = string.Empty;
         public decimal Price { get; set; }
+        public decimal SellingPrice { get; set; }
+        public decimal TaxPercentage { get; set; }
         public int Stock { get; set; }
         public string Status { get; set; } = "Active";
+        public string? ImageUrl { get; set; }
     }
 
     public class UpdateProductDto : CreateProductDto

@@ -13,6 +13,13 @@ namespace ERPPlugandPlay.DTOs
         public string GSTNumber { get; set; } = string.Empty;
         public string ContactPerson { get; set; } = string.Empty;
         public decimal CreditLimit { get; set; }
+        public string? CustomerCode { get; set; }
+        public string? CustomerType { get; set; }
+        public string? Country { get; set; }
+        public string? CreditTerms { get; set; }
+        public string? Currency { get; set; }
+        public string? PriceList { get; set; }
+        public string? Website { get; set; }
     }
 
     public class CustomerDto
@@ -28,6 +35,13 @@ namespace ERPPlugandPlay.DTOs
         public decimal CreditLimit { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? CustomerCode { get; set; }
+        public string? CustomerType { get; set; }
+        public string? Country { get; set; }
+        public string? CreditTerms { get; set; }
+        public string? Currency { get; set; }
+        public string? PriceList { get; set; }
+        public string? Website { get; set; }
     }
 
     // ── Quotation ─────────────────────────────────────────────

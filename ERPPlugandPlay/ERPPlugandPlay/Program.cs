@@ -157,7 +157,7 @@ Directory.CreateDirectory(uploadPath);
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(uploadPath),
+    FileProvider = new PhysicalFileProvider(physicalPath),
     RequestPath = "/api/documents"
 });
 

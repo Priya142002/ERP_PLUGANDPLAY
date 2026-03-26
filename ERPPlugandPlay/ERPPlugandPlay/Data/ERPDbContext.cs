@@ -32,6 +32,7 @@ namespace ERPPlugandPlay.Data
         public DbSet<Brand> Brands { get; set; }
         public DbSet<Unit> Units { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
+        public DbSet<TaxType> TaxTypes { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<StockTransaction> StockTransactions { get; set; }
         public DbSet<MaterialDispatch> MaterialDispatches { get; set; }
@@ -249,6 +250,19 @@ namespace ERPPlugandPlay.Data
             modelBuilder.Entity<PosOrderItem>().Property(o => o.TaxPercent).HasPrecision(5, 2);
             modelBuilder.Entity<PosOrderItem>().Property(o => o.DiscountPercent).HasPrecision(5, 2);
             modelBuilder.Entity<PosOrderItem>().Property(o => o.TotalPrice).HasPrecision(18, 2);
+
+            // Configure Delete Behaviors to avoid Multiple Cascade Path errors
+            modelBuilder.Entity<ProductTransferItem>()
+                .HasOne(i => i.Transfer)
+                .WithMany(t => t.Items)
+                .HasForeignKey(i => i.TransferId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductTransferItem>()
+                .HasOne(i => i.Product)
+                .WithMany()
+                .HasForeignKey(i => i.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // ── Cascade delete rules ──────────────────────────
             modelBuilder.Entity<Employee>()
