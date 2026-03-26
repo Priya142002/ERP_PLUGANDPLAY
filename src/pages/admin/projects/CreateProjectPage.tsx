@@ -61,9 +61,89 @@ interface Document {
   uploadedBy?: string;
 }
 
+// Creatable Select Component for dynamic category addition
+interface CreatableSelectProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  onAddNew: (v: string) => void;
+}
+
+const CreatableSelect: React.FC<CreatableSelectProps> = ({ label, value, onChange, options, onAddNew }) => {
+  const [adding, setAdding] = useState(false);
+  const [newVal, setNewVal] = useState('');
+  const labelCls = "block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5";
+  const fieldCls = "flex-1 h-10 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition bg-white";
+
+  const handleAdd = () => {
+    if (newVal.trim()) {
+      onAddNew(newVal.trim());
+      onChange(newVal.trim());
+      setNewVal('');
+      setAdding(false);
+    }
+  };
+
+  return (
+    <div>
+      <label className={labelCls}>{label}</label>
+      {adding ? (
+        <div className="flex gap-2 items-center">
+          <input
+            autoFocus
+            value={newVal}
+            onChange={(e) => setNewVal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAdd();
+              if (e.key === 'Escape') setAdding(false);
+            }}
+            placeholder={`New ${label.toLowerCase()}...`}
+            className={fieldCls}
+          />
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="h-10 px-4 rounded-lg bg-[#002147] text-white text-xs font-bold hover:bg-[#003366] transition whitespace-nowrap"
+          >
+            Add
+          </button>
+          <button
+            type="button"
+            onClick={() => setAdding(false)}
+            className="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 transition flex-shrink-0"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <select value={value} onChange={(e) => onChange(e.target.value)} className={fieldCls}>
+            <option value="">Select...</option>
+            {options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            title={`Add new ${label}`}
+            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 transition"
+          >
+            <Plus size={15} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const CreateProjectPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'basic' | 'budget' | 'timesheet' | 'expenses' | 'tasks' | 'documents' | 'drive' | 'notifications'>('basic');
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
   // Basic Project Info
   const [projectInfo, setProjectInfo] = useState({
@@ -113,6 +193,7 @@ export const CreateProjectPage: React.FC = () => {
     approvalFlow: true,
     selectedCategories: ['Travel', 'Food', 'Software', 'Misc', 'Domain Purchase', 'Server Purchase'],
   });
+  const [expenseCategories, setExpenseCategories] = useState<string[]>(['Travel', 'Food', 'Software', 'Misc', 'Domain Purchase', 'Server Purchase']);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [newExpense, setNewExpense] = useState({ 
     category: 'Travel', 
@@ -127,6 +208,12 @@ export const CreateProjectPage: React.FC = () => {
     billFile: null as File | null,
     billFileName: '',
   });
+
+  // Dropdown options for CreatableSelect
+  const [projectTypes, setProjectTypes] = useState<string[]>(['Fixed', 'Hourly', 'Internal']);
+  const [priorities, setPriorities] = useState<string[]>(['Low', 'Medium', 'High']);
+  const [projectStatuses, setProjectStatuses] = useState<string[]>(['Planned', 'Ongoing', 'Completed']);
+  const [currencies, setCurrencies] = useState<string[]>(['USD', 'EUR', 'GBP', 'INR']);
 
   // Team Members
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -210,6 +297,36 @@ export const CreateProjectPage: React.FC = () => {
         billFile: null,
         billFileName: '',
       });
+    }
+  };
+
+  const addExpenseCategory = (newCategory: string) => {
+    if (!expenseCategories.includes(newCategory)) {
+      setExpenseCategories([...expenseCategories, newCategory]);
+    }
+  };
+
+  const addProjectType = (newType: string) => {
+    if (!projectTypes.includes(newType)) {
+      setProjectTypes([...projectTypes, newType]);
+    }
+  };
+
+  const addPriority = (newPriority: string) => {
+    if (!priorities.includes(newPriority)) {
+      setPriorities([...priorities, newPriority]);
+    }
+  };
+
+  const addProjectStatus = (newStatus: string) => {
+    if (!projectStatuses.includes(newStatus)) {
+      setProjectStatuses([...projectStatuses, newStatus]);
+    }
+  };
+
+  const addCurrency = (newCurrency: string) => {
+    if (!currencies.includes(newCurrency)) {
+      setCurrencies([...currencies, newCurrency]);
     }
   };
 
@@ -391,20 +508,33 @@ All changes have been saved successfully.`;
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-xl border border-slate-200 p-2 flex gap-2 overflow-x-auto">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'bg-[#002147] text-white shadow-md'
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <tab.icon size={14} />
-            {tab.label}
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const isHovered = hoveredTab === tab.id;
+          
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              onMouseEnter={() => setHoveredTab(tab.id)}
+              onMouseLeave={() => setHoveredTab(null)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                isActive
+                  ? 'bg-[#002147] shadow-md'
+                  : 'hover:bg-slate-50'
+              }`}
+            >
+              <tab.icon 
+                size={14} 
+                color={isActive ? '#ffffff' : (isHovered ? '#000000' : '#64748b')}
+                style={{ transition: 'color 0.2s' }}
+              />
+              <span style={{ color: isActive ? '#ffffff' : (isHovered ? '#000000' : '#64748b'), transition: 'color 0.2s' }}>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Content Area */}
@@ -456,18 +586,13 @@ All changes have been saved successfully.`;
                 />
               </div>
 
-              <div>
-                <label className={labelCls}>Project Type <span className="text-rose-500">*</span></label>
-                <select
-                  className={selectCls}
-                  value={projectInfo.projectType}
-                  onChange={(e) => setProjectInfo({ ...projectInfo, projectType: e.target.value })}
-                >
-                  <option value="Fixed">Fixed</option>
-                  <option value="Hourly">Hourly</option>
-                  <option value="Internal">Internal</option>
-                </select>
-              </div>
+              <CreatableSelect
+                label="Project Type *"
+                value={projectInfo.projectType}
+                onChange={(v) => setProjectInfo({ ...projectInfo, projectType: v })}
+                options={projectTypes}
+                onAddNew={addProjectType}
+              />
 
               <div className="md:col-span-2">
                 <label className={labelCls}>Project Description</label>
@@ -500,26 +625,21 @@ All changes have been saved successfully.`;
                 />
               </div>
 
-              <div>
-                <label className={labelCls}>Project Status <span className="text-rose-500">*</span></label>
-                <select
-                  className={selectCls}
-                  value={projectInfo.status}
-                  onChange={(e) => {
-                    const newStatus = e.target.value;
-                    setProjectInfo({ 
-                      ...projectInfo, 
-                      status: newStatus,
-                      // Auto-set completion date when status changes to Completed
-                      completionDate: newStatus === 'Completed' ? new Date().toISOString().split('T')[0] : projectInfo.completionDate
-                    });
-                  }}
-                >
-                  <option value="Planned">Planned</option>
-                  <option value="Ongoing">Ongoing</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              </div>
+              <CreatableSelect
+                label="Project Status *"
+                value={projectInfo.status}
+                onChange={(v) => {
+                  const newStatus = v;
+                  setProjectInfo({ 
+                    ...projectInfo, 
+                    status: newStatus,
+                    // Auto-set completion date when status changes to Completed
+                    completionDate: newStatus === 'Completed' ? new Date().toISOString().split('T')[0] : projectInfo.completionDate
+                  });
+                }}
+                options={projectStatuses}
+                onAddNew={addProjectStatus}
+              />
 
               {/* Completion Date - Only show when status is Completed */}
               {projectInfo.status === 'Completed' && (
@@ -538,18 +658,13 @@ All changes have been saved successfully.`;
                 </div>
               )}
 
-              <div>
-                <label className={labelCls}>Priority <span className="text-rose-500">*</span></label>
-                <select
-                  className={selectCls}
-                  value={projectInfo.priority}
-                  onChange={(e) => setProjectInfo({ ...projectInfo, priority: e.target.value })}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
-              </div>
+              <CreatableSelect
+                label="Priority *"
+                value={projectInfo.priority}
+                onChange={(v) => setProjectInfo({ ...projectInfo, priority: v })}
+                options={priorities}
+                onAddNew={addPriority}
+              />
 
               <div>
                 <label className={labelCls}>Project Manager <span className="text-rose-500">*</span></label>
@@ -587,10 +702,10 @@ All changes have been saved successfully.`;
 
             {/* Project Completion Impact Notice */}
             {projectInfo.status === 'Completed' && (
-              <div className="mt-6 p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+              <div className="mt-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle2 size={20} className="text-green-600" />
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <CheckCircle2 size={20} className="text-blue-600" />
                   </div>
                   <div className="flex-1">
                     <h4 className="text-sm font-bold text-green-900 mb-2">Project Completion Actions</h4>
@@ -730,8 +845,8 @@ All changes have been saved successfully.`;
         {activeTab === 'budget' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-amber-50 rounded-lg">
-                <DollarSign size={20} className="text-amber-600" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <DollarSign size={20} className="text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Budget & Expenses</h3>
@@ -753,19 +868,13 @@ All changes have been saved successfully.`;
                     placeholder="100000"
                   />
                 </div>
-                <div>
-                  <label className={labelCls}>Currency</label>
-                  <select
-                    className={selectCls}
-                    value={budget.currency}
-                    onChange={(e) => setBudget({ ...budget, currency: e.target.value })}
-                  >
-                    <option>USD</option>
-                    <option>EUR</option>
-                    <option>GBP</option>
-                    <option>INR</option>
-                  </select>
-                </div>
+                <CreatableSelect
+                  label="Currency"
+                  value={budget.currency}
+                  onChange={(v) => setBudget({ ...budget, currency: v })}
+                  options={currencies}
+                  onAddNew={addCurrency}
+                />
                 <div>
                   <label className={labelCls}>Labor Cost</label>
                   <input
@@ -802,47 +911,42 @@ All changes have been saved successfully.`;
             {/* Add Expense Form */}
             <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
               <h4 className="text-sm font-bold text-slate-700 mb-4">Add Expense</h4>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                  <label className={labelCls}>Category</label>
-                  <select
-                    className={selectCls}
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <CreatableSelect
+                    label="Category"
                     value={newExpense.category}
-                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
-                  >
-                    <option>Travel</option>
-                    <option>Equipment</option>
-                    <option>Software</option>
-                    <option>Consulting</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelCls}>Description</label>
-                  <input
-                    type="text"
-                    className={fieldCls}
-                    value={newExpense.description}
-                    onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
-                    placeholder="Expense description"
+                    onChange={(v) => setNewExpense({ ...newExpense, category: v })}
+                    options={expenseCategories}
+                    onAddNew={addExpenseCategory}
                   />
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>Description</label>
+                    <input
+                      type="text"
+                      className={fieldCls}
+                      value={newExpense.description}
+                      onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+                      placeholder="Expense description"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Amount</label>
+                    <input
+                      type="number"
+                      className={fieldCls}
+                      value={newExpense.amount}
+                      onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                      placeholder="500"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className={labelCls}>Amount</label>
-                  <input
-                    type="number"
-                    className={fieldCls}
-                    value={newExpense.amount}
-                    onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
-                    placeholder="500"
-                  />
-                </div>
-                <div className="flex items-end">
+                <div className="flex justify-end">
                   <button
                     onClick={addExpense}
-                    className="w-full h-10 bg-[#002147] text-white rounded-lg font-medium hover:bg-[#003366] transition flex items-center justify-center gap-2"
+                    className="px-6 h-10 bg-[#002147] text-white rounded-lg font-medium hover:bg-[#003366] transition flex items-center justify-center gap-2"
                   >
-                    <Plus size={16} /> Add
+                    <Plus size={16} /> Add Expense
                   </button>
                 </div>
               </div>
@@ -927,7 +1031,7 @@ All changes have been saved successfully.`;
                       onChange={(e) => setTimesheetConfig({ ...timesheetConfig, enableTimesheet: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                   </label>
                 </div>
 
@@ -985,7 +1089,7 @@ All changes have been saved successfully.`;
                       onChange={(e) => setTimesheetConfig({ ...timesheetConfig, billableHours: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                   </label>
                 </div>
 
@@ -1015,7 +1119,7 @@ All changes have been saved successfully.`;
                       onChange={(e) => setTimesheetConfig({ ...timesheetConfig, approvalRequired: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                   </label>
                 </div>
               </div>
@@ -1050,8 +1154,8 @@ All changes have been saved successfully.`;
         {activeTab === 'expenses' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-emerald-50 rounded-lg">
-                <FileText size={20} className="text-emerald-600" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <FileText size={20} className="text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Expense Management</h3>
@@ -1060,9 +1164,9 @@ All changes have been saved successfully.`;
             </div>
 
             {/* Expense Configuration */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
               <div className="flex items-center gap-3 mb-4">
-                <DollarSign size={18} className="text-emerald-600" />
+                <DollarSign size={18} className="text-blue-600" />
                 <h4 className="text-sm font-bold text-slate-800">Expense Tracking Settings</h4>
               </div>
               
@@ -1080,7 +1184,7 @@ All changes have been saved successfully.`;
                       onChange={(e) => setExpenseConfig({ ...expenseConfig, enableExpenseTracking: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                   </label>
                 </div>
 
@@ -1110,7 +1214,7 @@ All changes have been saved successfully.`;
                       onChange={(e) => setExpenseConfig({ ...expenseConfig, uploadBills: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                   </label>
                 </div>
 
@@ -1127,7 +1231,7 @@ All changes have been saved successfully.`;
                       onChange={(e) => setExpenseConfig({ ...expenseConfig, approvalFlow: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                   </label>
                 </div>
               </div>
@@ -1137,9 +1241,9 @@ All changes have been saved successfully.`;
             <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
               <h4 className="text-sm font-bold text-slate-700 mb-4">Expense Categories</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {['Travel', 'Food', 'Software', 'Misc', 'Domain Purchase', 'Server Purchase'].map((cat) => (
+                {expenseCategories.map((cat) => (
                   <div key={cat} className="flex items-center gap-2 p-3 bg-white rounded-lg border border-slate-200">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                     <span className="text-sm font-medium text-slate-700">{cat}</span>
                   </div>
                 ))}
@@ -1151,21 +1255,13 @@ All changes have been saved successfully.`;
               <h4 className="text-sm font-bold text-slate-700 mb-4">Add New Expense</h4>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Category</label>
-                    <select
-                      className={selectCls}
-                      value={newExpense.category}
-                      onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
-                    >
-                      <option>Travel</option>
-                      <option>Food</option>
-                      <option>Software</option>
-                      <option>Misc</option>
-                      <option>Domain Purchase</option>
-                      <option>Server Purchase</option>
-                    </select>
-                  </div>
+                  <CreatableSelect
+                    label="Category"
+                    value={newExpense.category}
+                    onChange={(v) => setNewExpense({ ...newExpense, category: v })}
+                    options={expenseCategories}
+                    onAddNew={addExpenseCategory}
+                  />
                   <div>
                     <label className={labelCls}>Amount</label>
                     <input
@@ -1417,8 +1513,8 @@ All changes have been saved successfully.`;
         {activeTab === 'documents' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-cyan-50 rounded-lg">
-                <File size={20} className="text-cyan-600" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <File size={20} className="text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Documents & Attachments</h3>
@@ -1427,9 +1523,9 @@ All changes have been saved successfully.`;
             </div>
 
             {/* Upload Documents Section */}
-            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-6 rounded-xl border border-cyan-200">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
               <div className="flex items-center gap-3 mb-4">
-                <Upload size={18} className="text-cyan-600" />
+                <Upload size={18} className="text-blue-600" />
                 <h4 className="text-sm font-bold text-slate-800">Upload Documents</h4>
               </div>
               
@@ -1439,7 +1535,7 @@ All changes have been saved successfully.`;
                   <label className="block text-sm font-semibold text-slate-800 mb-3">Project Files</label>
                   <p className="text-xs text-slate-500 mb-3">Upload project-related documents, specifications, designs</p>
                   <label className="cursor-pointer">
-                    <div className="flex items-center justify-center gap-2 h-24 px-4 bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition">
+                    <div className="flex items-center justify-center gap-2 h-24 px-4 bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
                       <Upload size={20} className="text-slate-400" />
                       <div className="text-center">
                         <p className="text-sm font-medium text-slate-600">Click to upload project files</p>
@@ -1455,7 +1551,7 @@ All changes have been saved successfully.`;
                   <label className="block text-sm font-semibold text-slate-800 mb-3">Contracts</label>
                   <p className="text-xs text-slate-500 mb-3">Upload signed contracts, agreements, NDAs</p>
                   <label className="cursor-pointer">
-                    <div className="flex items-center justify-center gap-2 h-24 px-4 bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition">
+                    <div className="flex items-center justify-center gap-2 h-24 px-4 bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
                       <Upload size={20} className="text-slate-400" />
                       <div className="text-center">
                         <p className="text-sm font-medium text-slate-600">Click to upload contracts</p>
@@ -1518,8 +1614,8 @@ All changes have been saved successfully.`;
         {activeTab === 'drive' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-sky-50 rounded-lg">
-                <FolderOpen size={20} className="text-sky-600" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <FolderOpen size={20} className="text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Drive / File Management</h3>
@@ -1528,9 +1624,9 @@ All changes have been saved successfully.`;
             </div>
 
             {/* Folder Info */}
-            <div className="bg-gradient-to-br from-sky-50 to-blue-50 p-6 rounded-xl border border-sky-200">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
               <div className="flex items-center gap-3 mb-4">
-                <FolderOpen size={18} className="text-sky-600" />
+                <FolderOpen size={18} className="text-blue-600" />
                 <h4 className="text-sm font-bold text-slate-800">Project Folder</h4>
               </div>
               <div className="bg-white p-4 rounded-lg border border-slate-200">
@@ -1716,8 +1812,8 @@ All changes have been saved successfully.`;
         {activeTab === 'notifications' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-orange-50 rounded-lg">
-                <Bell size={20} className="text-orange-600" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Bell size={20} className="text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Notifications & Alerts</h3>
@@ -1725,9 +1821,9 @@ All changes have been saved successfully.`;
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border border-orange-200">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
               <div className="flex items-center gap-3 mb-4">
-                <Bell size={18} className="text-orange-600" />
+                <Bell size={18} className="text-blue-600" />
                 <h4 className="text-sm font-bold text-slate-800">Alert Settings</h4>
               </div>
               
@@ -1746,7 +1842,7 @@ All changes have been saved successfully.`;
                         onChange={(e) => setNotifications({ ...notifications, deadlineAlerts: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                     </label>
                   </div>
                   {notifications.deadlineAlerts && (
@@ -1776,7 +1872,7 @@ All changes have been saved successfully.`;
                         onChange={(e) => setNotifications({ ...notifications, budgetAlerts: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                     </label>
                   </div>
                   {notifications.budgetAlerts && (
@@ -1806,7 +1902,7 @@ All changes have been saved successfully.`;
                         onChange={(e) => setNotifications({ ...notifications, taskUpdates: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002147]"></div>
                     </label>
                   </div>
                   {notifications.taskUpdates && (
@@ -1854,8 +1950,8 @@ All changes have been saved successfully.`;
         {activeTab === 'tasks' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <Target size={20} className="text-purple-600" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Target size={20} className="text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Tasks & Milestones</h3>
@@ -1864,9 +1960,9 @@ All changes have been saved successfully.`;
             </div>
 
             {/* Add Milestone Form */}
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border border-purple-200">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
               <div className="flex items-center gap-3 mb-4">
-                <CheckCircle2 size={18} className="text-purple-600" />
+                <CheckCircle2 size={18} className="text-blue-600" />
                 <h4 className="text-sm font-bold text-slate-800">Add New Milestone</h4>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
