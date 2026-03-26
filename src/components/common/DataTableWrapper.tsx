@@ -22,6 +22,7 @@ interface DataTableWrapperProps<T> {
   emptyMessage?: string;
   maxHeight?: string;
   onEmptyClick?: () => void;
+  loading?: boolean;
 }
 
 export function DataTableWrapper<T extends { id: string }>({
@@ -30,7 +31,8 @@ export function DataTableWrapper<T extends { id: string }>({
   actions = [],
   emptyMessage = "No data found",
   maxHeight = "60vh",
-  onEmptyClick
+  onEmptyClick,
+  loading = false
 }: DataTableWrapperProps<T>) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -60,7 +62,19 @@ export function DataTableWrapper<T extends { id: string }>({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {data.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td 
+                  colSpan={columns.length + (actions.length > 0 ? 1 : 0)} 
+                  className="text-center py-16 text-slate-400 text-sm"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Loading data...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
               <tr 
                 onClick={onEmptyClick}
                 className={onEmptyClick ? 'cursor-pointer hover:bg-slate-50 transition-colors group' : ''}

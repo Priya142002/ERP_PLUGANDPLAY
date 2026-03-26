@@ -1,5 +1,5 @@
 // Central API client — all requests go through here
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.vivifysoft.in/ERP';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.vivifysoft.in/ERP';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -165,13 +165,108 @@ export const inventoryApi = {
     request<any>(`/api/inventory/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProduct: (id: string) =>
     request<any>(`/api/inventory/products/${id}`, { method: 'DELETE' }),
+  getProduct: (id: string) =>
+    request<any>(`/api/inventory/product/${id}`),
 
   updateStock: (data: any) =>
     request<any>('/api/inventory/stock/update', { method: 'POST', body: JSON.stringify(data) }),
   getStockHistory: (productId: string) =>
     request<any>(`/api/inventory/stock/history/${productId}`),
 
-  getCategories: () =>
-    request<any>('/api/inventory/categories'),
+  getCategories: (companyId: number) =>
+    request<any>(`/api/inventory/categories/${companyId}`),
+  createCategory: (data: any) =>
+    request<any>('/api/inventory/categories', { method: 'POST', body: JSON.stringify(data) }),
+
+  getBrands: (companyId: number) =>
+    request<any>(`/api/inventory/brands/${companyId}`),
+  createBrand: (data: any) =>
+    request<any>('/api/inventory/brands', { method: 'POST', body: JSON.stringify(data) }),
+
+  getUnits: (companyId: number) =>
+    request<any>(`/api/inventory/units/${companyId}`),
+  createUnit: (data: any) =>
+    request<any>('/api/inventory/units', { method: 'POST', body: JSON.stringify(data) }),
+
+  getTaxTypes: (companyId: number) =>
+    request<any>(`/api/inventory/taxtypes/${companyId}`),
+  createTaxType: (data: any) =>
+    request<any>('/api/inventory/taxtypes', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Warehouses
+  getWarehouses: (companyId: number, search?: string) =>
+    request<any>(
+      `/api/inventory/warehouses/${companyId}${search ? `?search=${encodeURIComponent(search)}&page=1&pageSize=100` : '?page=1&pageSize=100'}`
+    ),
+  createWarehouse: (data: any) =>
+    request<any>('/api/inventory/warehouses', { method: 'POST', body: JSON.stringify(data) }),
+  updateWarehouse: (id: number, data: any) =>
+    request<any>(`/api/inventory/warehouses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteWarehouse: (id: number) =>
+    request<any>(`/api/inventory/warehouses/${id}`, { method: 'DELETE' }),
+
+  // Material Dispatch
+  getDispatches: (companyId: number, search?: string) =>
+    request<any>(`/api/inventory/dispatch/${companyId}${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  getDispatch: (id: string) =>
+    request<any>(`/api/inventory/dispatch/detail/${id}`),
+  createDispatch: (data: any) =>
+    request<any>('/api/inventory/dispatch', { method: 'POST', body: JSON.stringify(data) }),
+  updateDispatchStatus: (id: number, status: string) =>
+    request<any>(`/api/inventory/dispatch/${id}/status?status=${status}`, { method: 'PUT' }),
+
+  // Product Transfer
+  getTransfers: (companyId: number, search?: string) =>
+    request<any>(`/api/inventory/transfer/${companyId}${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  createTransfer: (data: any) =>
+    request<any>('/api/inventory/transfer', { method: 'POST', body: JSON.stringify(data) }),
+  updateTransferStatus: (id: number, status: string) =>
+    request<any>(`/api/inventory/transfer/${id}/status?status=${status}`, { method: 'PUT' }),
+
+  // Product Receive (GRN)
+  getReceives: (companyId: number, search?: string) =>
+    request<any>(`/api/inventory/receive/${companyId}${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  createReceive: (data: any) =>
+    request<any>('/api/inventory/receive', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+/* ── Sales API ────────────────────────────────────────── */
+export const salesApi = {
+  getCustomers: (companyId: number, page = 1, pageSize = 100) =>
+    request<any>(`/api/sales/customers/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createCustomer: (data: any) =>
+    request<any>('/api/sales/customers', { method: 'POST', body: JSON.stringify(data) }),
+  updateCustomer: (id: string, data: any) =>
+    request<any>(`/api/sales/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCustomer: (id: string) =>
+    request<any>(`/api/sales/customers/${id}`, { method: 'DELETE' }),
+};
+
+/* ── File API ─────────────────────────────────────────── */
+export const fileApi = {
+  upload: (file: File, folder = "products") => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    return fetch(`${BASE_URL}/api/file/upload?folder=${folder}`, {
+      method: 'POST',
+      body: formData,
+      headers
+    }).then(res => res.json() as Promise<ApiResponse<{ fileName: string, url: string }>>);
+  }
+};
+
+/* ── Logistics API ─────────────────────────────────────── */
+export const logisticsApi = {
+  getCarriers: (companyId: number) => 
+    request<any>(`/api/logistics/carriers/${companyId}`),
+  createCarrier: (data: any) => 
+    request<any>('/api/logistics/carriers', { method: 'POST', body: JSON.stringify(data) }),
+  deleteCarrier: (id: number) => 
+    request<any>(`/api/logistics/carriers/${id}`, { method: 'DELETE' }),
 };
 

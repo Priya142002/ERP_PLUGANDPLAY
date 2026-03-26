@@ -1,31 +1,20 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Plus, Download, Edit, Trash2, Calendar, Building2, X, Save, Package, AlertTriangle } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import { TableFilters, DataTableWrapper } from "../../../components/common";
-import { useNotifications } from "../../../context/AppContext";
+import { useNotifications, useCurrentUser } from "../../../context/AppContext";
+import { inventoryApi } from "../../../services/api";
 import { exportToExcel } from "../../../utils/reportGenerator";
-
-// Mock data for Product Receive
-const MOCK_RECEIVES = [
-  { id: '1', date: '2026-03-16', receiveNo: 'REC-50012', source: 'West Coast Hub', warehouse: 'Main Warehouse', items: 50, receivedBy: 'John Carter', status: 'Completed' },
-  { id: '2', date: '2026-03-15', receiveNo: 'REC-50011', source: 'Dell Warehouse', warehouse: 'Central Distribution', items: 120, receivedBy: 'Sarah Doe', status: 'In Transit' },
-  { id: '3', date: '2026-03-14', receiveNo: 'REC-50010', source: 'Sony Logistics', warehouse: 'Main Warehouse', items: 34, receivedBy: 'Mike Ross', status: 'Partially Received' },
-  { id: '4', date: '2026-03-13', receiveNo: 'REC-50009', source: 'East Terminal', warehouse: 'Sub WH-02', items: 45, receivedBy: 'Rachel Green', status: 'Completed' },
-  { id: '5', date: '2026-03-12', receiveNo: 'REC-50008', source: 'Nike Factory', warehouse: 'Main Warehouse', items: 200, receivedBy: 'John Carter', status: 'Pending' },
-];
 
 const fieldCls = "w-full h-10 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition bg-white";
 const labelCls = "block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5";
 
-const PRODUCTS = ['Premium Wireless Headphones', 'Smart Fitness Tracker', '4K Ultra HD Monitor', 'Ergonomic Office Chair'];
-
 interface ReceiveItem {
   id: string;
-  product: string;
-  sku: string;
+  productId: string;
   expectedQty: number;
   receivedQty: number;
 }
@@ -44,27 +33,26 @@ interface Receive {
   itemsList?: ReceiveItem[];
 }
 
-/* ─────────────────────────────────────────
-   Edit Receive Modal
-───────────────────────────────────────── */
 interface EditModalProps {
   receive: Receive;
+  products: any[];
+  warehouses: any[];
   onClose: () => void;
   onSave: (r: Receive) => void;
 }
 
-const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }) => {
+const EditReceiveModal: React.FC<EditModalProps> = ({ receive, products, warehouses, onClose, onSave }) => {
   const [form, setForm] = useState<Receive>({ 
     ...receive,
     vehicleNo: receive.vehicleNo || '',
     remarks: receive.remarks || '',
-    itemsList: receive.itemsList || [{ id: '1', product: '', sku: 'whp-001', expectedQty: 0, receivedQty: 0 }]
+    itemsList: receive.itemsList || [{ id: '1', productId: '', expectedQty: 0, receivedQty: 0 }]
   });
   const set = (k: keyof Receive, v: any) => setForm(p => ({ ...p, [k]: v }));
 
   const addItem = () => setForm(p => ({ 
     ...p, 
-    itemsList: [...(p.itemsList || []), { id: Date.now().toString(), product: '', sku: '', expectedQty: 0, receivedQty: 0 }] 
+    itemsList: [...(p.itemsList || []), { id: Date.now().toString(), productId: '', expectedQty: 0, receivedQty: 0 }] 
   }));
   
   const removeItem = (id: string) => setForm(p => ({ 
@@ -91,7 +79,6 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
         className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl relative max-h-[90vh] overflow-y-auto"
         style={{ backgroundColor: '#ffffff', opacity: 1 }}>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white rounded-t-2xl sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><Package size={16} /></div>
@@ -105,9 +92,7 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
 
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Receipt Details & Items */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Receipt Identification */}
               <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
                   <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600"><Package size={14} /></div>
@@ -135,12 +120,14 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
                   </div>
                   <div>
                     <label className={labelCls}>Target Warehouse <span className="text-rose-400">*</span></label>
-                    <input className={fieldCls} value={form.warehouse} onChange={e => set('warehouse', e.target.value)} />
+                    <select className={fieldCls} value={form.warehouse} onChange={e => set('warehouse', e.target.value)}>
+                      <option value="">Select destination…</option>
+                      {warehouses.map(w => <option key={w.id} value={w.name}>{w.name}</option>)}
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* Received Items */}
               <div className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
                 <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -157,7 +144,6 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
                     <thead>
                       <tr className="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
                         <th className="px-4 py-2.5">Product</th>
-                        <th className="px-4 py-2.5 w-24">SKU</th>
                         <th className="px-4 py-2.5 w-28">Expected Qty</th>
                         <th className="px-4 py-2.5 w-28">Received Qty</th>
                         <th className="px-4 py-2.5 w-10"></th>
@@ -167,13 +153,10 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
                       {(form.itemsList || []).map(item => (
                         <tr key={item.id} className="bg-white">
                           <td className="px-4 py-2.5">
-                            <select className={fieldCls} value={item.product} onChange={e => updateItem(item.id, 'product', e.target.value)}>
+                            <select className={fieldCls} value={item.productId} onChange={e => updateItem(item.id, 'productId', e.target.value)}>
                               <option value="">Select product…</option>
-                              {PRODUCTS.map(p => <option key={p}>{p}</option>)}
+                              {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
                             </select>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className="text-slate-400 text-xs">{item.sku || 'whp-001'}</span>
                           </td>
                           <td className="px-4 py-2.5">
                             <input type="number" min={0} className={fieldCls} placeholder="0"
@@ -197,9 +180,7 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
               </div>
             </div>
 
-            {/* Right Column - Arrival Info & Other Details */}
             <div className="space-y-6">
-              {/* Arrival Info */}
               <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
                   <div className="p-1.5 bg-orange-50 rounded-lg text-orange-600"><Building2 size={14} /></div>
@@ -227,7 +208,6 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
                 </div>
               </div>
 
-              {/* Remarks */}
               <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
                 <label className={labelCls}>Remarks / Observation</label>
                 <textarea rows={4} className={`${fieldCls} h-auto py-2.5 resize-none`}
@@ -237,7 +217,6 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex gap-3 px-6 py-4 border-t border-slate-100 bg-white rounded-b-2xl sticky bottom-0">
           <button onClick={onClose}
             className="flex-1 h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-slate-50 transition">
@@ -253,9 +232,6 @@ const EditReceiveModal: React.FC<EditModalProps> = ({ receive, onClose, onSave }
   );
 };
 
-/* ─────────────────────────────────────────
-   Delete Confirm Modal
-───────────────────────────────────────── */
 const DeleteModal: React.FC<{ receiveNo: string; onClose: () => void; onConfirm: () => void }> = ({ receiveNo, onClose, onConfirm }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
     onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -287,12 +263,54 @@ const DeleteModal: React.FC<{ receiveNo: string; onClose: () => void; onConfirm:
 
 export const ProductReceivePage: React.FC = () => {
   const navigate = useNavigate();
+  const currentUser = useCurrentUser();
+  const companyId = parseInt((currentUser as any)?.companyId || '1');
   const { showNotification } = useNotifications();
-  const [receives, setReceives] = useState<Receive[]>(MOCK_RECEIVES);
+
+  const [loading, setLoading] = useState(false);
+  const [receives, setReceives] = useState<Receive[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
   const [editReceive, setEditReceive] = useState<Receive | null>(null);
   const [deleteReceive, setDeleteReceive] = useState<Receive | null>(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+
+  useEffect(() => {
+    fetchReceives();
+  }, [companyId]);
+
+  const fetchReceives = async () => {
+    setLoading(true);
+    try {
+      const [recRes, prodRes, whRes] = await Promise.all([
+        inventoryApi.getReceives(companyId),
+        inventoryApi.getProducts(companyId),
+        inventoryApi.getWarehouses(companyId)
+      ]);
+
+      if (prodRes.success) setProducts(prodRes.data.items || []);
+      if (whRes.success) setWarehouses(whRes.data.items || []);
+
+      if (recRes.success) {
+        const mapped = (recRes.data.items || []).map((r: any) => ({
+          id: r.id.toString(),
+          date: r.receiveDate ? r.receiveDate.split('T')[0] : '—',
+          receiveNo: `REC-${r.id.toString().padStart(5, '0')}`,
+          source: r.receivedFrom,
+          warehouse: 'Target WH',
+          items: (r.items || []).reduce((sum: number, i: any) => sum + i.quantity, 0),
+          receivedBy: 'System',
+          status: 'Completed'
+        }));
+        setReceives(mapped);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = (updated: Receive) => setReceives(prev => prev.map(r => r.id === updated.id ? updated : r));
   const handleDelete = (id: string) => setReceives(prev => prev.filter(r => r.id !== id));
@@ -300,192 +318,60 @@ export const ProductReceivePage: React.FC = () => {
   const handleExportExcel = () => {
     try {
       const exportData = displayed.map(receive => [
-        receive.receiveNo,
-        receive.date,
-        receive.source,
-        receive.warehouse,
-        receive.items,
-        receive.status
+        receive.receiveNo, receive.date, receive.source, receive.warehouse, receive.items, receive.status
       ]);
-
       exportToExcel(
-        [
-          {
-            sheetName: 'Product Receiving',
-            headers: ['Receive No', 'Date', 'Source', 'Warehouse', 'Qty Received', 'Status'],
-            data: exportData
-          }
-        ],
-        'Product_Receiving_Mar_2026'
+        [{ sheetName: 'Product Receiving', headers: ['Receive No', 'Date', 'Source', 'Warehouse', 'Qty Received', 'Status'], data: exportData }],
+        'Product_Receiving'
       );
-
-      showNotification({
-        type: 'success',
-        title: 'Excel Downloaded',
-        message: 'Product receiving data exported successfully'
-      });
+      showNotification({ type: 'success', title: 'Excel Downloaded', message: 'Product receiving data exported successfully' });
     } catch (error) {
-      showNotification({
-        type: 'error',
-        title: 'Export Failed',
-        message: 'Failed to export Excel file'
-      });
-      console.error('Export error:', error);
+      showNotification({ type: 'error', title: 'Export Failed', message: 'Failed to export Excel file' });
     }
   };
 
   const statusOptions = useMemo(() => Array.from(new Set(receives.map(r => r.status))), [receives]);
 
   const displayed = useMemo(() => receives.filter(r =>
-    (!search || r.receiveNo.toLowerCase().includes(search.toLowerCase()) ||
-                r.source.toLowerCase().includes(search.toLowerCase())) &&
+    (!search || r.receiveNo.toLowerCase().includes(search.toLowerCase()) || r.source.toLowerCase().includes(search.toLowerCase())) &&
     (!filterStatus || r.status === filterStatus)
   ), [receives, search, filterStatus]);
 
-  const handleClearFilters = () => {
-    setSearch('');
-    setFilterStatus('');
-  };
+  const handleClearFilters = () => { setSearch(''); setFilterStatus(''); };
 
   const columns = [
-    {
-      key: 'receiveNo' as const,
-      label: 'Receive No',
-      render: (value: string) => (
-        <span className="font-semibold text-slate-800">{value}</span>
-      )
-    },
-    {
-      key: 'date' as const,
-      label: 'Date',
-      render: (value: string) => (
-        <div className="flex items-center gap-2 text-slate-600 text-sm">
-          <Calendar size={13} className="text-slate-400" />
-          {value}
-        </div>
-      )
-    },
-    {
-      key: 'source' as const,
-      label: 'Source',
-      render: (value: string) => (
-        <div className="flex items-center gap-2 text-slate-600 text-sm">
-          <Building2 size={13} className="text-slate-400" />
-          {value}
-        </div>
-      )
-    },
-    {
-      key: 'items' as const,
-      label: 'Qty Received',
-      align: 'center' as const,
-      render: (value: number) => (
-        <span className="font-medium text-slate-700">{value} units</span>
-      )
-    },
-    {
-      key: 'status' as const,
-      label: 'Status',
-      render: (value: string) => {
-        let variant: 'success' | 'warning' | 'info' | 'default' = 'default';
-        if (value === 'Completed') variant = 'success';
-        if (value === 'In Transit') variant = 'info';
-        if (value === 'Pending' || value === 'Partially Received') variant = 'warning';
-        
-        return <Badge variant={variant}>{value}</Badge>;
-      }
-    }
+    { key: 'receiveNo' as const, label: 'Receive No', render: (value: string) => <span className="font-semibold text-slate-800">{value}</span> },
+    { key: 'date' as const, label: 'Date', render: (value: string) => <div className="flex items-center gap-2 text-slate-600 text-sm"><Calendar size={13} className="text-slate-400" />{value}</div> },
+    { key: 'source' as const, label: 'Source', render: (value: string) => <div className="flex items-center gap-2 text-slate-600 text-sm"><Building2 size={13} className="text-slate-400" />{value}</div> },
+    { key: 'items' as const, label: 'Qty Received', align: 'center' as const, render: (value: number) => <span className="font-medium text-slate-700">{value} units</span> },
+    { key: 'status' as const, label: 'Status', render: (value: string) => {
+      let variant: 'success' | 'warning' | 'info' | 'default' = 'default';
+      if (value === 'Completed') variant = 'success';
+      if (value === 'In Transit') variant = 'info';
+      if (value === 'Pending' || value === 'Partially Received') variant = 'warning';
+      return <Badge variant={variant}>{value}</Badge>;
+    }}
   ];
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      {/* Page Title Section */}
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Product Receiving</h1>
-        </div>
+        <div><h1 className="text-2xl font-bold tracking-tight text-slate-900">Product Receiving</h1></div>
         <div className="flex flex-row items-center gap-2 md:gap-3">
-          <Button 
-            variant="secondary" 
-            className="rounded-xl px-4 md:px-6 h-9 md:h-10 text-[10px] md:text-xs font-bold transition-all border-slate-200"
-            leftIcon={<Download size={14} />}
-            onClick={handleExportExcel}
-          >
-            Export
-          </Button>
-          <Button 
-            variant="primary" 
-            className="bg-[#002147] hover:bg-[#003366] text-white border-none shadow-lg shadow-blue-900/10 rounded-xl px-4 md:px-8 h-10 text-[10px] md:text-xs font-bold transition-all active:scale-95"
-            leftIcon={<Plus size={16} />}
-            onClick={() => navigate('/admin/inventory/receive/create')}
-          >
-            New Receipt
-          </Button>
+          <Button variant="secondary" className="rounded-xl px-4 md:px-6 h-9 md:h-10 text-[10px] md:text-xs font-bold transition-all border-slate-200"
+            leftIcon={<Download size={14} />} onClick={handleExportExcel}>Export</Button>
+          <Button variant="primary" className="bg-[#002147] hover:bg-[#003366] text-white border-none shadow-lg shadow-blue-900/10 rounded-xl px-4 md:px-8 h-10 text-[10px] md:text-xs font-bold transition-all active:scale-95"
+            leftIcon={<Plus size={16} />} onClick={() => navigate('/admin/inventory/receive/create')}>New Receipt</Button>
         </div>
       </div>
-      {/* Search + Filters */}
-      <TableFilters
-        searchValue={search}
-        searchPlaceholder="Search..."
-        onSearchChange={setSearch}
-        filters={[
-          {
-            label: 'Filter Status',
-            value: filterStatus,
-            options: statusOptions,
-            onChange: setFilterStatus
-          }
-        ]}
-        onClearAll={handleClearFilters}
-        showClearButton={!!(search || filterStatus)}
-      />
-
-      {/* Table Section */}
-      <DataTableWrapper
-        data={displayed}
-        columns={columns}
-        actions={[
-          {
-            label: 'Edit',
-            icon: <Edit size={14} stroke="currentColor" strokeWidth={2} />,
-            onClick: (item) => setEditReceive(item),
-            variant: 'primary',
-            title: 'Edit'
-          },
-          {
-            label: 'Delete',
-            icon: <Trash2 size={14} stroke="currentColor" strokeWidth={2} />,
-            onClick: (item) => setDeleteReceive(item),
-            variant: 'danger',
-            title: 'Delete'
-          }
-        ]}
-        emptyMessage="No receipts found"
-      />
-
-      {/* Modals */}
+      <TableFilters searchValue={search} searchPlaceholder="Search..." onSearchChange={setSearch} filters={[{ label: 'Filter Status', value: filterStatus, options: statusOptions, onChange: setFilterStatus }]} onClearAll={handleClearFilters} showClearButton={!!(search || filterStatus)} />
+      <DataTableWrapper loading={loading} data={displayed} columns={columns} actions={[{ label: 'Edit', icon: <Edit size={14} />, onClick: (item) => setEditReceive(item), variant: 'primary', title: 'Edit' }, { label: 'Delete', icon: <Trash2 size={14} />, onClick: (item) => setDeleteReceive(item), variant: 'danger', title: 'Delete' }]} emptyMessage="No receipts found" />
       <AnimatePresence>
-        {editReceive && (
-          <EditReceiveModal
-            key="edit"
-            receive={editReceive}
-            onClose={() => setEditReceive(null)}
-            onSave={handleSave}
-          />
-        )}
-        {deleteReceive && (
-          <DeleteModal
-            key="delete"
-            receiveNo={deleteReceive.receiveNo}
-            onClose={() => setDeleteReceive(null)}
-            onConfirm={() => handleDelete(deleteReceive.id)}
-          />
-        )}
+        {editReceive && <EditReceiveModal key="edit" receive={editReceive} products={products} warehouses={warehouses} onClose={() => setEditReceive(null)} onSave={handleSave} />}
+        {deleteReceive && <DeleteModal key="delete" receiveNo={deleteReceive.receiveNo} onClose={() => setDeleteReceive(null)} onConfirm={() => handleDelete(deleteReceive.id)} />}
       </AnimatePresence>
     </motion.div>
   );
 };
+
+export default ProductReceivePage;

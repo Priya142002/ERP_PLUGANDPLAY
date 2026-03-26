@@ -2,6 +2,7 @@ using ERPPlugandPlay.Data;
 using ERPPlugandPlay.DTOs;
 using ERPPlugandPlay.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace ERPPlugandPlay.Services
 {
@@ -13,6 +14,7 @@ namespace ERPPlugandPlay.Services
         // Products
         Task<ApiResponse<ProductDto>> AddProductAsync(CreateProductDto dto);
         Task<ApiResponse<ProductDto>> UpdateProductAsync(int id, UpdateProductDto dto);
+        Task<ApiResponse<ProductDto>> GetProductAsync(int id);
         Task<ApiResponse<PagedResult<ProductDto>>> ListProductsAsync(int companyId, PaginationParams p);
         Task<ApiResponse<bool>> DeleteProductAsync(int id);
 
@@ -24,8 +26,27 @@ namespace ERPPlugandPlay.Services
         Task<ApiResponse<CategoryDto>> AddCategoryAsync(CreateCategoryDto dto);
         Task<ApiResponse<List<CategoryDto>>> ListCategoriesAsync(int companyId);
 
+        // Brands
+        Task<ApiResponse<List<BrandDto>>> ListBrandsAsync(int companyId);
+        Task<ApiResponse<BrandDto>> AddBrandAsync(CreateBrandDto dto);
+
+        // Units
+        Task<ApiResponse<List<UnitDto>>> ListUnitsAsync(int companyId);
+        Task<ApiResponse<UnitDto>> AddUnitAsync(CreateUnitDto dto);
+
+        // Tax Types
+        Task<ApiResponse<List<TaxTypeDto>>> ListTaxTypesAsync(int companyId);
+        Task<ApiResponse<TaxTypeDto>> AddTaxTypeAsync(CreateTaxTypeDto dto);
+
+        // Warehouses
+        Task<ApiResponse<PagedResult<WarehouseDto>>> ListWarehousesAsync(int companyId, PaginationParams p);
+        Task<ApiResponse<WarehouseDto>> AddWarehouseAsync(CreateWarehouseDto dto);
+        Task<ApiResponse<WarehouseDto>> UpdateWarehouseAsync(int id, UpdateWarehouseDto dto);
+        Task<ApiResponse<bool>> DeleteWarehouseAsync(int id);
+
         // Material Dispatch
         Task<ApiResponse<MaterialDispatchDto>> CreateDispatchAsync(CreateDispatchDto dto);
+        Task<ApiResponse<MaterialDispatchDto>> GetDispatchAsync(int id);
         Task<ApiResponse<PagedResult<MaterialDispatchDto>>> ListDispatchesAsync(int companyId, PaginationParams p);
         Task<ApiResponse<bool>> UpdateDispatchStatusAsync(int id, string status);
 
@@ -43,6 +64,25 @@ namespace ERPPlugandPlay.Services
     {
         private readonly ERPDbContext _db;
         public InventoryService(ERPDbContext db) => _db = db;
+
+        private static void DebugLog(string hypothesisId, string message, object data)
+        {
+            try
+            {
+                var line = JsonSerializer.Serialize(new
+                {
+                    sessionId = "53db90",
+                    runId = "inventory-sku-debug-1",
+                    hypothesisId,
+                    location = "InventoryService.cs:AddProductAsync",
+                    message,
+                    data,
+                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                });
+                File.AppendAllText("debug-53db90.log", line + Environment.NewLine);
+            }
+            catch { }
+        }
 
         // ── Dashboard ────────────────────────────────────────
         public async Task<ApiResponse<InventoryDashboardDto>> GetDashboardAsync(int companyId, int lowStockThreshold = 10)
@@ -115,12 +155,18 @@ namespace ERPPlugandPlay.Services
 
         public async Task<ApiResponse<ProductDto>> AddProductAsync(CreateProductDto dto)
         {
-            if (await _db.Products.AnyAsync(p => p.SKU == dto.SKU))
+            var globalSkuExists = await _db.Products.AnyAsync(p => p.SKU == dto.SKU && p.CompanyId == dto.CompanyId);
+            
+            if (globalSkuExists)
+            {
                 return ApiResponse<ProductDto>.Fail("SKU already exists.");
+            }
 
             var categoryId = await GetOrCreateCategory(dto.CompanyId, dto.Category);
             var brandId = await GetOrCreateBrand(dto.CompanyId, dto.Brand);
             var unitId = await GetOrCreateUnit(dto.CompanyId, dto.Unit);
+
+            var taxTypeId = !string.IsNullOrEmpty(dto.TaxType) ? await GetOrCreateTaxType(dto.CompanyId, dto.TaxType, dto.TaxPercentage) : (int?)null;
 
             var product = new Product
             {
@@ -130,9 +176,13 @@ namespace ERPPlugandPlay.Services
                 CategoryId = categoryId,
                 BrandId = brandId,
                 UnitId = unitId,
+                TaxTypeId = taxTypeId,
                 Price = dto.Price,
+                SellingPrice = dto.SellingPrice,
+                TaxPercentage = dto.TaxPercentage,
                 StockQty = dto.Stock,
                 Status = dto.Status,
+                ImageUrl = dto.ImageUrl,
                 AddedAt = DateTime.UtcNow
             };
 
@@ -162,10 +212,14 @@ namespace ERPPlugandPlay.Services
             product.CategoryId = await GetOrCreateCategory(product.CompanyId, dto.Category);
             product.BrandId = await GetOrCreateBrand(product.CompanyId, dto.Brand);
             product.UnitId = await GetOrCreateUnit(product.CompanyId, dto.Unit);
+            product.TaxTypeId = !string.IsNullOrEmpty(dto.TaxType) ? await GetOrCreateTaxType(product.CompanyId, dto.TaxType, dto.TaxPercentage) : null;
             product.Price = dto.Price;
+            product.SellingPrice = dto.SellingPrice;
+            product.TaxPercentage = dto.TaxPercentage;
             product.StockQty = dto.Stock;
             product.Status = dto.Status;
-
+            product.ImageUrl = dto.ImageUrl;
+            
             await _db.SaveChangesAsync();
 
             product = await _db.Products
@@ -175,10 +229,22 @@ namespace ERPPlugandPlay.Services
             return ApiResponse<ProductDto>.Ok(MapProduct(product));
         }
 
+        public async Task<ApiResponse<ProductDto>> GetProductAsync(int id)
+        {
+            var p = await _db.Products
+                .Include(x => x.Category)
+                .Include(x => x.Brand)
+                .Include(x => x.Unit)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (p == null) return ApiResponse<ProductDto>.Fail("Product not found.");
+            return ApiResponse<ProductDto>.Ok(MapProduct(p));
+        }
+
         public async Task<ApiResponse<PagedResult<ProductDto>>> ListProductsAsync(int companyId, PaginationParams p)
         {
             var query = _db.Products.Where(p => p.CompanyId == companyId)
-                .Include(pr => pr.Category).Include(pr => pr.Brand).Include(pr => pr.Unit).AsQueryable();
+                .Include(pr => pr.Category).Include(pr => pr.Brand).Include(pr => pr.Unit).Include(pr => pr.TaxType).AsQueryable();
             if (!string.IsNullOrEmpty(p.Search))
                 query = query.Where(pr => pr.Name.Contains(p.Search) || pr.SKU.Contains(p.Search));
 
@@ -258,6 +324,120 @@ namespace ERPPlugandPlay.Services
             return ApiResponse<List<CategoryDto>>.Ok(cats);
         }
 
+        // ── Brands ───────────────────────────────────────────
+        public async Task<ApiResponse<List<BrandDto>>> ListBrandsAsync(int companyId)
+        {
+            var brands = await _db.Brands.Where(b => b.CompanyId == companyId)
+                .Select(b => new BrandDto { Id = b.Id, Name = b.Name }).ToListAsync();
+            return ApiResponse<List<BrandDto>>.Ok(brands);
+        }
+
+        public async Task<ApiResponse<BrandDto>> AddBrandAsync(CreateBrandDto dto)
+        {
+            var brand = new Brand { CompanyId = dto.CompanyId, Name = dto.Name };
+            _db.Brands.Add(brand);
+            await _db.SaveChangesAsync();
+            return ApiResponse<BrandDto>.Ok(new BrandDto { Id = brand.Id, Name = brand.Name }, "Brand added.");
+        }
+
+        // ── Units ────────────────────────────────────────────
+        public async Task<ApiResponse<List<UnitDto>>> ListUnitsAsync(int companyId)
+        {
+            var units = await _db.Units.Where(u => u.CompanyId == companyId)
+                .Select(u => new UnitDto { Id = u.Id, Name = u.Name, Abbreviation = u.Abbreviation }).ToListAsync();
+            return ApiResponse<List<UnitDto>>.Ok(units);
+        }
+
+        public async Task<ApiResponse<UnitDto>> AddUnitAsync(CreateUnitDto dto)
+        {
+            var unit = new Unit { CompanyId = dto.CompanyId, Name = dto.Name, Abbreviation = dto.Abbreviation ?? dto.Name };
+            _db.Units.Add(unit);
+            await _db.SaveChangesAsync();
+            return ApiResponse<UnitDto>.Ok(new UnitDto { Id = unit.Id, Name = unit.Name, Abbreviation = unit.Abbreviation }, "Unit added.");
+        }
+
+        // ── Warehouses ─────────────────────────────────────────
+        public async Task<ApiResponse<PagedResult<WarehouseDto>>> ListWarehousesAsync(int companyId, PaginationParams p)
+        {
+            var query = _db.Warehouses.Where(w => w.CompanyId == companyId).AsQueryable();
+
+            if (!string.IsNullOrEmpty(p.Search))
+                query = query.Where(w => w.Name.Contains(p.Search) || w.Location.Contains(p.Search) || w.Status.Contains(p.Search));
+
+            var total = await query.CountAsync();
+            var items = await query
+                .Skip((p.Page - 1) * p.PageSize)
+                .Take(p.PageSize)
+                .Select(w => new WarehouseDto
+                {
+                    Id = w.Id,
+                    Name = w.Name,
+                    Location = w.Location,
+                    Status = w.Status
+                })
+                .ToListAsync();
+
+            return ApiResponse<PagedResult<WarehouseDto>>.Ok(new PagedResult<WarehouseDto>
+            {
+                Items = items,
+                TotalCount = total,
+                Page = p.Page,
+                PageSize = p.PageSize
+            });
+        }
+
+        public async Task<ApiResponse<WarehouseDto>> AddWarehouseAsync(CreateWarehouseDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                return ApiResponse<WarehouseDto>.Fail("Warehouse name is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.Location))
+                return ApiResponse<WarehouseDto>.Fail("Warehouse location is required.");
+
+            var nameLower = dto.Name.ToLower();
+            var location = dto.Location.Trim();
+            var status = string.IsNullOrWhiteSpace(dto.Status) ? "Active" : dto.Status;
+
+            if (await _db.Warehouses.AnyAsync(w => w.CompanyId == dto.CompanyId && w.Name.ToLower() == nameLower))
+                return ApiResponse<WarehouseDto>.Fail("Warehouse already exists for this company.");
+
+            var wh = new Warehouse
+            {
+                CompanyId = dto.CompanyId,
+                Name = dto.Name.Trim(),
+                Location = location,
+                Status = status
+            };
+
+            _db.Warehouses.Add(wh);
+            await _db.SaveChangesAsync();
+
+            return ApiResponse<WarehouseDto>.Ok(MapWarehouse(wh), "Warehouse added.");
+        }
+
+        public async Task<ApiResponse<WarehouseDto>> UpdateWarehouseAsync(int id, UpdateWarehouseDto dto)
+        {
+            var wh = await _db.Warehouses.FirstOrDefaultAsync(w => w.Id == id);
+            if (wh == null) return ApiResponse<WarehouseDto>.Fail("Warehouse not found.");
+
+            wh.Name = dto.Name.Trim();
+            wh.Location = dto.Location.Trim();
+            wh.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Active" : dto.Status;
+
+            await _db.SaveChangesAsync();
+            return ApiResponse<WarehouseDto>.Ok(MapWarehouse(wh));
+        }
+
+        public async Task<ApiResponse<bool>> DeleteWarehouseAsync(int id)
+        {
+            var wh = await _db.Warehouses.FirstOrDefaultAsync(w => w.Id == id);
+            if (wh == null) return ApiResponse<bool>.Fail("Warehouse not found.");
+
+            _db.Warehouses.Remove(wh);
+            await _db.SaveChangesAsync();
+            return ApiResponse<bool>.Ok(true, "Warehouse deleted.");
+        }
+
         // ── Material Dispatch ─────────────────────────────────
         public async Task<ApiResponse<MaterialDispatchDto>> CreateDispatchAsync(CreateDispatchDto dto)
         {
@@ -293,6 +473,13 @@ namespace ERPPlugandPlay.Services
             _db.MaterialDispatches.Add(dispatch);
             await _db.SaveChangesAsync();
             return ApiResponse<MaterialDispatchDto>.Ok(await GetDispatchDtoAsync(dispatch.Id), "Dispatch created.");
+        }
+
+        public async Task<ApiResponse<MaterialDispatchDto>> GetDispatchAsync(int id)
+        {
+            var dispatch = await _db.MaterialDispatches.Include(d => d.Items).ThenInclude(i => i.Product).FirstOrDefaultAsync(d => d.Id == id);
+            if (dispatch == null) return ApiResponse<MaterialDispatchDto>.Fail("Dispatch not found.");
+            return ApiResponse<MaterialDispatchDto>.Ok(MapDispatch(dispatch));
         }
 
         public async Task<ApiResponse<PagedResult<MaterialDispatchDto>>> ListDispatchesAsync(int companyId, PaginationParams p)
@@ -439,7 +626,30 @@ namespace ERPPlugandPlay.Services
             { Items = items.Select(MapReceive).ToList(), TotalCount = total, Page = p.Page, PageSize = p.PageSize });
         }
 
+        public async Task<ApiResponse<List<TaxTypeDto>>> ListTaxTypesAsync(int companyId)
+        {
+            var items = await _db.TaxTypes.Where(x => x.CompanyId == companyId).ToListAsync();
+            return ApiResponse<List<TaxTypeDto>>.Ok(items.Select(x => new TaxTypeDto { Id = x.Id, Name = x.Name, Percentage = x.Percentage }).ToList());
+        }
+
+        public async Task<ApiResponse<TaxTypeDto>> AddTaxTypeAsync(CreateTaxTypeDto dto)
+        {
+            var item = new TaxType { CompanyId = dto.CompanyId, Name = dto.Name, Percentage = dto.Percentage };
+            _db.TaxTypes.Add(item);
+            await _db.SaveChangesAsync();
+            return ApiResponse<TaxTypeDto>.Ok(new TaxTypeDto { Id = item.Id, Name = item.Name, Percentage = item.Percentage });
+        }
+
         // ── Helpers ───────────────────────────────────────────
+        private async Task<int> GetOrCreateTaxType(int companyId, string name, decimal percentage)
+        {
+            var item = await _db.TaxTypes.FirstOrDefaultAsync(x => x.CompanyId == companyId && x.Name.ToLower() == name.ToLower());
+            if (item != null) return item.Id;
+            item = new TaxType { CompanyId = companyId, Name = name, Percentage = percentage };
+            _db.TaxTypes.Add(item);
+            await _db.SaveChangesAsync();
+            return item.Id;
+        }
         private async Task<MaterialDispatchDto> GetDispatchDtoAsync(int id)
         {
             var d = await _db.MaterialDispatches.Include(x => x.Items).ThenInclude(i => i.Product).FirstAsync(x => x.Id == id);
@@ -467,9 +677,13 @@ namespace ERPPlugandPlay.Services
             Category = p.Category?.Name ?? "",
             Brand = p.Brand?.Name ?? "",
             Unit = p.Unit?.Name ?? "",
+            TaxType = p.TaxType?.Name ?? "",
             Price = p.Price,
+            SellingPrice = p.SellingPrice,
+            TaxPercentage = p.TaxPercentage,
             Stock = p.StockQty,
             Status = p.Status,
+            ImageUrl = p.ImageUrl,
             AddedAt = p.AddedAt
         };
 
@@ -522,6 +736,14 @@ namespace ERPPlugandPlay.Services
                 ReceivedQty = i.ReceivedQty,
                 UnitCost = i.UnitCost
             }).ToList()
+        };
+
+        private static WarehouseDto MapWarehouse(Warehouse w) => new()
+        {
+            Id = w.Id,
+            Name = w.Name,
+            Location = w.Location,
+            Status = w.Status
         };
     }
 }

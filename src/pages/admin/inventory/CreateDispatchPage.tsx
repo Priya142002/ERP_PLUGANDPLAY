@@ -1,370 +1,466 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, Truck, Calendar, Package, MapPin, Save,
+  ArrowLeft, Truck, Package, MapPin, Save,
   RotateCcw, Plus, Trash2, X, User, Phone, Mail, ExternalLink
 } from "lucide-react";
-import Button from "../../../components/ui/Button";
+import Textarea from "../../../components/ui/Textarea";
+import Input from "../../../components/ui/Input";
+import { useNotifications, useCurrentUser } from "../../../context/AppContext";
+import { inventoryApi, salesApi, logisticsApi } from "../../../services/api";
 
-/* ─────────────────────────────────────────
-   Types
-───────────────────────────────────────── */
-interface Customer { id: string; name: string; phone?: string; email?: string; }
-interface DispatchItem { id: string; product: string; warehouse: string; stock: string; qty: number; }
+/* ── Custom Styled Select ── */
+const CustomSelect = ({ label, value, onChange, options, required, onAdd }: any) => (
+  <div className="space-y-1.5 flex-1">
+    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label} {required && '*'}</label>
+    <div className="flex gap-2">
+      <select 
+        className="w-full h-10 px-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-300 transition appearance-none bg-white"
+        value={value} 
+        onChange={e => onChange(e.target.value)}
+      >
+        <option value="">Select {label.toLowerCase()}...</option>
+        {options.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      {onAdd && (
+        <button onClick={onAdd} className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 transition shadow-sm active:scale-90">
+          <Plus size={16} />
+        </button>
+      )}
+    </div>
+  </div>
+);
 
-const INITIAL_CUSTOMERS: Customer[] = [
-  { id: '1', name: 'Global Tech Solutions',  phone: '+1 234 567 890', email: 'billing@globaltech.com' },
-  { id: '2', name: 'Vertex Industries',       phone: '+1 345 678 901', email: 'accounts@vertex.com'    },
-  { id: '3', name: 'Apex Manufacturing',      phone: '+1 456 789 012', email: 'ap@apexmfg.com'         },
-  { id: '4', name: 'Blue Horizon Ltd',        phone: '+1 567 890 123', email: 'info@bluehorizon.com'   },
-];
-
-const PRODUCTS = ['Premium Wireless Headphones', 'Smart Fitness Tracker', '4K Ultra HD Monitor', 'Ergonomic Office Chair'];
-const WAREHOUSES = ['Main Warehouse', 'West Coast Hub', 'Central Distribution', 'South Terminal'];
-const CARRIERS   = ['FedEx', 'UPS', 'DHL', 'Express Freight', 'Self Pickup'];
-
-const fieldCls = "w-full h-10 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition bg-white";
-const labelCls = "block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5";
-
-/* ─────────────────────────────────────────
-   Add Customer Modal (mirrors AddCustomerPage)
-───────────────────────────────────────── */
-interface AddCustomerModalProps {
-  onClose: () => void;
-  onSave: (c: Customer) => void;
-}
-const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ onClose, onSave }) => {
+/* ── Traditional Add Customer Modal ── */
+const AddCustomerModal: React.FC<{ onClose: () => void; onSave: (c: any) => void; companyId: number }> = ({ onClose, onSave, companyId }) => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', phone: '', email: '', type: 'Business', code: '', contactPerson: '', city: '', country: '' });
-  const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
+  const [form, setForm] = useState({ name: '', phone: '', email: '', type: 'Business', code: '', contactPerson: '', city: '', country: '', address: 'N/A' });
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
-    if (!form.name.trim()) return;
-    onSave({ id: Date.now().toString(), name: form.name.trim(), phone: form.phone, email: form.email });
-    onClose();
+  useEffect(() => {
+    generateCode();
+  }, []);
+
+  const generateCode = async () => {
+    try {
+      const res = await salesApi.getCustomers(companyId);
+      if (res.success) {
+        const list = res.data.items || res.data || [];
+        const codes = list.map((c: any) => c.customerCode || '').filter((c: string) => c.startsWith('CUST-'));
+        let next = codes.length + 1;
+        setForm(p => ({ ...p, code: `CUST-${next.toString().padStart(3, '0')}` }));
+      }
+    } catch (e) { setForm(p => ({ ...p, code: 'CUST-001' })); }
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.phone) return;
+    setLoading(true);
+    try {
+      const res = await salesApi.createCustomer({ ...form, customerCode: form.code, companyId, isActive: true });
+      if (res.success) { onSave({ id: res.data.id.toString(), name: form.name }); onClose(); }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: -12 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: '#ffffff', opacity: 1 }}>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><User size={16} /></div>
-            <div>
-              <h3 className="font-bold text-slate-800 text-base">New Customer</h3>
-              <p className="text-[10px] text-slate-400">Fill details to register a new customer</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Open full page */}
-            <button onClick={() => { onClose(); navigate('/admin/sales/customers/add'); }}
-              title="Open full customer form"
-              className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-slate-200 text-xs font-medium text-slate-500 hover:bg-slate-50 transition">
-              <ExternalLink size={12} /> Full Form
-            </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition"><X size={18} /></button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-4">
-          {/* Basic */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Customer Type</label>
-              <select className={fieldCls} value={form.type} onChange={e => set('type', e.target.value)}>
-                <option>Business</option><option>Individual</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Customer Code</label>
-              <input className={fieldCls} placeholder="CUST-007" value={form.code} onChange={e => set('code', e.target.value)} />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>Customer Name <span className="text-rose-400">*</span></label>
-            <input className={fieldCls} placeholder="e.g. Acme Corp" value={form.name} onChange={e => set('name', e.target.value)} />
-          </div>
-
-          {/* Contact */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Contact Person</label>
-              <input className={fieldCls} placeholder="Manager Name" value={form.contactPerson} onChange={e => set('contactPerson', e.target.value)} />
-            </div>
-            <div>
-              <label className={labelCls}>Phone <span className="text-rose-400">*</span></label>
-              <div className="relative">
-                <Phone size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input className={`${fieldCls} pl-8`} placeholder="+1 234 567 890" value={form.phone} onChange={e => set('phone', e.target.value)} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden p-8 border border-slate-100">
+        <div className="flex items-center justify-between mb-8">
+           <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><User size={24} /></div>
+              <div>
+                 <h3 className="font-black text-slate-800 text-xl tracking-tight">New Customer</h3>
+                 <p className="text-xs text-slate-400 font-medium">Fill details to register a new customer</p>
               </div>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>Email <span className="text-rose-400">*</span></label>
-            <div className="relative">
-              <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input className={`${fieldCls} pl-8`} type="email" placeholder="billing@customer.com" value={form.email} onChange={e => set('email', e.target.value)} />
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>City</label>
-              <input className={fieldCls} placeholder="City" value={form.city} onChange={e => set('city', e.target.value)} />
-            </div>
-            <div>
-              <label className={labelCls}>Country</label>
-              <select className={fieldCls} value={form.country} onChange={e => set('country', e.target.value)}>
-                <option value="">Select country</option>
-                <option>United States</option><option>United Kingdom</option><option>Canada</option><option>India</option>
-              </select>
-            </div>
-          </div>
+           </div>
+           <div className="flex gap-2">
+              <button 
+                onClick={() => navigate('/admin/sales/customers/add?from=dispatch')}
+                className="flex items-center gap-2 px-4 h-9 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-bold transition"
+              >
+                 <ExternalLink size={14} /> Full Form
+              </button>
+              <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-50 text-slate-400"><X size={20} /></button>
+           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-slate-100 sticky bottom-0 bg-white">
-          <button onClick={onClose} 
-            style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
-            className="flex-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition flex items-center justify-center">
-            Cancel
-          </button>
-          <button onClick={handleSave} disabled={!form.name.trim()}
-            style={{ minHeight: '48px', height: '48px', borderRadius: '12px' }}
-            className="flex-1 bg-[#002147] text-white text-sm font-semibold hover:bg-[#003366] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
-            <Save size={14} /> Save Customer
-          </button>
+        <div className="space-y-6">
+           <div className="grid grid-cols-2 gap-6">
+              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Customer Type</label>
+              <select className="w-full h-11 px-4 text-sm border border-slate-200 rounded-xl bg-slate-50/50" value={form.type} onChange={e => setForm({...form, type: e.target.value})}><option>Business</option><option>Individual</option></select></div>
+              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Customer Code</label>
+              <input className="w-full h-11 px-4 text-sm border border-slate-200 rounded-xl bg-slate-100 text-slate-500 font-medium" value={form.code} readOnly /></div>
+           </div>
+
+           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Customer Name *</label>
+           <input className="w-full h-11 px-4 text-sm border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-300 transition" placeholder="e.g. Acme Corp" value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
+
+           <div className="grid grid-cols-2 gap-6">
+              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact Person</label>
+              <input className="w-full h-11 px-4 text-sm border border-slate-200 rounded-xl" placeholder="Manager Name" value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} /></div>
+              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Phone *</label>
+              <div className="relative"><Phone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" /><input className="w-full h-11 pl-10 pr-4 text-sm border border-slate-200 rounded-xl" placeholder="+1 234 567 890" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} /></div></div>
+           </div>
+
+           <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email *</label>
+           <div className="relative"><Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" /><input className="w-full h-11 pl-10 pr-4 text-sm border border-slate-200 rounded-xl" placeholder="billing@customer.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div></div>
+
+           <div className="grid grid-cols-2 gap-6">
+              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">City</label>
+              <input className="w-full h-11 px-4 text-sm border border-slate-200 rounded-xl" placeholder="City" value={form.city} onChange={e => setForm({...form, city: e.target.value})} /></div>
+              <div><label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Country</label>
+              <select className="w-full h-11 px-4 text-sm border border-slate-200 rounded-xl" value={form.country} onChange={e => setForm({...form, country: e.target.value})}><option value="">Select country</option><option>United States</option><option>India</option><option>United Kingdom</option></select></div>
+           </div>
+        </div>
+
+        <div className="flex gap-4 mt-10">
+           <button onClick={onClose} className="flex-1 h-12 bg-[#df2020] text-white rounded-xl font-bold flex items-center justify-center shadow-lg shadow-red-500/10 active:scale-95 transition-all text-sm uppercase tracking-wide">Cancel</button>
+           <button onClick={handleSave} disabled={loading} className="flex-1 h-12 bg-[#002147] hover:bg-slate-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all text-sm uppercase tracking-wide">
+              <Save size={18} /> {loading ? 'Saving...' : 'Save Customer'}
+           </button>
         </div>
       </motion.div>
     </div>
   );
 };
 
-/* ─────────────────────────────────────────
-   Main Page
-───────────────────────────────────────── */
+/* ── Add Carrier Modal ── */
+const AddCarrierModal: React.FC<{ onClose: () => void; onSave: (c: any) => void; companyId: number }> = ({ onClose, onSave, companyId }) => {
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const handleSave = async () => {
+    if (!name) return;
+    setLoading(true);
+    try {
+      const res = await logisticsApi.createCarrier({ name, companyId, isActive: true });
+      if (res.success) { onSave({ label: name, value: name }); onClose(); }
+    } catch (e) {} finally { setLoading(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/20">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border">
+         <div className="flex items-center justify-between mb-4 border-b pb-3">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2"><Truck size={16} /> New Carrier</h3>
+            <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-50 text-slate-400"><X size={16} /></button>
+         </div>
+         <Input label="Carrier Name" placeholder="e.g. BlueDart / DHL" value={name} onChange={e => setName(e.target.value)} required />
+         <div className="flex gap-3 mt-6">
+            <button onClick={onClose} className="flex-1 h-10 rounded-xl bg-slate-50 text-slate-600 text-xs font-bold">Cancel</button>
+            <button onClick={handleSave} disabled={loading} className="flex-1 h-10 rounded-xl bg-[#002147] text-white text-xs font-bold shadow-lg active:scale-95">{loading ? '...' : 'Add Carrier'}</button>
+         </div>
+      </motion.div>
+    </div>
+  );
+};
+
 export const CreateDispatchPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const currentUser = useCurrentUser();
+  const companyId = parseInt((currentUser as any)?.companyId || '1');
+  const { showNotification } = useNotifications();
 
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
-  const [customerId, setCustomerId] = useState('');
-  const [carrier, setCarrier] = useState('');
-  const [sourceWH, setSourceWH] = useState('');
-  const [tracking, setTracking] = useState('');
-  const [notes, setNotes] = useState('');
-  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showAddCust, setShowAddCust] = useState(false);
+  const [showAddCarrier, setShowAddCarrier] = useState(false);
+  const [carriers, setCarriers] = useState<any[]>([]);
 
-  const [items, setItems] = useState<DispatchItem[]>([
-    { id: '1', product: '', warehouse: '', stock: '—', qty: 0 }
-  ]);
+  // Form
+  const [dispatchNo, setDispatchNo] = useState("");
+  const [dispatchDate, setDispatchDate] = useState(new Date().toISOString().split('T')[0]);
+  const [customerId, setCustomerId] = useState("");
+  const [carrier, setCarrier] = useState("");
+  const [sourceWH, setSourceWH] = useState("");
+  const [tracking, setTracking] = useState("");
+  const [notes, setNotes] = useState("");
+  const [items, setItems] = useState<any[]>([{ id: '1', productId: '', qty: 0, fromWh: '' }]);
 
-  const addItem = () => setItems(p => [...p, { id: Date.now().toString(), product: '', warehouse: '', stock: '—', qty: 0 }]);
-  const removeItem = (id: string) => setItems(p => p.filter(i => i.id !== id));
-  const updateItem = (id: string, k: keyof DispatchItem, v: any) =>
-    setItems(p => p.map(i => i.id === id ? { ...i, [k]: v } : i));
+  useEffect(() => { 
+    fetchData(); 
+    if (id) fetchEditData();
+    
+    // Auto-select customer if returning from full registration
+    const lastId = localStorage.getItem('lastCreatedCustomerId');
+    if (lastId) {
+      setCustomerId(lastId);
+      localStorage.removeItem('lastCreatedCustomerId');
+    }
+  }, [companyId, id]);
 
-  const selectedCustomer = customers.find(c => c.id === customerId);
+  const fetchEditData = async () => {
+    try {
+      const res = await inventoryApi.getDispatch(id!);
+      if (res.success) {
+        const d = res.data;
+        setDispatchNo(d.dispatchNumber);
+        setDispatchDate(d.dispatchDate?.split('T')[0]);
+        setNotes(d.notes || '');
+        const carrierFromNotes = d.notes?.split('Carrier: ')[1]?.trim() || '';
+        setCarrier(carrierFromNotes);
+        setTracking(d.trackingNumber || '');
+        setItems((d.items || []).map((i: any) => ({
+          id: i.productId.toString(),
+          productId: i.productId.toString(),
+          qty: i.quantity,
+          fromWh: ''
+        })));
+        // Match customer by name in the loaded customers list
+        setCustomers(prev => {
+          const match = prev.find((c: any) => c.name === d.dispatchedTo);
+          if (match) setCustomerId(match.id.toString());
+          return prev;
+        });
+        // Store dispatchedTo for fallback
+        sessionStorage.setItem('_editDispatchedTo', d.dispatchedTo || '');
+      }
+    } catch (e) {}
+  };
 
-  const handleAddCustomer = (c: Customer) => {
-    setCustomers(p => [...p, c]);
-    setCustomerId(c.id);
+  const fetchData = async () => {
+    try {
+      const [p, w, c, d, l] = await Promise.all([
+        inventoryApi.getProducts(companyId),
+        inventoryApi.getWarehouses(companyId),
+        salesApi.getCustomers(companyId),
+        inventoryApi.getDispatches(companyId),
+        logisticsApi.getCarriers(companyId)
+      ]);
+      if (p.success) setProducts(p.data.items || []);
+      if (w.success) setWarehouses(w.data.items || []);
+      if (c.success) {
+        const custList = c.data.items || c.data || [];
+        setCustomers(custList);
+        // If in edit mode, match customer by saved dispatchedTo name
+        if (id) {
+          const savedTo = sessionStorage.getItem('_editDispatchedTo');
+          if (savedTo) {
+            const match = custList.find((cu: any) => cu.name === savedTo);
+            if (match) setCustomerId(match.id.toString());
+          }
+        }
+      }
+      if (l.success) setCarriers(l.data.items || l.data || []);
+      
+      if (!id && d.success) {
+        const list = d.data.items || d.data || [];
+        setDispatchNo(`DISP-${10000 + list.length + 1}`);
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleConfirm = async () => {
+    if (!customerId || items.length === 0) return showNotification({ type: 'error', title: 'Error', message: 'Fill all fields.' });
+    setLoading(true);
+    try {
+      const payload = {
+        companyId,
+        dispatchedTo: customers.find(c => c.id.toString() === customerId)?.name || sessionStorage.getItem('_editDispatchedTo') || 'Unknown',
+        dispatchDate: new Date(dispatchDate).toISOString(),
+        notes: `${notes} | Carrier: ${carrier}`,
+        items: items.filter(i => i.productId).map(i => ({ productId: parseInt(i.productId), quantity: i.qty }))
+      };
+      if (id) {
+        // Edit mode: create a new dispatch to replace (or just update status for now)
+        const r = await inventoryApi.updateDispatchStatus(parseInt(id), 'Dispatched');
+        if (r.success) {
+          showNotification({ type: 'success', title: 'Updated', message: 'Dispatch updated successfully.' });
+          sessionStorage.removeItem('_editDispatchedTo');
+          navigate('/admin/inventory/dispatch');
+        }
+      } else {
+        const r = await inventoryApi.createDispatch(payload);
+        if (r.success) navigate('/admin/inventory/dispatch');
+      }
+    } catch (e) {} finally { setLoading(false); }
   };
 
   return (
-    <>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-6xl mx-auto p-4 lg:p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate('/admin/inventory/dispatch')} className="p-2 border rounded-xl hover:bg-white shadow-sm transition active:scale-95"><ArrowLeft size={18} /></button>
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight">{id ? 'Edit' : 'Create'} Material Dispatch</h1>
+      </div>
 
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/admin/inventory/dispatch')}
-            className="p-2.5 bg-white hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 transition-all border border-slate-200 shadow-sm">
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Create Material Dispatch</h1>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column (8 units) */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* Shipment Details Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-6">
+             <div className="flex items-center gap-2 pb-4 border-b">
+                <div className="p-2 bg-orange-500 rounded-lg text-white"><Truck size={16} /></div>
+                <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Shipment Details</h2>
+             </div>
+             
+             <div className="grid grid-cols-2 gap-6">
+                <Input label="Dispatch No" value={dispatchNo} readOnly />
+                <Input label="Dispatch Date" type="date" value={dispatchDate} onChange={e => setDispatchDate(e.target.value)} />
+             </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* ── Left: Main Details ── */}
-          <div className="md:col-span-2 space-y-6">
+             <div className="grid grid-cols-2 gap-6">
+                <CustomSelect 
+                  label="Customer" 
+                  value={customerId} 
+                  onChange={setCustomerId} 
+                  options={customers.map(c => ({ label: c.name, value: c.id.toString() }))} 
+                  required 
+                  onAdd={() => setShowAddCust(true)}
+                />
+                <CustomSelect 
+                  label="Carrier / Shipping Method" 
+                  value={carrier} 
+                  onChange={setCarrier} 
+                  options={carriers.map(cr => ({ label: cr.name, value: cr.name }))}
+                  onAdd={() => setShowAddCarrier(true)}
+                />
+             </div>
+          </div>
 
-            {/* Shipment Details */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-              <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                <div className="p-1.5 bg-orange-50 rounded-lg text-orange-600"><Truck size={16} /></div>
-                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Shipment Details</h3>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Dispatch No</label>
-                  <input className={fieldCls} defaultValue="DISP-10025" />
+          {/* Dispatch Items Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+             <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                   <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Package size={16} /></div>
+                   <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Dispatch Items</h2>
                 </div>
-                <div>
-                  <label className={labelCls}>Dispatch Date</label>
-                  <div className="relative">
-                    <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="date" className={`${fieldCls} pl-8`} defaultValue={new Date().toISOString().split('T')[0]} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Customer with + button */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Customer <span className="text-rose-400">*</span></label>
-                  <div className="flex gap-2">
-                    <select className={`${fieldCls} flex-1`} value={customerId} onChange={e => setCustomerId(e.target.value)}>
-                      <option value="">Select customer…</option>
-                      {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                    <button type="button" onClick={() => setShowAddCustomer(true)} title="Add new customer"
-                      className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 transition">
-                      <Plus size={15} />
-                    </button>
-                  </div>
-                  {/* Selected customer info */}
-                  {selectedCustomer && (
-                    <div className="mt-2 px-3 py-2 bg-indigo-50 rounded-lg border border-indigo-100 flex items-center gap-3">
-                      <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 flex-shrink-0">
-                        <User size={13} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-indigo-800 truncate">{selectedCustomer.name}</p>
-                        {selectedCustomer.phone && <p className="text-[10px] text-indigo-500">{selectedCustomer.phone}</p>}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className={labelCls}>Carrier / Shipping Method</label>
-                  <select className={fieldCls} value={carrier} onChange={e => setCarrier(e.target.value)}>
-                    <option value="">Select carrier…</option>
-                    {CARRIERS.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Dispatch Items */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-blue-50 rounded-lg text-blue-600"><Package size={16} /></div>
-                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Dispatch Items</h3>
-                </div>
-                <button onClick={addItem}
-                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 transition">
-                  <Plus size={13} /> Add Item
+                <button 
+                  onClick={() => setItems([...items, { id: Date.now().toString(), productId: '', qty: 0, fromWh: '' }])}
+                  className="px-4 h-9 flex items-center gap-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition"
+                >
+                  <Plus size={14} /> Add Item
                 </button>
-              </div>
-
-              <div className="overflow-x-auto">
+             </div>
+             
+             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-                      <th className="px-5 py-3">Product</th>
-                      <th className="px-5 py-3">Warehouse</th>
-                      <th className="px-5 py-3 text-center">Stock</th>
-                      <th className="px-5 py-3 w-28">Qty to Ship</th>
-                      <th className="px-5 py-3 text-center w-14"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {items.map(item => (
-                      <tr key={item.id} className="group">
-                        <td className="px-5 py-3">
-                          <select className={fieldCls} value={item.product} onChange={e => updateItem(item.id, 'product', e.target.value)}>
-                            <option value="">Select product…</option>
-                            {PRODUCTS.map(p => <option key={p}>{p}</option>)}
-                          </select>
-                        </td>
-                        <td className="px-5 py-3">
-                          <select className={fieldCls} value={item.warehouse} onChange={e => updateItem(item.id, 'warehouse', e.target.value)}>
-                            <option value="">Select warehouse…</option>
-                            {WAREHOUSES.map(w => <option key={w}>{w}</option>)}
-                          </select>
-                        </td>
-                        <td className="px-5 py-3 text-center">
-                          <span className="text-sm font-medium text-slate-500">{item.stock}</span>
-                        </td>
-                        <td className="px-5 py-3">
-                          <input type="number" min={0} className={fieldCls} placeholder="0"
-                            value={item.qty || ''} onChange={e => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)} />
-                        </td>
-                        <td className="px-5 py-3 text-center">
-                          <button onClick={() => removeItem(item.id)} disabled={items.length === 1}
-                            className="text-slate-300 hover:text-rose-500 disabled:opacity-30 transition">
-                            <Trash2 size={16} />
-                          </button>
-                        </td>
+                   <thead>
+                      <tr className="bg-[#002147] text-white text-[10px] font-black uppercase tracking-widest">
+                         <th className="px-6 py-4">Product</th>
+                         <th className="px-4 py-4 w-40">Warehouse</th>
+                         <th className="px-4 py-4 w-24 text-center">Stock</th>
+                         <th className="px-4 py-4 w-32">Qty to Ship</th>
+                         <th className="px-6 py-4 w-16"></th>
                       </tr>
-                    ))}
-                  </tbody>
+                   </thead>
+                   <tbody className="divide-y divide-slate-100">
+                      {items.map((it, idx) => {
+                         const p = products.find(x => x.id.toString() === it.productId);
+                         return (
+                            <tr key={it.id} className="hover:bg-slate-50/50 transition">
+                               <td className="px-6 py-4">
+                                  <select 
+                                    className="w-full h-10 border rounded-lg text-sm px-2 focus:ring-2 focus:ring-indigo-200"
+                                    value={it.productId}
+                                    onChange={e => {
+                                      const n = [...items]; n[idx].productId = e.target.value; setItems(n);
+                                    }}
+                                  >
+                                     <option value="">Select product...</option>
+                                     {products.map(px => <option key={px.id} value={px.id}>{px.name}</option>)}
+                                  </select>
+                               </td>
+                               <td className="px-4 py-4">
+                                  <select 
+                                    className="w-full h-10 border rounded-lg text-sm px-2"
+                                    value={it.fromWh}
+                                    onChange={e => {
+                                      const n = [...items]; n[idx].fromWh = e.target.value; setItems(n);
+                                    }}
+                                  >
+                                     <option value="">Select warehouse...</option>
+                                     {warehouses.map(w => <option key={w.id} value={w.name}>{w.name}</option>)}
+                                  </select>
+                               </td>
+                               <td className="px-4 py-4 text-center text-sm font-medium text-slate-500">
+                                  {p ? p.stockQty : '-'}
+                               </td>
+                               <td className="px-4 py-4">
+                                  <input 
+                                    type="number" 
+                                    className="w-full h-10 border border-slate-200 rounded-lg px-3 text-sm focus:ring-2"
+                                    value={it.qty}
+                                    onChange={e => {
+                                      const n = [...items]; n[idx].qty = parseInt(e.target.value) || 0; setItems(n);
+                                    }}
+                                  />
+                               </td>
+                               <td className="px-6 py-4 text-right">
+                                  <button 
+                                    onClick={() => setItems(items.filter(i => i.id !== it.id))}
+                                    className="text-slate-200 hover:text-rose-500 transition"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                               </td>
+                            </tr>
+                         );
+                      })}
+                   </tbody>
                 </table>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Sidebar ── */}
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-              <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600"><MapPin size={16} /></div>
-                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Logistics</h3>
-              </div>
-              <div>
-                <label className={labelCls}>Source Warehouse <span className="text-rose-400">*</span></label>
-                <select className={fieldCls} value={sourceWH} onChange={e => setSourceWH(e.target.value)}>
-                  <option value="">Select source…</option>
-                  {WAREHOUSES.map(w => <option key={w}>{w}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Tracking Number</label>
-                <input className={fieldCls} placeholder="Enter tracking ID" value={tracking} onChange={e => setTracking(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <label className={labelCls}>Special Instructions</label>
-              <textarea rows={4} className={`${fieldCls} h-auto py-2.5 resize-none`}
-                placeholder="Add any shipping notes…" value={notes} onChange={e => setNotes(e.target.value)} />
-            </div>
-
-            <div className="space-y-3">
-              <Button variant="primary" fullWidth leftIcon={<Save size={16} />}
-                className="py-4 bg-[#002147] hover:bg-[#003366] border-none shadow-lg rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
-                Confirm Dispatch
-              </Button>
-              <Button variant="secondary" fullWidth leftIcon={<RotateCcw size={16} />}
-                className="py-4 rounded-xl font-bold text-xs uppercase tracking-widest border-slate-200 text-slate-500 hover:bg-slate-50 transition-all">
-                Reset Form
-              </Button>
-            </div>
+             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* Add Customer Modal */}
-      <AnimatePresence>
-        {showAddCustomer && (
-          <AddCustomerModal key="add-customer"
-            onClose={() => setShowAddCustomer(false)}
-            onSave={handleAddCustomer} />
-        )}
-      </AnimatePresence>
-    </>
+        {/* Right Column (4 units) */}
+        <div className="lg:col-span-4 space-y-6">
+           
+           {/* Logistics Card */}
+           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-6">
+              <div className="flex items-center gap-2 pb-4 border-b">
+                 <div className="p-2 bg-blue-500 rounded-lg text-white font-bold"><MapPin size={16} /></div>
+                 <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Logistics</h2>
+              </div>
+              
+              <CustomSelect 
+                label="Source Warehouse *" 
+                value={sourceWH} 
+                onChange={setSourceWH} 
+                options={warehouses.map(w => ({ label: w.name, value: w.name }))} 
+              />
+              
+              <Input label="Tracking Number" placeholder="Enter tracking ID" value={tracking} onChange={e => setTracking(e.target.value)} />
+           </div>
+
+           {/* Special Instructions Card */}
+           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+              <div className="flex items-center gap-2 pb-4 border-b mb-4">
+                 <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Special Instructions</h2>
+              </div>
+              <Textarea placeholder="Add any shipping notes..." value={notes} onChange={e => setNotes(e.target.value)} rows={4} />
+           </div>
+
+           {/* Buttons */}
+           <div className="space-y-3 pt-4">
+              <button 
+                onClick={handleConfirm}
+                disabled={loading}
+                className="w-full h-12 bg-[#002147] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/10 hover:shadow-xl transition active:scale-95 disabled:opacity-50"
+              >
+                <Save size={18} /> {loading ? 'Processing...' : id ? 'UPDATE DISPATCH' : 'CONFIRM DISPATCH'}
+              </button>
+              <button 
+                onClick={() => navigate('/admin/inventory/dispatch')}
+                className="w-full h-12 bg-[#002147] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:bg-[#001a38] transition active:scale-95"
+              >
+                <RotateCcw size={18} /> RESET FORM
+              </button>
+           </div>
+        </div>
+      </div>
+
+      {showAddCust && <AddCustomerModal companyId={companyId} onClose={() => setShowAddCust(false)} onSave={(c) => {
+         setCustomers([...customers, c]); setCustomerId(c.id);
+      }} />}
+
+      {showAddCarrier && <AddCarrierModal companyId={companyId} onClose={() => setShowAddCarrier(false)} onSave={(cr) => {
+         setCarriers([...carriers, { name: cr.label }]); setCarrier(cr.value);
+      }} />}
+    </div>
   );
 };
 

@@ -235,8 +235,10 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route path="dashboard" element={<InventoryDashboard />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/add" element={<AddProductPage />} />
+          <Route path="products/edit/:id" element={<AddProductPage />} />
           <Route path="dispatch" element={<MaterialDispatchPage />} />
           <Route path="dispatch/create" element={<CreateDispatchPage />} />
+          <Route path="dispatch/edit/:id" element={<CreateDispatchPage />} />
           <Route path="transfer" element={<StockTransferPage />} />
           <Route path="transfer/create" element={<CreateTransferPage />} />
           <Route path="receive" element={<ProductReceivePage />} />

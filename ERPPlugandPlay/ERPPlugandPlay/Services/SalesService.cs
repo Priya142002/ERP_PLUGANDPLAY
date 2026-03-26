@@ -54,7 +54,10 @@ namespace ERPPlugandPlay.Services
             {
                 CompanyId = dto.CompanyId, Name = dto.Name, Email = dto.Email,
                 Phone = dto.Phone, Address = dto.Address, GSTNumber = dto.GSTNumber,
-                ContactPerson = dto.ContactPerson, CreditLimit = dto.CreditLimit
+                ContactPerson = dto.ContactPerson, CreditLimit = dto.CreditLimit,
+                CustomerCode = dto.CustomerCode, CustomerType = dto.CustomerType,
+                Country = dto.Country, CreditTerms = dto.CreditTerms,
+                Currency = dto.Currency, PriceList = dto.PriceList, Website = dto.Website
             };
             _db.Customers.Add(customer);
             await _db.SaveChangesAsync();
@@ -82,6 +85,9 @@ namespace ERPPlugandPlay.Services
             customer.Name = dto.Name; customer.Email = dto.Email; customer.Phone = dto.Phone;
             customer.Address = dto.Address; customer.GSTNumber = dto.GSTNumber;
             customer.ContactPerson = dto.ContactPerson; customer.CreditLimit = dto.CreditLimit;
+            customer.CustomerCode = dto.CustomerCode; customer.CustomerType = dto.CustomerType;
+            customer.Country = dto.Country; customer.CreditTerms = dto.CreditTerms;
+            customer.Currency = dto.Currency; customer.PriceList = dto.PriceList; customer.Website = dto.Website;
             await _db.SaveChangesAsync();
             return ApiResponse<CustomerDto>.Ok(MapCustomer(customer));
         }
@@ -452,7 +458,10 @@ namespace ERPPlugandPlay.Services
             Id = c.Id, CompanyId = c.CompanyId, Name = c.Name, Email = c.Email,
             Phone = c.Phone, Address = c.Address, GSTNumber = c.GSTNumber,
             ContactPerson = c.ContactPerson, CreditLimit = c.CreditLimit,
-            IsActive = c.IsActive, CreatedAt = c.CreatedAt
+            IsActive = c.IsActive, CreatedAt = c.CreatedAt,
+            CustomerCode = c.CustomerCode, CustomerType = c.CustomerType,
+            Country = c.Country, CreditTerms = c.CreditTerms,
+            Currency = c.Currency, PriceList = c.PriceList, Website = c.Website
         };
 
         private static QuotationDto MapQuotation(Quotation q) => new()
