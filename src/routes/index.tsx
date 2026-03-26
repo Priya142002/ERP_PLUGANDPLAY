@@ -103,9 +103,7 @@ import {
   HRDashboard,
   ProjectDashboard,
   ProjectListPage,
-  TasksPage,
-  TimesheetPage,
-  ClientSyncPage,
+  CreateProjectPage,
   TicketsPage,
   SLAPage,
   HelpdeskDashboard,
@@ -138,6 +136,8 @@ import {
   InventorySync,
   InvoiceReceipt,
 } from '../pages/admin';
+import TaskBoardPage from '../pages/admin/projects/TaskBoardPage';
+import ProjectDashboardPage from '../pages/admin/projects/ProjectDashboardPage';
 
 interface AppRoutesProps {
   user: User | null;
@@ -345,10 +345,10 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
         <Route path="projects">
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<ProjectDashboard />} />
+          <Route path="overview" element={<ProjectDashboardPage />} />
           <Route path="list" element={<ProjectListPage />} />
-          <Route path="tasks" element={<TasksPage />} />
-          <Route path="timesheets" element={<TimesheetPage />} />
-          <Route path="client-sync" element={<ClientSyncPage />} />
+          <Route path="create" element={<CreateProjectPage />} />
+          <Route path="tasks" element={<TaskBoardPage />} />
         </Route>
 
         {/* Helpdesk */}

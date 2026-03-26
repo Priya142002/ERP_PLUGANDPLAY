@@ -157,8 +157,6 @@ export const adminNavigation: NavigationItem[] = [
       { id: 'prj-dash', label: 'Project Dynamics', path: '/admin/projects/dashboard', roles: ['admin'], icon: 'dashboard' },
       { id: 'prj-list', label: 'Projects & Status', path: '/admin/projects/list', roles: ['admin'], icon: 'list' },
       { id: 'prj-tasks', label: 'Task Board', path: '/admin/projects/tasks', roles: ['admin'], icon: 'check-circle' },
-      { id: 'prj-time', label: 'Timesheets & Expenses', path: '/admin/projects/timesheets', roles: ['admin'], icon: 'clock' },
-      { id: 'prj-client', label: 'Client Sync (Updates)', path: '/admin/projects/client-sync', roles: ['admin'], icon: 'chat-alt-2' },
     ]
   },
   {

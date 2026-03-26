@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Badge from '../../../components/ui/Badge';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   Plus, 
@@ -19,9 +20,12 @@ import {
   X,
   TrendingUp,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import Button from '../../../components/ui/Button';
+import { generatePDFReport, ReportData } from '../../../utils/reportGenerator';
 
 // Mobile responsive styles
 const mobileStyles = `
@@ -190,138 +194,611 @@ const ProjectHealthReportModal: React.FC<{ onClose: () => void }> = ({ onClose }
 
 // --- Project Dynamics (Dashboard) ---
 export const ProjectDashboard: React.FC = () => {
-  const [showReport, setShowReport] = useState(false);
-  const [reportBtnHover, setReportBtnHover] = useState(false);
+  const navigate = useNavigate();
+  const [selectedPeriod, setSelectedPeriod] = useState('Q1 2026');
 
-  const stats = [
-    { label: 'Active Projects', value: '24', icon: Briefcase, color: 'bg-blue-600', trend: '8 On Track' },
-    { label: 'Total Tasks', value: '184', icon: CheckCircle, color: 'bg-indigo-600', trend: '+12 Weekly' },
-    { label: 'Resource Util.', value: '88%', icon: Users, color: 'bg-emerald-600', trend: 'Optimal' },
-    { label: 'Project Budget', value: '₹2,40,000', icon: DollarSign, color: 'bg-amber-500', trend: '72% Used' },
+  const handleGenerateReport = () => {
+    // Prepare report data structure
+    const reportData: ReportData = {
+      metadata: {
+        companyName: 'Your Company',
+        reportTitle: 'Project Dashboard Report',
+        reportType: 'general',
+        generatedBy: 'Admin',
+        dateRange: 'Q1 2026'
+      },
+      sections: [
+        // Summary Metrics Section
+        {
+          title: 'Summary Metrics',
+          type: 'stats',
+          data: [
+            { title: 'Total Projects', value: '48', trend: '+12%' },
+            { title: 'Active Projects', value: '24', trend: '+8 Weekly' },
+            { title: 'Completed Projects', value: '18', trend: '+3 This Month' },
+            { title: 'Total Tasks', value: '184', trend: '+32 Weekly' },
+            { title: 'Project Budget', value: '₹2,40,000', trend: '72% Used' },
+            { title: 'Resource Utilization', value: '88%', trend: 'Optimal' }
+          ]
+        },
+        // Project Status Breakdown Section
+        {
+          title: 'Project Status Breakdown',
+          type: 'table',
+          data: {
+            headers: ['Status', 'Count', 'Percentage'],
+            rows: [
+              ['Ongoing', '24', '50%'],
+              ['Completed', '18', '37.5%'],
+              ['Delayed', '6', '12.5%']
+            ]
+          }
+        },
+        // Task Summary Section
+        {
+          title: 'Task Summary',
+          type: 'table',
+          data: {
+            headers: ['Status', 'Count', 'Percentage'],
+            rows: [
+              ['Pending', '68', '37%'],
+              ['Completed', '98', '53%'],
+              ['Overdue', '18', '10%']
+            ]
+          }
+        },
+        // Financial Overview Section
+        {
+          title: 'Financial Overview',
+          type: 'table',
+          data: {
+            headers: ['Metric', 'Amount'],
+            rows: [
+              ['Total Budget', '₹240,000'],
+              ['Expenses', '₹172,800'],
+              ['Remaining', '₹67,200'],
+              ['Budget Used', '72%']
+            ]
+          }
+        },
+        // High Priority Projects Section
+        {
+          title: 'High Priority Projects',
+          type: 'table',
+          data: {
+            headers: ['Project', 'Progress', 'Status', 'Lead', 'Deadline', 'Budget', 'Tasks'],
+            rows: [
+              ['Infrastructure Modernization', '75%', 'On Track', 'Jordan T.', 'Mar 30, 2026', '₹80,000', '45/60'],
+              ['Core ERP Migration', '42%', 'In Review', 'Alex M.', 'Apr 15, 2026', '₹70,000', '21/50'],
+              ['Supply Chain Sync', '90%', 'Finishing', 'Sara K.', 'Mar 25, 2026', '₹60,000', '54/60']
+            ]
+          }
+        },
+        // Upcoming Deadlines Section
+        {
+          title: 'Upcoming Deadlines',
+          type: 'table',
+          data: {
+            headers: ['Project', 'Deadline', 'Days Left'],
+            rows: [
+              ['Supply Chain Sync', 'Mar 25, 2026', '2 days'],
+              ['Infrastructure Modernization', 'Mar 30, 2026', '7 days'],
+              ['Mobile App Development', 'Apr 10, 2026', '18 days'],
+              ['Core ERP Migration', 'Apr 15, 2026', '23 days']
+            ]
+          }
+        }
+      ]
+    };
+
+    // Generate PDF using the utility
+    generatePDFReport(reportData);
+  };
+
+  // Summary Cards Data
+  const summaryCards = [
+    {
+      title: 'Total Projects',
+      value: '48',
+      change: '+12%',
+      trend: 'up',
+      icon: Briefcase,
+      color: '#3b82f6',
+      bgColor: '#eff6ff'
+    },
+    {
+      title: 'Active Projects',
+      value: '24',
+      change: '+8 Weekly',
+      trend: 'up',
+      icon: CheckCircle,
+      color: '#10b981',
+      bgColor: '#d1fae5'
+    },
+    {
+      title: 'Completed Projects',
+      value: '18',
+      change: '+3 This Month',
+      trend: 'up',
+      icon: CheckCircle2,
+      color: '#8b5cf6',
+      bgColor: '#ede9fe'
+    },
+    {
+      title: 'Total Tasks',
+      value: '184',
+      change: '+32 Weekly',
+      trend: 'up',
+      icon: Clock,
+      color: '#f59e0b',
+      bgColor: '#fef3c7'
+    },
+    {
+      title: 'Project Budget',
+      value: '₹2,40,000',
+      change: '72% Used',
+      trend: 'neutral',
+      icon: DollarSign,
+      color: '#06b6d4',
+      bgColor: '#cffafe'
+    },
+    {
+      title: 'Resource Utilization',
+      value: '88%',
+      change: 'Optimal',
+      trend: 'up',
+      icon: Users,
+      color: '#ec4899',
+      bgColor: '#fce7f3'
+    }
+  ];
+
+  // Project Status Breakdown
+  const projectStatus = [
+    { label: 'Ongoing', count: 24, percentage: 50, color: '#3b82f6' },
+    { label: 'Completed', count: 18, percentage: 37.5, color: '#10b981' },
+    { label: 'Delayed', count: 6, percentage: 12.5, color: '#ef4444' }
+  ];
+
+  // Task Summary
+  const taskSummary = [
+    { label: 'Pending', count: 68, percentage: 37, color: '#f59e0b' },
+    { label: 'Completed', count: 98, percentage: 53, color: '#10b981' },
+    { label: 'Overdue', count: 18, percentage: 10, color: '#ef4444' }
+  ];
+
+  // Financial Overview
+  const financialData = {
+    totalBudget: 240000,
+    totalExpenses: 172800,
+    remaining: 67200,
+    percentageUsed: 72
+  };
+
+  // High Priority Projects
+  const highPriorityProjects = [
+    {
+      id: 1,
+      name: 'Infrastructure Modernization',
+      status: 'On Track',
+      progress: 75,
+      lead: 'Jordan T.',
+      deadline: 'Mar 30, 2026',
+      budget: '₹80,000',
+      tasks: { completed: 45, total: 60 }
+    },
+    {
+      id: 2,
+      name: 'Core ERP Migration',
+      status: 'In Review',
+      progress: 42,
+      lead: 'Alex M.',
+      deadline: 'Apr 15, 2026',
+      budget: '₹70,000',
+      tasks: { completed: 21, total: 50 }
+    },
+    {
+      id: 3,
+      name: 'Supply Chain Sync',
+      status: 'Finishing',
+      progress: 90,
+      lead: 'Sara K.',
+      deadline: 'Mar 25, 2026',
+      budget: '₹60,000',
+      tasks: { completed: 54, total: 60 }
+    }
+  ];
+
+  // Upcoming Deadlines
+  const upcomingDeadlines = [
+    { project: 'Supply Chain Sync', date: 'Mar 25, 2026', daysLeft: 2, priority: 'high' },
+    { project: 'Infrastructure Modernization', date: 'Mar 30, 2026', daysLeft: 7, priority: 'medium' },
+    { project: 'Mobile App Development', date: 'Apr 10, 2026', daysLeft: 18, priority: 'medium' },
+    { project: 'Core ERP Migration', date: 'Apr 15, 2026', daysLeft: 23, priority: 'low' }
+  ];
+
+  // Recent Activities
+  const recentActivities = [
+    { action: 'Project Created', project: 'Cloud Migration', user: 'John D.', time: '2 hours ago', type: 'create' },
+    { action: 'Task Completed', project: 'Infrastructure Modernization', user: 'Jordan T.', time: '4 hours ago', type: 'complete' },
+    { action: 'Budget Updated', project: 'Core ERP Migration', user: 'Alex M.', time: '6 hours ago', type: 'update' },
+    { action: 'Milestone Reached', project: 'Supply Chain Sync', user: 'Sara K.', time: '1 day ago', type: 'milestone' }
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Project Dynamics</h1>
-          <p className="text-slate-500 text-sm mt-1 font-medium">Strategic project management and resource tracking</p>
+          <h1 className="text-2xl font-bold text-slate-900">Project Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1">Strategic project management and resource tracking</p>
         </div>
-        <div className="flex flex-row items-center gap-3">
-          <div className="flex items-center gap-2.5 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm font-bold text-xs text-slate-600">
-            <Calendar size={14} className="text-blue-600" />
-            <span>Cycle: Q1 2026</span>
-          </div>
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowReport(true)}
-            onMouseEnter={() => setReportBtnHover(true)}
-            onMouseLeave={() => setReportBtnHover(false)}
-            className="flex items-center gap-2 px-6 h-10 text-xs font-bold rounded-xl shadow-lg transition"
-            style={{ backgroundColor: reportBtnHover ? '#e2e8f0' : '#1a2744', color: reportBtnHover ? '#000000' : '#ffffff' }}
+            onClick={handleGenerateReport}
+            className="flex items-center gap-2 px-6 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold transition"
           >
-            <BarChart3 size={14} />
-            Project Health Report
+            <FileText size={16} />
+            Generate Report
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 project-stats-grid">
-        {stats.map((stat, i) => (
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {summaryCards.map((card, index) => (
           <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
-            className="p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden bg-white"
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all"
           >
-            <div className={`absolute top-0 left-0 right-0 h-1.5 ${stat.color} opacity-100`} />
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-10 h-10 ${stat.color}/10 flex items-center justify-center ${stat.color.replace('bg-', 'text-')} rounded-xl shadow-sm border border-current/10 group-hover:scale-110 transition-transform`}>
-                <stat.icon size={20} />
+            <div className="flex items-start justify-between mb-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: card.bgColor }}
+              >
+                <card.icon size={20} style={{ color: card.color }} />
               </div>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase bg-white/80 backdrop-blur-sm shadow-sm text-emerald-600 border border-slate-100 transition-colors`}>
-                {stat.trend}
-              </span>
             </div>
             <div>
-              <h3 className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-1 group-hover:text-slate-700 transition-colors">{stat.label}</h3>
-              <p className="text-2xl font-bold text-slate-900 tracking-tight group-hover:text-[#002147] transition-colors">{stat.value}</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                {card.title}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 mb-1">{card.value}</p>
+              <p className="text-xs text-slate-500 font-medium">{card.change}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm group relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-[2rem]" style={{ backgroundColor: '#1a2744' }} />
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full translate-x-10 -translate-y-10 group-hover:scale-150 transition-transform duration-700" />
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8 relative z-10">High Priority Initiatives</h3>
-          <div className="space-y-8 relative z-10">
-            {[
-              { name: 'Infrastructure Modernization', progress: 75, color: 'bg-blue-600', status: 'On Track' },
-              { name: 'Core ERP Migration', progress: 42, color: 'bg-indigo-600', status: 'In Review' },
-              { name: 'Supply Chain Sync', progress: 90, color: 'bg-emerald-600', status: 'Finishing' },
-            ].map((prj, i) => (
-              <div key={i} className="space-y-3 cursor-pointer group/prj">
-                <div className="flex justify-between items-center px-1">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 group-hover/prj:text-blue-600 transition-colors">{prj.name}</h4>
-                    <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold italic">{prj.status}</p>
+        {/* Left Column - 2/3 width */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Project Status Breakdown */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Project Status Breakdown</h3>
+              <BarChart3 size={20} className="text-slate-400" />
+            </div>
+            <div className="space-y-4">
+              {projectStatus.map((status, index) => (
+                <div key={index}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: status.color }}
+                      />
+                      <span className="text-sm font-medium text-slate-700">{status.label}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-slate-900">{status.count}</span>
+                      <span className="text-xs text-slate-500">{status.percentage}%</span>
+                    </div>
                   </div>
-                  <span className="text-sm font-bold text-slate-900">{prj.progress}%</span>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${status.percentage}%` }}
+                      transition={{ duration: 0.8, delay: index * 0.1 }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: status.color }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
-                  <motion.div initial={{ width: 0 }} whileInView={{ width: `${prj.progress}%` }} transition={{ duration: 1 }} className={`h-full ${prj.color} rounded-full`} />
+              ))}
+            </div>
+          </div>
+
+          {/* Task Summary */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Task Summary</h3>
+              <Clock size={20} className="text-slate-400" />
+            </div>
+            <div className="space-y-4">
+              {taskSummary.map((task, index) => (
+                <div key={index}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: task.color }}
+                      />
+                      <span className="text-sm font-medium text-slate-700">{task.label}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-slate-900">{task.count}</span>
+                      <span className="text-xs text-slate-500">{task.percentage}%</span>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${task.percentage}%` }}
+                      transition={{ duration: 0.8, delay: index * 0.1 }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: task.color }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* High Priority Projects */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900">High Priority Projects</h3>
+              <Zap size={20} className="text-amber-500" />
+            </div>
+            <div className="space-y-4">
+              {highPriorityProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className="p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-bold text-slate-900 mb-1">{project.name}</h4>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Users size={12} />
+                          {project.lead}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar size={12} />
+                          {project.deadline}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign size={12} />
+                          {project.budget}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        project.status === 'On Track'
+                          ? 'bg-green-100 text-green-700'
+                          : project.status === 'In Review'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}
+                    >
+                      {project.status}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Progress</span>
+                      <span className="font-bold text-slate-900">{project.progress}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                        style={{ width: `${project.progress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>
+                        Tasks: {project.tasks.completed}/{project.tasks.total}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="p-8 rounded-[2rem] shadow-sm relative overflow-hidden group/controls"
-          style={{ backgroundColor: '#1a2744' }}>
-          <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full translate-x-16 translate-y-16 group-hover/controls:scale-150 transition-transform duration-700"
-            style={{ backgroundColor: 'rgba(255,255,255,0.04)' }} />
-          <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-8 relative z-10"
-            style={{ color: 'rgba(255,255,255,0.45)' }}>PROJECT CONTROLS</h3>
-          <div className="space-y-3 relative z-10">
-            {[
-              { label: 'New Project Instance', icon: Briefcase, color: 'text-blue-400' },
-              { label: 'Dispatch Global Tasks', icon: Zap, color: 'text-amber-400' },
-              { label: 'Generate Status Update', icon: Share2, color: 'text-emerald-400' },
-              { label: 'Budget Reallocation', icon: DollarSign, color: 'text-rose-400' },
-            ].map((act, i) => (
-              <button key={i}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:translate-x-1 transition-all text-left"
-                style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${act.color}`}
-                  style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
-                  <act.icon size={16} />
+        {/* Right Column - 1/3 width */}
+        <div className="space-y-6">
+          {/* Financial Overview */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Financial Overview</h3>
+              <DollarSign size={20} className="text-slate-400" />
+            </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Total Budget</p>
+                <p className="text-2xl font-bold text-slate-900">₹{(financialData.totalBudget / 1000).toFixed(0)}K</p>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                  style={{ width: `${financialData.percentageUsed}%` }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Expenses</p>
+                  <p className="text-lg font-bold text-slate-900">₹{(financialData.totalExpenses / 1000).toFixed(0)}K</p>
                 </div>
-                <span className="text-[11px] font-bold tracking-wide text-white">{act.label}</span>
-              </button>
-            ))}
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Remaining</p>
+                  <p className="text-lg font-bold text-slate-900">₹{(financialData.remaining / 1000).toFixed(0)}K</p>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Budget Used</span>
+                  <span className="text-lg font-bold text-slate-900">{financialData.percentageUsed}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Deadlines */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Upcoming Deadlines</h3>
+              <Clock size={20} className="text-slate-400" />
+            </div>
+            <div className="space-y-3">
+              {upcomingDeadlines.map((deadline, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900 mb-1">{deadline.project}</p>
+                    <p className="text-xs text-slate-500">{deadline.date}</p>
+                  </div>
+                  <div
+                    className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      deadline.priority === 'high'
+                        ? 'bg-red-100 text-red-700'
+                        : deadline.priority === 'medium'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {deadline.daysLeft}d
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Activities */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Recent Activities</h3>
+              <TrendingUp size={20} className="text-slate-400" />
+            </div>
+            <div className="space-y-4">
+              {recentActivities.map((activity, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      activity.type === 'create'
+                        ? 'bg-blue-100 text-blue-600'
+                        : activity.type === 'complete'
+                        ? 'bg-green-100 text-green-600'
+                        : activity.type === 'update'
+                        ? 'bg-amber-100 text-amber-600'
+                        : 'bg-purple-100 text-purple-600'
+                    }`}
+                  >
+                    {activity.type === 'create' && <Plus size={14} />}
+                    {activity.type === 'complete' && <CheckCircle size={14} />}
+                    {activity.type === 'update' && <FileText size={14} />}
+                    {activity.type === 'milestone' && <TrendingUp size={14} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900">{activity.action}</p>
+                    <p className="text-xs text-slate-500 truncate">{activity.project}</p>
+                    <p className="text-xs text-slate-400 mt-1">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-
-      {showReport && <ProjectHealthReportModal onClose={() => setShowReport(false)} />}
-    </motion.div>
+    </div>
   );
 };
 
 // --- Projects & Status ---
 export const ProjectListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ name: '', lead: '', status: 'On Track', budget: '', deadline: '' });
+  const [deleteProject, setDeleteProject] = useState<{ id: number; name: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'basic' | 'timeline' | 'budget' | 'team' | 'settings'>('basic');
+  const [form, setForm] = useState({
+    // Basic Info
+    name: '',
+    code: '',
+    description: '',
+    category: 'Development',
+    priority: 'Medium',
+    client: '',
+    
+    // Timeline
+    startDate: '',
+    deadline: '',
+    estimatedHours: '',
+    
+    // Budget & Financial
+    budget: '',
+    currency: 'USD',
+    billingType: 'Fixed Price',
+    hourlyRate: '',
+    
+    // Team
+    lead: '',
+    teamMembers: [] as string[],
+    department: '',
+    
+    // Settings
+    status: 'Planning',
+    visibility: 'Internal',
+    allowTimesheet: true,
+    allowExpenses: true,
+    requireApproval: false,
+    notifyTeam: true,
+    
+    // Additional
+    tags: '',
+    notes: ''
+  });
   const [createBtnHover, setCreateBtnHover] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setShowModal(false);
-    setForm({ name: '', lead: '', status: 'On Track', budget: '', deadline: '' });
+    setActiveTab('basic');
+    setForm({
+      name: '', code: '', description: '', category: 'Development', priority: 'Medium', client: '',
+      startDate: '', deadline: '', estimatedHours: '',
+      budget: '', currency: 'USD', billingType: 'Fixed Price', hourlyRate: '',
+      lead: '', teamMembers: [], department: '',
+      status: 'Planning', visibility: 'Internal', allowTimesheet: true, allowExpenses: true,
+      requireApproval: false, notifyTeam: true, tags: '', notes: ''
+    });
   };
+
+  const handleDelete = () => {
+    if (deleteProject) {
+      console.log('Deleting project:', deleteProject.id);
+      // Handle actual deletion here
+      setDeleteProject(null);
+    }
+  };
+
+  const projects = [
+    { id: 1, name: 'INITIATIVE ALPHA-01', description: 'Strategic modernization of technical assets and operational benchmarks...', lead: 'Jordan T.', status: 'ON TRACK', health: 92, statusVariant: 'success' as const },
+    { id: 2, name: 'INITIATIVE ALPHA-02', description: 'Strategic modernization of technical assets and operational benchmarks...', lead: 'Jordan T.', status: 'IN REVIEW', health: 92, statusVariant: 'info' as const },
+    { id: 3, name: 'INITIATIVE ALPHA-03', description: 'Strategic modernization of technical assets and operational benchmarks...', lead: 'Jordan T.', status: 'AT RISK', health: 92, statusVariant: 'warning' as const },
+    { id: 4, name: 'INITIATIVE ALPHA-04', description: 'Strategic modernization of technical assets and operational benchmarks...', lead: 'Jordan T.', status: 'ON TRACK', health: 92, statusVariant: 'success' as const },
+    { id: 5, name: 'INITIATIVE ALPHA-05', description: 'Strategic modernization of technical assets and operational benchmarks...', lead: 'Jordan T.', status: 'IN REVIEW', health: 92, statusVariant: 'info' as const },
+    { id: 6, name: 'INITIATIVE ALPHA-06', description: 'Strategic modernization of technical assets and operational benchmarks...', lead: 'Jordan T.', status: 'ON TRACK', health: 92, statusVariant: 'success' as const },
+  ];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -331,7 +808,7 @@ export const ProjectListPage: React.FC = () => {
           <p className="text-slate-500 text-sm mt-1 font-medium italic">Comprehensive oversight of strategic lifecycle</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => navigate('/admin/projects/create')}
           onMouseEnter={() => setCreateBtnHover(true)}
           onMouseLeave={() => setCreateBtnHover(false)}
           className="flex items-center gap-2 px-6 h-10 rounded-xl shadow-lg text-sm font-bold transition"
@@ -341,31 +818,114 @@ export const ProjectListPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 project-cards-grid">
-        {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-[2rem]" style={{ backgroundColor: '#1a2744' }} />
-            <div className="flex justify-between items-start mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 text-blue-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><Briefcase size={20} /></div>
-              <Badge variant={i % 3 === 0 ? 'success' : i % 3 === 1 ? 'info' : 'warning'} className="text-[9px] uppercase tracking-widest">{i % 3 === 0 ? 'ON TRACK' : i % 3 === 1 ? 'IN REVIEW' : 'AT RISK'}</Badge>
-            </div>
-            <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">Initiative Alpha-0{i}</h3>
-            <p className="text-[11px] text-slate-500 mt-2 font-medium italic leading-relaxed">Strategic modernization of technical assets and operational benchmarks...</p>
-            <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
-              <div>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Lead Manager</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 border border-blue-50"></div>
-                  <span className="text-[10px] font-bold text-slate-600">Jordan T.</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Health Score</p>
-                <p className="text-sm font-bold text-emerald-600">92%</p>
-              </div>
-            </div>
+      {/* Enhanced Table View */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-200" style={{ backgroundColor: '#f8fafc' }}>
+                <th className="text-left px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Project</th>
+                <th className="text-left px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</th>
+                <th className="text-left px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Lead Manager</th>
+                <th className="text-center px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                <th className="text-center px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Health Score</th>
+                <th className="text-center px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((project, index) => (
+                <motion.tr
+                  key={project.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors group"
+                >
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <Briefcase size={18} />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{project.name}</div>
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">ID: PRJ-{String(project.id).padStart(3, '0')}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-md">{project.description}</p>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 border-2 border-white shadow-sm flex items-center justify-center">
+                        <span className="text-xs font-bold text-blue-700">{project.lead.charAt(0)}</span>
+                      </div>
+                      <span className="text-sm font-medium text-slate-700">{project.lead}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex justify-center">
+                      <Badge variant={project.statusVariant} className="text-[9px] uppercase tracking-widest font-bold px-3 py-1">
+                        {project.status}
+                      </Badge>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${project.health}%` }}
+                            transition={{ duration: 0.8, delay: index * 0.1 }}
+                            className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full"
+                          />
+                        </div>
+                        <span className="text-sm font-bold text-emerald-600">{project.health}%</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => navigate('/admin/projects/create')}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg transition bg-[#002147] hover:bg-[#003366] text-white border border-[#002147]"
+                        title="Edit"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteProject({ id: project.id, name: project.name })}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg transition bg-red-600 hover:bg-red-700 text-white border border-red-600"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Table Footer */}
+        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+          <div className="text-xs text-slate-500">
+            Showing <span className="font-bold text-slate-700">{projects.length}</span> projects
           </div>
-        ))}
+          <div className="flex items-center gap-2">
+            <button className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white transition-colors disabled:opacity-50" disabled>
+              Previous
+            </button>
+            <button className="px-3 py-1.5 rounded-lg bg-[#1a2744] text-white text-xs font-medium hover:bg-[#2a3754] transition-colors">
+              1
+            </button>
+            <button className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white transition-colors">
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Create New Project Modal */}
@@ -414,6 +974,44 @@ export const ProjectListPage: React.FC = () => {
                   style={{ backgroundColor: '#1a2744', color: '#ffffff' }}>Create Project</button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={() => setDeleteProject(null)}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={e => e.stopPropagation()}
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8"
+            style={{ backgroundColor: '#ffffff' }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <AlertTriangle className="h-8 w-8 text-slate-800 flex-shrink-0" />
+              <h3 className="text-2xl font-bold text-slate-800">Delete Project</h3>
+            </div>
+            <p className="text-base text-slate-700 leading-relaxed mb-8">
+              Are you sure you want to delete <span className="font-bold text-slate-900">"{deleteProject.name}"</span>? This cannot be undone.
+            </p>
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setDeleteProject(null)}
+                className="flex-1 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-lg font-bold transition"
+                style={{ height: '48px', minHeight: '48px', maxHeight: '48px' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDelete}
+                className="flex-1 rounded-2xl bg-[#002147] hover:bg-[#003366] text-white text-lg font-bold transition"
+                style={{ height: '48px', minHeight: '48px', maxHeight: '48px' }}
+              >
+                Delete
+              </button>
+            </div>
           </motion.div>
         </div>
       )}
@@ -1198,3 +1796,6 @@ export const ClientSyncPage: React.FC = () => {
     </motion.div>
   );
 };
+
+// Export CreateProjectPage
+export { default as CreateProjectPage } from './CreateProjectPage';
