@@ -254,17 +254,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
 
         .lp-lc { position:relative;z-index:2; }
         .lp-brand { display:flex;align-items:center;gap:14px;margin-bottom:48px; }
-        .lp-brand-name { font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:rgba(255,255,255,0.95);letter-spacing:0.5px;line-height:1.15; }
-        .lp-brand-sub { font-size:13px;color:rgba(200,220,255,0.75);font-weight:300; }
-        .lp-title { font-family:'Rajdhani',sans-serif;font-size:46px;font-weight:700;color:rgba(255,255,255,0.92);line-height:1.15;margin-bottom:14px;letter-spacing:0.3px; }
-        .lp-subtitle { font-size:15px;color:rgba(255,255,255,0.78);line-height:1.65;font-weight:300;margin-bottom:44px; }
+        .lp-brand-name { font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#ffffff !important;letter-spacing:0.5px;line-height:1.15; }
+        .lp-brand-sub { font-size:13px;color:#ffffff !important;font-weight:300; }
+        .lp-title { font-family:'Rajdhani',sans-serif;font-size:46px;font-weight:700;color:#ffffff !important;line-height:1.15;margin-bottom:14px;letter-spacing:0.3px; }
+        .lp-subtitle { font-size:15px;color:#ffffff !important;line-height:1.65;font-weight:300;margin-bottom:44px; }
         .lp-stats { display:flex;gap:48px; }
-        .lp-stat-val { font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:rgba(255,255,255,0.92); }
-        .lp-stat-lbl { font-size:11px;color:rgba(255,255,255,0.72);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;margin-top:2px; }
-        .lp-left-foot { position:relative;z-index:2;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.7; }
+        .lp-stat-val { font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:#ffffff !important; }
+        .lp-stat-lbl { font-size:11px;color:#ffffff !important;text-transform:uppercase;letter-spacing:0.8px;font-weight:300;margin-top:2px; }
+        .lp-left-foot { position:relative;z-index:2;font-size:12px;color:#ffffff !important;line-height:1.7; }
 
         @media (max-width: 900px) {
-          .lp-left-foot { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 24px; text-align: center; }
+          .lp-left-foot { color: #ffffff !important; font-size: 12px; margin-top: 24px; text-align: center; }
         }
         @media (max-width: 600px) {
           .lp-left-foot { font-size: 11px; }
@@ -369,9 +369,49 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
             flex: 1; height: auto; min-height: 100vh;
             padding: 40px 24px 32px;
             justify-content: center;
+            text-align: center;
           }
           .lp-monitor-outer { display: none; }
           .lp-right { display: none; }
+
+          /* Center align content on mobile */
+          .lp-lc {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .lp-brand {
+            justify-content: center;
+          }
+          .lp-brand-name {
+            font-size: 64px !important;
+            font-weight: 800 !important;
+            letter-spacing: 8px !important;
+            line-height: 0.9 !important;
+          }
+          .lp-brand-sub {
+            font-size: 18px !important;
+          }
+          .lp-title {
+            text-align: center;
+            font-size: 32px;
+            line-height: 1.2;
+          }
+          .lp-subtitle {
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+          .lp-stats {
+            justify-content: center;
+            gap: 32px;
+          }
+          .lp-stat-val {
+            font-size: 26px;
+          }
+          .lp-stat-lbl {
+            font-size: 10px;
+          }
 
           /* Show CTA buttons on mobile */
           .lp-cta-buttons {
@@ -412,10 +452,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
 
         @media (max-width: 600px) {
           .lp-left { padding: 32px 16px 24px; }
-          .lp-title { font-size: 30px; }
-          .lp-subtitle { font-size: 13px; margin-bottom: 28px; }
-          .lp-stats { gap: 28px; }
-          .lp-stat-val { font-size: 24px; }
+          .lp-brand-name { font-size: 56px !important; font-weight: 800 !important; letter-spacing: 6px !important; line-height: 0.9 !important; }
+          .lp-brand-sub { font-size: 17px !important; }
+          .lp-title { font-size: 28px; line-height: 1.2; }
+          .lp-subtitle { font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+          .lp-stats { gap: 24px; }
+          .lp-stat-val { font-size: 22px; }
+          .lp-stat-lbl { font-size: 9px; }
           .lp-cta-buttons { flex-direction: column; gap: 10px; margin-top: 28px; }
           .lp-btn-outline, .lp-btn-solid { width: 100%; min-width: auto; }
 
