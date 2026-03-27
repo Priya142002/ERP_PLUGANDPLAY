@@ -155,7 +155,7 @@ namespace ERPPlugandPlay.Services
                         .FirstOrDefaultAsync(c => c.Id == employee.CompanyId);
             }
 
-            // Auto-create trial company for new users
+            // Check if trial company exists by email
             if (company == null)
             {
                 var existingByEmail = await _db.Companies.Include(c => c.Modules)
@@ -165,71 +165,66 @@ namespace ERPPlugandPlay.Services
                 {
                     company = existingByEmail;
                 }
-                else
-                {
-                    company = new Company
-                    {
-                        Name = user.Name, Email = user.Email,
-                        AdminName = user.Name, AdminEmail = user.Email, AdminPhone = "",
-                        AdminPassword = user.PlainPassword,
-                        Status = "active", IsTrialActive = true,
-                        TrialStartDate = DateTime.UtcNow, TrialEndDate = DateTime.UtcNow.AddDays(30)
-                    };
-                    _db.Companies.Add(company);
-                    await _db.SaveChangesAsync();
-                    foreach (var mod in AllModules())
-                        _db.CompanyModules.Add(new CompanyModule
-                        { CompanyId = company.Id, ModuleId = mod, IsEnabled = true, IsTrialAccess = true });
-                    await _db.SaveChangesAsync();
-                    company = await _db.Companies.Include(c => c.Modules).FirstAsync(c => c.Id == company.Id);
-                }
             }
 
-            var activeSub = await _db.CompanySubscriptions
-                .FirstOrDefaultAsync(s => s.CompanyId == company.Id && s.Status == "Active" &&
-                                          (!s.EndDate.HasValue || s.EndDate.Value >= DateTime.UtcNow));
-            bool hasActiveSub = activeSub != null;
+            bool hasActiveSub = false;
             bool isTrialActive = false;
             DateTime? trialEndDate = null;
             int daysRemaining = 0;
+            List<string> allowedModules = new();
 
-            if (!hasActiveSub)
+            if (company != null)
             {
-                if (company.IsTrialActive && company.TrialEndDate.HasValue)
+                var activeSub = await _db.CompanySubscriptions
+                    .FirstOrDefaultAsync(s => s.CompanyId == company.Id && s.Status == "Active" &&
+                                              (!s.EndDate.HasValue || s.EndDate.Value >= DateTime.UtcNow));
+                hasActiveSub = activeSub != null;
+
+                if (!hasActiveSub)
                 {
-                    if (company.TrialEndDate.Value >= DateTime.UtcNow)
+                    if (company.IsTrialActive && company.TrialEndDate.HasValue)
                     {
-                        isTrialActive = true;
-                        trialEndDate = company.TrialEndDate;
-                        daysRemaining = (int)(company.TrialEndDate.Value - DateTime.UtcNow).TotalDays + 1;
+                        if (company.TrialEndDate.Value >= DateTime.UtcNow)
+                        {
+                            isTrialActive = true;
+                            trialEndDate = company.TrialEndDate;
+                            daysRemaining = (int)(company.TrialEndDate.Value - DateTime.UtcNow).TotalDays + 1;
+                        }
+                        else
+                        {
+                            company.IsTrialActive = false;
+                            await _db.SaveChangesAsync();
+                            return ApiResponse<AuthResponseDto>.Fail(
+                                "Your 30-day free trial has expired. Please subscribe to continue.");
+                        }
                     }
                     else
-                    {
-                        company.IsTrialActive = false;
-                        await _db.SaveChangesAsync();
                         return ApiResponse<AuthResponseDto>.Fail(
-                            "Your 30-day free trial has expired. Please subscribe to continue.");
-                    }
+                            "Your trial has expired. Please subscribe to continue.");
                 }
                 else
-                    return ApiResponse<AuthResponseDto>.Fail(
-                        "Your trial has expired. Please subscribe to continue.");
+                    daysRemaining = activeSub!.EndDate.HasValue
+                        ? (int)(activeSub.EndDate.Value - DateTime.UtcNow).TotalDays + 1 : 9999;
+
+                allowedModules = hasActiveSub
+                    ? (company.Modules.Where(m => m.IsEnabled).Select(m => m.ModuleId).ToList() is { Count: > 0 } ml
+                        ? ml : AllModules())
+                    : company.Modules.Where(m => m.IsEnabled && m.IsTrialAccess).Select(m => m.ModuleId).ToList();
             }
             else
-                daysRemaining = activeSub!.EndDate.HasValue
-                    ? (int)(activeSub.EndDate.Value - DateTime.UtcNow).TotalDays + 1 : 9999;
-
-            var allowedModules = hasActiveSub
-                ? (company.Modules.Where(m => m.IsEnabled).Select(m => m.ModuleId).ToList() is { Count: > 0 } ml
-                    ? ml : AllModules())
-                : company.Modules.Where(m => m.IsEnabled && m.IsTrialAccess).Select(m => m.ModuleId).ToList();
+            {
+                isTrialActive = true;
+                trialEndDate = DateTime.UtcNow.AddDays(30);
+                daysRemaining = 30;
+                allowedModules = AllModules();
+            }
 
             var (token, expiry) = _jwt.GenerateToken(user);
             return ApiResponse<AuthResponseDto>.Ok(new AuthResponseDto
             {
                 Token = token, Name = user.Name, Email = user.Email,
                 Role = user.Role.RoleName, Expiry = expiry,
-                CompanyId = company.Id, CompanyName = company.Name,
+                CompanyId = company?.Id, CompanyName = company?.Name,
                 IsTrialActive = isTrialActive, TrialEndDate = trialEndDate,
                 HasActiveSubscription = hasActiveSub,
                 DaysRemaining = daysRemaining, AllowedModules = allowedModules
