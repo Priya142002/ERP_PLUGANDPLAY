@@ -43,6 +43,10 @@ export const CreateReceivePage: React.FC = () => {
   const [vehicleNo, setVehicleNo] = useState('');
   const [remarks, setRemarks] = useState('');
 
+  const [isAddingWH, setIsAddingWH] = useState(false);
+  const [newWHName, setNewWHName] = useState('');
+  const [whLoading, setWhLoading] = useState(false);
+
   const [items, setItems] = useState<ReceiveItem[]>([
     { id: '1', productId: '', expectedQty: 0, receivedQty: 0 }
   ]);
@@ -61,6 +65,32 @@ export const CreateReceivePage: React.FC = () => {
       if (whRes.success) setWarehouses(whRes.data.items || []);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleAddWarehouse = async () => {
+    if (!newWHName.trim()) return;
+    setWhLoading(true);
+    try {
+      const res = await inventoryApi.createWarehouse({
+        companyId,
+        name: newWHName.trim(),
+        location: "Default Location",
+        status: "Active"
+      });
+      if (res.success && res.data) {
+        setWarehouses([...warehouses, res.data]);
+        setTargetWH(res.data.name);
+        setNewWHName('');
+        setIsAddingWH(false);
+        showNotification({ type: 'success', title: 'Added', message: 'Warehouse added successfully.' });
+      } else {
+        showNotification({ type: 'error', title: 'Failed', message: res.message || 'Error adding warehouse.' });
+      }
+    } catch (err) {
+      showNotification({ type: 'error', title: 'Error', message: 'Unexpected API error.' });
+    } finally {
+      setWhLoading(false);
     }
   };
 
@@ -106,10 +136,10 @@ export const CreateReceivePage: React.FC = () => {
 
       const res = await inventoryApi.createReceive(payload);
       if (res.success) {
-        showNotification({ type: 'success', title: 'Success', message: 'Product receipt (GRN) created!' });
+        showNotification({ type: 'success', title: 'Success', message: 'Product receive (GRN) created!' });
         navigate('/admin/inventory/receive');
       } else {
-        showNotification({ type: 'error', title: 'Failed', message: res.message || 'Failed to create receipt.' });
+        showNotification({ type: 'error', title: 'Failed', message: res.message || 'Failed to create receive.' });
       }
     } catch (err) {
       showNotification({ type: 'error', title: 'Error', message: 'Unexpected error occurred.' });
@@ -134,7 +164,7 @@ export const CreateReceivePage: React.FC = () => {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">New Product Receipt</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">New Product Receive</h1>
            
           </div>
         </div>
@@ -149,7 +179,7 @@ export const CreateReceivePage: React.FC = () => {
               <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
                 <FileSearch size={16} />
               </div>
-              <h3 className="font-bold text-slate-900 tracking-tight text-sm uppercase tracking-wider">Receipt Identification</h3>
+              <h3 className="font-bold text-slate-900 tracking-tight text-sm uppercase tracking-wider">Receive Identification</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -171,12 +201,32 @@ export const CreateReceivePage: React.FC = () => {
                 <label className={labelCls}>Source (Supplier/Warehouse) <span className="text-rose-400">*</span></label>
                 <input className={fieldCls} placeholder="e.g. Dell Warehouse" value={source} onChange={e => setSource(e.target.value)} />
               </div>
-              <div>
-                <label className={labelCls}>Target Warehouse <span className="text-rose-400">*</span></label>
-                <select className={fieldCls} value={targetWH} onChange={e => setTargetWH(e.target.value)}>
-                  <option value="">Select destination…</option>
-                  {warehouses.map(w => <option key={w.id} value={w.name}>{w.name}</option>)}
-                </select>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target Warehouse <span className="text-rose-400">*</span></label>
+                  <button type="button" onClick={() => setIsAddingWH(!isAddingWH)} className="text-[#002147] hover:text-[#003366] transition-colors p-0.5 rounded-full hover:bg-slate-100 focus:outline-none">
+                    <Plus size={14} />
+                  </button>
+                </div>
+                {isAddingWH ? (
+                  <div className="flex gap-2">
+                    <input 
+                      className={fieldCls} 
+                      placeholder="New warehouse name" 
+                      value={newWHName} 
+                      onChange={e => setNewWHName(e.target.value)} 
+                      onKeyDown={e => e.key === 'Enter' && handleAddWarehouse()}
+                    />
+                    <Button variant="secondary" size="sm" onClick={handleAddWarehouse} disabled={whLoading || !newWHName.trim()} className="px-3 border">
+                      {whLoading ? '...' : 'Add'}
+                    </Button>
+                  </div>
+                ) : (
+                  <select className={fieldCls} value={targetWH} onChange={e => setTargetWH(e.target.value)}>
+                    <option value="">Select destination…</option>
+                    {warehouses.map(w => <option key={w.id} value={w.name}>{w.name}</option>)}
+                  </select>
+                )}
               </div>
             </div>
           </div>
@@ -273,7 +323,7 @@ export const CreateReceivePage: React.FC = () => {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <label className={labelCls}>Remarks / Observation</label>
             <textarea rows={4} className={`${fieldCls} h-auto py-2.5 resize-none`}
-              placeholder="Add any damages or receipt notes..." value={remarks} onChange={e => setRemarks(e.target.value)} />
+              placeholder="Add any damages or receive notes..." value={remarks} onChange={e => setRemarks(e.target.value)} />
           </div>
 
           <div className="space-y-3 pt-2">
@@ -285,7 +335,7 @@ export const CreateReceivePage: React.FC = () => {
               disabled={loading}
               className="py-4 bg-[#002147] hover:bg-[#003366] border-none shadow-lg shadow-blue-900/10 rounded-xl font-bold text-xs uppercase tracking-widest active:scale-[0.98] transition-all"
             >
-              {loading ? 'Finalizing...' : 'Finalize Receipt'}
+              {loading ? 'Finalizing...' : 'Finalize Receive'}
             </Button>
             <Button 
               variant="secondary" 

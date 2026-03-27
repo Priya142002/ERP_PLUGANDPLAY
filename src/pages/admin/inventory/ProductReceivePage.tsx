@@ -361,7 +361,7 @@ export const ProductReceivePage: React.FC = () => {
           <Button variant="secondary" className="rounded-xl px-4 md:px-6 h-9 md:h-10 text-[10px] md:text-xs font-bold transition-all border-slate-200"
             leftIcon={<Download size={14} />} onClick={handleExportExcel}>Export</Button>
           <Button variant="primary" className="bg-[#002147] hover:bg-[#003366] text-white border-none shadow-lg shadow-blue-900/10 rounded-xl px-4 md:px-8 h-10 text-[10px] md:text-xs font-bold transition-all active:scale-95"
-            leftIcon={<Plus size={16} />} onClick={() => navigate('/admin/inventory/receive/create')}>New Receipt</Button>
+            leftIcon={<Plus size={16} />} onClick={() => navigate('/admin/inventory/receive/create')}>New Receive</Button>
         </div>
       </div>
       <TableFilters searchValue={search} searchPlaceholder="Search..." onSearchChange={setSearch} filters={[{ label: 'Filter Status', value: filterStatus, options: statusOptions, onChange: setFilterStatus }]} onClearAll={handleClearFilters} showClearButton={!!(search || filterStatus)} />
