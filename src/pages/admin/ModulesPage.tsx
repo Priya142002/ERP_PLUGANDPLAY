@@ -331,10 +331,21 @@ export function ModulesPage() {
                 onDragStart={() => handleDragStart(actualIndex)}
                 onDragOver={(e) => handleDragOver(e, actualIndex)}
                 onDragEnd={handleDragEnd}
-                className={`p-5 rounded-xl border hover:shadow-lg transition-all cursor-move ${
+                title="Drag and drop to rearrange the order"
+                className={`p-5 rounded-xl border hover:shadow-2xl transition-all cursor-move relative group ${
                   draggedIndex === actualIndex ? 'opacity-50' : ''
                 }`}
-                style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}>
+                style={{ 
+                  background: "linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)",
+                  borderColor: "var(--border)"
+                }}> 
+                {/* Hover tooltip */}
+                <div className="absolute inset-0 bg-blue-600/90 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <p className="text-white font-medium text-sm flex items-center gap-2">
+                    <GripVertical className="h-4 w-4" />
+                    Drag and drop to rearrange the order
+                  </p>
+                </div>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <GripVertical className="h-4 w-4 text-slate-400 cursor-grab active:cursor-grabbing" />
