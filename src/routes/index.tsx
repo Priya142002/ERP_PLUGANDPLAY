@@ -109,6 +109,7 @@ import {
   HelpdeskDashboard,
   AssetDashboard,
   AssetManagePage,
+  AddAssetPage,
   AssetDepreciationPage,
   MaintenancePage,
   AssetDisposalPage,
@@ -370,6 +371,7 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AssetDashboard />} />
           <Route path="manage" element={<AssetManagePage />} />
+          <Route path="add" element={<AddAssetPage />} />
           <Route path="depreciation" element={<AssetDepreciationPage />} />
           <Route path="maintenance" element={<MaintenancePage />} />
           <Route path="disposal" element={<AssetDisposalPage />} />

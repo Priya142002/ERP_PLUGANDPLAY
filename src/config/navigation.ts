@@ -178,9 +178,6 @@ export const adminNavigation: NavigationItem[] = [
     children: [
       { id: 'ast-dash', label: 'Asset Intelligence', path: '/admin/assets/dashboard', roles: ['admin'], icon: 'dashboard' },
       { id: 'ast-manage', label: 'Management & Allocation', path: '/admin/assets/manage', roles: ['admin'], icon: 'list' },
-      { id: 'ast-depr', label: 'Depreciation Engine', path: '/admin/assets/depreciation', roles: ['admin'], icon: 'chart-bar' },
-      { id: 'ast-maint', label: 'Maintenance Logs', path: '/admin/assets/maintenance', roles: ['admin'], icon: 'refresh' },
-      { id: 'ast-disp', label: 'Asset Disposal', path: '/admin/assets/disposal', roles: ['admin'], icon: 'trash' },
       { id: 'ast-rep', label: 'Asset Reports', path: '/admin/assets/reports', roles: ['admin'], icon: 'document-report' },
     ]
   },
