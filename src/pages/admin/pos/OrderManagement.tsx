@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Play, XCircle, RotateCcw, Edit, Trash2 } from 'lucide-react';
+import { Clock, Play, XCircle, RotateCcw, Edit, Trash2, Eye, Printer } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
 import Modal from '../../../components/ui/Modal';
@@ -9,20 +9,22 @@ import { DataTableWrapper } from '../../../components/common';
 
 export const OrderManagement: React.FC = () => {
   const [orders, setOrders] = useState([
-    { id: '1', orderId: 'ORD-001', customer: 'John Doe', items: 3, amount: '$125.50', status: 'Completed', date: '2026-03-24 10:45 AM' },
-    { id: '2', orderId: 'ORD-002', customer: 'Jane Smith', items: 5, amount: '$245.00', status: 'Hold', date: '2026-03-24 10:42 AM' },
-    { id: '3', orderId: 'ORD-003', customer: 'Bob Wilson', items: 2, amount: '$85.00', status: 'Cancelled', date: '2026-03-24 10:38 AM' },
-    { id: '4', orderId: 'ORD-004', customer: 'Alice Brown', items: 4, amount: '$180.75', status: 'Returned', date: '2026-03-24 10:35 AM' },
+    { id: '1', orderId: 'ORD-001', customer: 'John Doe', items: 3, amount: '$125.50', status: 'Completed', paymentStatus: 'Paid', date: '2026-03-24 10:45 AM' },
+    { id: '2', orderId: 'ORD-002', customer: 'Jane Smith', items: 5, amount: '$245.00', status: 'Hold', paymentStatus: 'Pending', date: '2026-03-24 10:42 AM' },
+    { id: '3', orderId: 'ORD-003', customer: 'Bob Wilson', items: 2, amount: '$85.00', status: 'Cancelled', paymentStatus: 'Pending', date: '2026-03-24 10:38 AM' },
+    { id: '4', orderId: 'ORD-004', customer: 'Alice Brown', items: 4, amount: '$180.75', status: 'Returned', paymentStatus: 'Paid', date: '2026-03-24 10:35 AM' },
   ]);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [editFormData, setEditFormData] = useState({
     customer: '',
     items: 0,
     amount: '',
-    status: ''
+    status: '',
+    paymentStatus: ''
   });
 
   const columns = [
@@ -32,43 +34,52 @@ export const OrderManagement: React.FC = () => {
       render: (value: string) => <span className="font-bold text-slate-800 text-sm">{value}</span>
     },
     {
+      key: 'date' as const,
+      label: 'Date & Time',
+      render: (value: string) => <span className="text-slate-500 text-xs">{value}</span>
+    },
+    {
       key: 'customer' as const,
       label: 'Customer',
       render: (value: string) => <span className="text-slate-700 text-sm">{value}</span>
     },
     {
-      key: 'items' as const,
-      label: 'Items',
-      align: 'center' as const,
-      render: (value: number) => <span className="text-slate-600 text-sm">{value}</span>
-    },
-    {
       key: 'amount' as const,
-      label: 'Amount',
+      label: 'Total Amount',
       align: 'right' as const,
       render: (value: string) => <span className="font-bold text-emerald-600 text-sm">{value}</span>
     },
     {
-      key: 'status' as const,
-      label: 'Status',
+      key: 'paymentStatus' as const,
+      label: 'Payment Status',
       render: (value: string) => {
         const variants: any = {
-          'Completed': 'success',
-          'Hold': 'warning',
-          'Cancelled': 'error',
-          'Returned': 'info'
+          'Paid': 'success',
+          'Pending': 'warning'
         };
         return <Badge variant={variants[value]} className="text-[10px]">{value}</Badge>;
       }
-    },
-    {
-      key: 'date' as const,
-      label: 'Date & Time',
-      render: (value: string) => <span className="text-slate-500 text-xs">{value}</span>
     }
   ];
 
   const actions = [
+    {
+      label: 'View',
+      icon: <Eye size={14} />,
+      onClick: (row: any) => {
+        setSelectedOrder(row);
+        setShowInvoiceModal(true);
+      },
+      variant: 'primary' as const
+    },
+    {
+      label: 'Print',
+      icon: <Printer size={14} />,
+      onClick: (row: any) => {
+        handlePrintInvoice(row);
+      },
+      variant: 'secondary' as const
+    },
     {
       label: 'Edit',
       icon: <Edit size={14} />,
@@ -78,7 +89,8 @@ export const OrderManagement: React.FC = () => {
           customer: row.customer,
           items: row.items,
           amount: row.amount,
-          status: row.status
+          status: row.status,
+          paymentStatus: row.paymentStatus
         });
         setShowEditModal(true);
       },
@@ -109,6 +121,12 @@ export const OrderManagement: React.FC = () => {
     setOrders(orders.filter(order => order.id !== selectedOrder.id));
     setShowDeleteModal(false);
     setSelectedOrder(null);
+  };
+
+  const handlePrintInvoice = (order: any) => {
+    alert(`Printing invoice for ${order.orderId}`);
+    // In a real app, this would trigger the print dialog or generate a PDF
+    window.print();
   };
 
   return (
@@ -207,6 +225,17 @@ export const OrderManagement: React.FC = () => {
               <option value="Returned">Returned</option>
             </select>
           </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">Payment Status</label>
+            <select
+              value={editFormData.paymentStatus}
+              onChange={(e) => setEditFormData({ ...editFormData, paymentStatus: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-slate-50"
+            >
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
           <div className="flex gap-3 pt-4">
             <Button
               variant="secondary"
@@ -260,6 +289,10 @@ export const OrderManagement: React.FC = () => {
                   <span className="text-slate-600">Status:</span>
                   <span className="font-medium text-slate-900">{selectedOrder.status}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Payment Status:</span>
+                  <span className="font-medium text-slate-900">{selectedOrder.paymentStatus}</span>
+                </div>
               </div>
             </div>
           )}
@@ -282,6 +315,81 @@ export const OrderManagement: React.FC = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Invoice View Modal */}
+      <Modal
+        isOpen={showInvoiceModal}
+        onClose={() => {
+          setShowInvoiceModal(false);
+          setSelectedOrder(null);
+        }}
+        title="Invoice Details"
+      >
+        {selectedOrder && (
+          <div className="space-y-4">
+            {/* Invoice Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-lg text-white">
+              <h2 className="text-2xl font-bold mb-2">Invoice</h2>
+              <p className="text-blue-100 text-sm">{selectedOrder.orderId}</p>
+            </div>
+
+            {/* Order Details */}
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Date & Time:</span>
+                <span className="font-medium text-slate-900">{selectedOrder.date}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Customer:</span>
+                <span className="font-medium text-slate-900">{selectedOrder.customer}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Items:</span>
+                <span className="font-medium text-slate-900">{selectedOrder.items}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Order Status:</span>
+                <Badge variant={selectedOrder.status === 'Completed' ? 'success' : selectedOrder.status === 'Hold' ? 'warning' : selectedOrder.status === 'Cancelled' ? 'error' : 'info'} className="text-[10px]">
+                  {selectedOrder.status}
+                </Badge>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Payment Status:</span>
+                <Badge variant={selectedOrder.paymentStatus === 'Paid' ? 'success' : 'warning'} className="text-[10px]">
+                  {selectedOrder.paymentStatus}
+                </Badge>
+              </div>
+              <div className="pt-3 border-t border-slate-200">
+                <div className="flex justify-between">
+                  <span className="text-base font-bold text-slate-900">Total Amount:</span>
+                  <span className="text-xl font-bold text-emerald-600">{selectedOrder.amount}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                leftIcon={<Printer size={14} />}
+                onClick={() => handlePrintInvoice(selectedOrder)}
+              >
+                Print Invoice
+              </Button>
+              <Button
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  setShowInvoiceModal(false);
+                  setSelectedOrder(null);
+                }}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </motion.div>
   );
