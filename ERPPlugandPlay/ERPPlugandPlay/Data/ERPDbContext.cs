@@ -15,6 +15,7 @@ namespace ERPPlugandPlay.Data
 
         // ── Company & HR ──────────────────────────────────────
         public DbSet<Company> Companies { get; set; }
+        public DbSet<Branch> Branches { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<Designation> Designations { get; set; }
         public DbSet<Employee> Employees { get; set; }
@@ -132,6 +133,13 @@ namespace ERPPlugandPlay.Data
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
             modelBuilder.Entity<Company>().HasIndex(c => c.Email).IsUnique();
+            modelBuilder.Entity<Company>().HasIndex(c => c.Name).IsUnique();
+
+            modelBuilder.Entity<Branch>()
+                .HasOne(b => b.Company)
+                .WithMany(c => c.Branches)
+                .HasForeignKey(b => b.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // ── Decimal precision ─────────────────────────────
             modelBuilder.Entity<Employee>().Property(e => e.Salary).HasPrecision(18, 2);

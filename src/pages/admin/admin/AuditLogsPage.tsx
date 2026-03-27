@@ -1,84 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Activity, Download } from "lucide-react";
 import Select from "../../../components/ui/Select";
-
-const MOCK_LOGS = [
-  { 
-    id: 1, 
-    timestamp: '2 mins ago',
-    user: 'John Doe',
-    userInitials: 'JD',
-    action: 'Created',
-    resource: 'Invoice #1234',
-    status: 'Success'
-  },
-  { 
-    id: 2, 
-    timestamp: '15 mins ago',
-    user: 'Jane Smith',
-    userInitials: 'JS',
-    action: 'Updated',
-    resource: 'Product SKU-789',
-    status: 'Success'
-  },
-  { 
-    id: 3, 
-    timestamp: '1 hour ago',
-    user: 'Bob Johnson',
-    userInitials: 'BJ',
-    action: 'Deleted',
-    resource: 'Customer Record',
-    status: 'Success'
-  },
-  { 
-    id: 4, 
-    timestamp: '2 hours ago',
-    user: 'John Doe',
-    userInitials: 'JD',
-    action: 'Login',
-    resource: 'System Access',
-    status: 'Success'
-  },
-  { 
-    id: 5, 
-    timestamp: '3 hours ago',
-    user: 'Jane Smith',
-    userInitials: 'JS',
-    action: 'Updated',
-    resource: 'Company Profile',
-    status: 'Success'
-  },
-];
+import { adminApi } from "../../../services/api";
+import toast from "react-hot-toast";
 
 const getActionBadgeClass = (action: string) => {
-  switch (action) {
-    case 'Created':
-      return 'bg-slate-100 text-slate-700';
-    case 'Updated':
-      return 'bg-blue-100 text-blue-700';
-    case 'Deleted':
-      return 'bg-red-500 text-white';
-    case 'Login':
-      return 'bg-slate-100 text-slate-700';
-    default:
-      return 'bg-slate-100 text-slate-700';
-  }
+  const a = action.toLowerCase();
+  if (a.includes('create')) return 'bg-emerald-100 text-emerald-700';
+  if (a.includes('update') || a.includes('edit')) return 'bg-blue-100 text-blue-700';
+  if (a.includes('delete') || a.includes('remove')) return 'bg-red-500 text-white';
+  if (a.includes('login')) return 'bg-slate-100 text-slate-700';
+  return 'bg-slate-100 text-slate-700';
 };
 
 export const AuditLogsPage: React.FC = () => {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [userFilter, setUserFilter] = useState("All Users");
   const [actionFilter, setActionFilter] = useState("All Actions");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(10);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [currentPage, searchTerm, userFilter, actionFilter]);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const res = await adminApi.getAuditLogs(currentPage, pageSize, searchTerm);
+      if (res.success) {
+        setLogs(res.data.items);
+        setTotalCount(res.data.totalCount);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch audit logs");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleExport = () => {
     // Create CSV content
-    const headers = ['Timestamp', 'User', 'Action', 'Resource', 'Status'];
+    const headers = ['Timestamp', 'User', 'Action', 'Resource', 'IP Address'];
     const csvContent = [
       headers.join(','),
-      ...MOCK_LOGS.map(log => 
-        [log.timestamp, log.user, log.action, log.resource, log.status].join(',')
+      ...logs.map(log => 
+        [new Date(log.createdAt).toLocaleString(), log.userName, log.action, `${log.entity} (${log.entityId})`, log.ipAddress].join(',')
       )
     ].join('\n');
 
@@ -168,33 +139,57 @@ export const AuditLogsPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
-            {MOCK_LOGS.map((log) => (
-              <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4 text-sm text-slate-600">{log.timestamp}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-[#002147] text-white flex items-center justify-center text-xs font-semibold">
-                      {log.userInitials}
-                    </div>
-                    <span className="text-sm font-medium text-slate-900">{log.user}</span>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center">
+                  <div className="flex justify-center">
+                    <div className="w-8 h-8 border-4 border-[#002147] border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getActionBadgeClass(log.action)}`}>
-                    {log.action}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-700">{log.resource}</td>
-                <td className="px-6 py-4 text-sm text-slate-700">{log.status}</td>
               </tr>
-            ))}
+            ) : logs.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                  No logs found matching your criteria.
+                </td>
+              </tr>
+            ) : (
+              logs.map((log) => (
+                <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 text-sm text-slate-600">
+                    {new Date(log.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-[#002147] text-white flex items-center justify-center text-xs font-semibold">
+                        {log.userName?.substring(0, 2).toUpperCase() || '??'}
+                      </div>
+                      <span className="text-sm font-medium text-slate-900">{log.userName}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getActionBadgeClass(log.action)}`}>
+                      {log.action}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-700">
+                    {log.entity} <span className="text-slate-400">#{log.entityId}</span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-500 font-mono">
+                    {log.ipAddress || 'Internal'}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-600">Showing 1 to 5 of 50 entries</p>
+        <p className="text-sm text-slate-600">
+          Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} entries
+        </p>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
@@ -203,22 +198,17 @@ export const AuditLogsPage: React.FC = () => {
           >
             Previous
           </button>
-          {[1, 2, 3].map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 text-sm font-medium rounded ${
-                currentPage === page
-                  ? 'bg-[#002147] text-white'
-                  : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
+          
+          <button
+            className="px-3 py-1 text-sm font-medium rounded bg-[#002147] text-white"
+          >
+            {currentPage}
+          </button>
+
           <button
             onClick={() => setCurrentPage(currentPage + 1)}
-            className="px-3 py-1 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50"
+            disabled={currentPage * pageSize >= totalCount}
+            className="px-3 py-1 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>

@@ -112,6 +112,7 @@ namespace ERPPlugandPlay.Services
                         Price = p.Price
                     }).ToListAsync(),
                 RecentTransactions = await _db.StockTransactions.Include(t => t.Product)
+                    .Where(t => t.CompanyId == companyId)
                     .OrderByDescending(t => t.Date).Take(10)
                     .Select(t => new StockTransactionDto
                     {
@@ -204,7 +205,7 @@ namespace ERPPlugandPlay.Services
 
             if (product == null) return ApiResponse<ProductDto>.Fail("Product not found.");
 
-            if (product.SKU != dto.SKU && await _db.Products.AnyAsync(p => p.SKU == dto.SKU))
+            if (product.SKU != dto.SKU && await _db.Products.AnyAsync(p => p.SKU == dto.SKU && p.CompanyId == product.CompanyId))
                 return ApiResponse<ProductDto>.Fail("SKU already exists.");
 
             product.Name = dto.Name;

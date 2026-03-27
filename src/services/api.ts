@@ -270,3 +270,40 @@ export const logisticsApi = {
     request<any>(`/api/logistics/carriers/${id}`, { method: 'DELETE' }),
 };
 
+/* ── Admin API ────────────────────────────────────────── */
+export const adminApi = {
+  // Company
+  getCompanies: (page = 1, pageSize = 10, search = '') =>
+    request<any>(`/api/company/list?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`),
+  createCompany: (data: any) =>
+    request<any>('/api/company/create', { method: 'POST', body: JSON.stringify(data) }),
+  updateCompany: (id: number, data: any) =>
+    request<any>(`/api/company/update/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCompany: (id: number) =>
+    request<any>(`/api/company/delete/${id}`, { method: 'DELETE' }),
+
+  // Users
+  getUsers: (page = 1, pageSize = 10, search = '') =>
+    request<any>(`/api/admin/users?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`),
+  createUser: (data: any) =>
+    request<any>('/api/admin/users/create', { method: 'POST', body: JSON.stringify(data) }),
+  updateUser: (id: number, data: any) =>
+    request<any>(`/api/admin/users/update/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  toggleUserStatus: (id: number) =>
+    request<any>(`/api/admin/users/toggle-status/${id}`, { method: 'POST' }),
+
+  // Access
+  getRoles: () =>
+    request<any>('/api/admin/roles'),
+  getPermissions: () =>
+    request<any>('/api/admin/permissions'),
+  getRolePermissions: (roleId: number) =>
+    request<any>(`/api/admin/roles/${roleId}/permissions`),
+  assignPermissions: (data: any) =>
+    request<any>('/api/admin/roles/assign-permissions', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Audit Logs
+  getAuditLogs: (page = 1, pageSize = 50, search = '') =>
+    request<any>(`/api/admin/audit-logs?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`),
+};
+

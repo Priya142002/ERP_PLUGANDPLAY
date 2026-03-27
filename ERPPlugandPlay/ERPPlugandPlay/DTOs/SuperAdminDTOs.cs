@@ -78,9 +78,11 @@ namespace ERPPlugandPlay.DTOs
     {
         [Required] public string Name { get; set; } = string.Empty;
         public decimal MonthlyPrice { get; set; }
+        public decimal PricePerUser { get; set; }
         public string PlanType { get; set; } = "Monthly";
         public int MaxSeats { get; set; }
         public int MaxModules { get; set; }
+        public string AllowedModules { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
     }
 
@@ -89,9 +91,11 @@ namespace ERPPlugandPlay.DTOs
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal MonthlyPrice { get; set; }
+        public decimal PricePerUser { get; set; }
         public string PlanType { get; set; } = "Monthly";
         public int MaxSeats { get; set; }
         public int MaxModules { get; set; }
+        public string AllowedModules { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public bool IsActive { get; set; }
     }
@@ -101,6 +105,8 @@ namespace ERPPlugandPlay.DTOs
     {
         [Required] public int CompanyId { get; set; }
         [Required] public int PlanId { get; set; }
+        public int? OverrideMaxSeats { get; set; }
+        public string? OverrideModules { get; set; }
         public DateTime? EndDate { get; set; }
         public bool IsProrated { get; set; } = false;
     }
