@@ -44,6 +44,7 @@ namespace ERPPlugandPlay.Models
     public class ProductTransferItem
     {
         public int Id { get; set; }
+
         public int TransferId { get; set; }
         public ProductTransfer Transfer { get; set; } = null!;
         public int ProductId { get; set; }
