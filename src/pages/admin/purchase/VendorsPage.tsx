@@ -541,8 +541,8 @@ export const VendorsPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Button 
               variant="secondary" 
-              className="px-4 h-10 text-xs font-bold rounded-xl border-slate-200 [&_svg]:!stroke-black" 
-              leftIcon={<Download size={14} />}
+              className="export-btn px-4 h-10 text-xs font-bold rounded-xl border-slate-200" 
+              leftIcon={<Download size={14} />} 
               onClick={handleExportExcel}
             >
               Export
