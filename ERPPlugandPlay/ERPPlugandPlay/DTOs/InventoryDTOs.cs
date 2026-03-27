@@ -245,9 +245,9 @@ namespace ERPPlugandPlay.DTOs
     public class CreateReceiveDto
     {
         [Required] public int CompanyId { get; set; }
-        public int? VendorId { get; set; }
+        public string? ReceivedFrom { get; set; }
         public string? PurchaseOrderRef { get; set; }
-        public DateTime ReceivedDate { get; set; } = DateTime.UtcNow;
+        public DateTime ReceiveDate { get; set; } = DateTime.UtcNow;
         public string? Notes { get; set; }
         [Required] public List<ReceiveItemDto> Items { get; set; } = new();
     }
@@ -255,8 +255,7 @@ namespace ERPPlugandPlay.DTOs
     public class ReceiveItemDto
     {
         [Required] public int ProductId { get; set; }
-        [Required] public int OrderedQty { get; set; }
-        [Required] public int ReceivedQty { get; set; }
+        public int Quantity { get; set; }
         public decimal UnitCost { get; set; }
     }
 
@@ -267,9 +266,10 @@ namespace ERPPlugandPlay.DTOs
         public string GrnNumber { get; set; } = string.Empty;
         public int? VendorId { get; set; }
         public string? VendorName { get; set; }
+        public string? ReceivedFrom { get; set; }
         public string? PurchaseOrderRef { get; set; }
         public string Status { get; set; } = string.Empty;
-        public DateTime ReceivedDate { get; set; }
+        public DateTime ReceiveDate { get; set; }
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<ReceiveItemResultDto> Items { get; set; } = new();
@@ -279,8 +279,7 @@ namespace ERPPlugandPlay.DTOs
     {
         public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
-        public int OrderedQty { get; set; }
-        public int ReceivedQty { get; set; }
+        public int Quantity { get; set; }
         public decimal UnitCost { get; set; }
     }
 }

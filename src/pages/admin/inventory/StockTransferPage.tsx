@@ -9,8 +9,8 @@ import { useNotifications, useCurrentUser } from "../../../context/AppContext";
 import { inventoryApi } from "../../../services/api";
 import { exportToExcel } from "../../../utils/reportGenerator";
 
-interface TransferItem { id: string; productId: string; quantity: number; }
-interface Transfer { id: string; date: string; referenceNo: string; fromWarehouse: string; toWarehouse: string; totalItems: number; shippingCharge: number; status: string; priority?: string; remarks?: string; items?: TransferItem[]; }
+interface TransferItem { id: string; productId: string; productName?: string; quantity: number; }
+interface Transfer { id: string; date: string; referenceNo: string; fromWarehouse: string; toWarehouse: string; totalItems: number; shippingCharge: number; status: string; priority?: string; remarks?: string; items?: TransferItem[]; notes?: string; }
 
 const fieldCls = "w-full h-10 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition bg-white";
 const labelCls = "block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5";
@@ -70,7 +70,6 @@ export const StockTransferPage: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const companyId = parseInt((currentUser as any)?.companyId || '1');
-  const { showNotification } = useNotifications();
   const [loading, setLoading] = useState(false);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -97,13 +96,18 @@ export const StockTransferPage: React.FC = () => {
         const mapped = (transRes.data.items || []).map((t: any) => ({
           id: t.id.toString(),
           date: t.transferDate?.split('T')[0] || '—',
-          referenceNo: `TR-${t.id.toString().padStart(5, '0')}`,
-          fromWarehouse: 'Main WH',
-          toWarehouse: 'Target WH',
+          referenceNo: t.transferNumber || `TRF-${t.id.toString().padStart(5, '0')}`,
+          fromWarehouse: t.fromLocation || '—',
+          toWarehouse: t.toLocation || '—',
           totalItems: (t.items || []).reduce((s: number, i: any) => s + i.quantity, 0),
-          shippingCharge: 0,
-          status: 'Pending',
-          items: (t.items || []).map((i: any) => ({ id: i.id.toString(), productId: i.productId.toString(), quantity: i.quantity }))
+          notes: t.notes || '',
+          status: t.status || 'Pending',
+          items: (t.items || []).map((i: any) => ({ 
+            id: i.id?.toString() || Math.random().toString(), 
+            productId: i.productId?.toString(), 
+            productName: i.productName || '', 
+            quantity: i.quantity 
+          }))
         }));
         setTransfers(mapped);
       }
@@ -116,12 +120,24 @@ export const StockTransferPage: React.FC = () => {
   const statusOptions = useMemo(() => Array.from(new Set(transfers.map(t => t.status))), [transfers]);
 
   const columns = [
-    { key: 'referenceNo' as const, label: 'Ref No', render: (v: string) => <span className="font-semibold text-slate-800">{v}</span> },
+    { 
+      key: 'referenceNo' as const, 
+      label: 'Ref No', 
+      render: (v: string, item: any) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-slate-800">{v}</span>
+          <span className="text-[10px] text-slate-400 truncate max-w-[150px]">
+            {item.items?.map((i: any) => i.productName || i.productId).join(', ') || 'No items'}
+          </span>
+        </div>
+      )
+    },
     { key: 'date' as const, label: 'Date', render: (v: string) => <div className="flex items-center gap-2 text-slate-600 text-sm"><Calendar size={13} className="text-slate-400" />{v}</div> },
     { key: 'fromWarehouse' as const, label: 'From', render: (v: string) => <div className="flex items-center gap-2 text-slate-600 text-sm font-semibold"><MapPin size={13} className="text-rose-400" />{v}</div> },
     { key: 'toWarehouse' as const, label: 'To', render: (v: string) => <div className="flex items-center gap-2 text-slate-600 text-sm font-semibold"><MapPin size={13} className="text-emerald-400" />{v}</div> },
     { key: 'totalItems' as const, label: 'Quantity', align: 'center' as const, render: (v: number) => <span className="font-medium text-slate-700">{v} pcs</span> },
-    { key: 'status' as const, label: 'Status', render: (v: string) => <Badge variant={v === 'Completed' ? 'success' : v === 'Pending' ? 'warning' : 'info'}>{v}</Badge> }
+    { key: 'notes' as const, label: 'Notes', render: (v: string) => <span className="text-slate-500 text-xs italic truncate max-w-[200px]" title={v}>{v || '—'}</span> },
+    { key: 'status' as const, label: 'Status', render: (v: string) => <Badge variant={v === 'Completed' || v === 'Transferred' ? 'success' : v === 'Pending' ? 'warning' : 'info'}>{v}</Badge> }
   ];
 
   return (

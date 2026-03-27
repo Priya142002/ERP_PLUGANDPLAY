@@ -98,19 +98,19 @@ namespace ERPPlugandPlay.Services
                 OutOfStockCount = products.Count(p => p.StockQty == 0),
                 TotalInventoryValue = products.Sum(p => p.Price * p.StockQty),
                 TodayDispatches = await _db.MaterialDispatches.CountAsync(d => d.CompanyId == companyId && d.DispatchDate.Date == today),
-                TodayReceives = await _db.ProductReceives.CountAsync(r => r.CompanyId == companyId && r.ReceivedDate.Date == today),
-                LowStockItems = products
-                    .Where(p => p.StockQty <= lowStockThreshold)
+                TodayReceives = await _db.ProductReceives.CountAsync(r => r.CompanyId == companyId && r.ReceiveDate.Date == today),
+                LowStockItems = await _db.Products.Where(p => p.CompanyId == companyId && p.StockQty <= lowStockThreshold && p.StockQty > 0)
+                    .Include(p => p.Category) // Include Category for CategoryName
                     .OrderBy(p => p.StockQty)
                     .Take(10)
                     .Select(p => new LowStockItemDto
                     {
                         ProductId = p.Id,
                         ProductName = p.Name,
-                        CategoryName = p.Category?.Name ?? "",
+                        CategoryName = p.Category.Name ?? "",
                         StockQty = p.StockQty,
                         Price = p.Price
-                    }).ToList(),
+                    }).ToListAsync(),
                 RecentTransactions = await _db.StockTransactions.Include(t => t.Product)
                     .OrderByDescending(t => t.Date).Take(10)
                     .Select(t => new StockTransactionDto
@@ -575,9 +575,9 @@ namespace ERPPlugandPlay.Services
             {
                 CompanyId = dto.CompanyId,
                 GrnNumber = grnNumber,
-                VendorId = dto.VendorId,
+                ReceivedFrom = dto.ReceivedFrom,
                 PurchaseOrderRef = dto.PurchaseOrderRef,
-                ReceivedDate = dto.ReceivedDate,
+                ReceiveDate = dto.ReceiveDate,
                 Notes = dto.Notes
             };
 
@@ -586,20 +586,19 @@ namespace ERPPlugandPlay.Services
                 receive.Items.Add(new ProductReceiveItem
                 {
                     ProductId = item.ProductId,
-                    OrderedQty = item.OrderedQty,
-                    ReceivedQty = item.ReceivedQty,
+                    Quantity = item.Quantity,
                     UnitCost = item.UnitCost
                 });
 
                 var product = await _db.Products.FindAsync(item.ProductId);
                 if (product != null)
                 {
-                    product.StockQty += item.ReceivedQty;
+                    product.StockQty += item.Quantity;
                     _db.StockTransactions.Add(new StockTransaction
                     {
                         CompanyId = dto.CompanyId,
                         ProductId = item.ProductId,
-                        Quantity = item.ReceivedQty,
+                        Quantity = item.Quantity,
                         Type = "IN",
                         Remarks = $"GRN {grnNumber}"
                     });
@@ -723,17 +722,17 @@ namespace ERPPlugandPlay.Services
             GrnNumber = r.GrnNumber,
             VendorId = r.VendorId,
             VendorName = r.Vendor?.Name,
+            ReceivedFrom = r.ReceivedFrom,
             PurchaseOrderRef = r.PurchaseOrderRef,
             Status = r.Status,
-            ReceivedDate = r.ReceivedDate,
+            ReceiveDate = r.ReceiveDate,
             Notes = r.Notes,
             CreatedAt = r.CreatedAt,
             Items = r.Items.Select(i => new ReceiveItemResultDto
             {
                 ProductId = i.ProductId,
                 ProductName = i.Product?.Name ?? "",
-                OrderedQty = i.OrderedQty,
-                ReceivedQty = i.ReceivedQty,
+                Quantity = i.Quantity,
                 UnitCost = i.UnitCost
             }).ToList()
         };

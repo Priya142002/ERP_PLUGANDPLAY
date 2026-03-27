@@ -210,20 +210,50 @@ using (var scope = app.Services.CreateScope())
         try
         {
             db.Database.ExecuteSqlRaw(@"
-                IF COL_LENGTH('ProductReceives', 'PurchaseOrderRef') IS NULL
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceives') AND name = 'PurchaseOrderRef')
                 BEGIN
                     ALTER TABLE ProductReceives ADD PurchaseOrderRef NVARCHAR(MAX) NULL;
                 END
 
-                IF COL_LENGTH('ProductReceives', 'ReceivedDate') IS NULL
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceives') AND name = 'ReceivedFrom')
                 BEGIN
-                    ALTER TABLE ProductReceives ADD ReceivedDate DATETIME2 NOT NULL DEFAULT GETUTCDATE();
+                    ALTER TABLE ProductReceives ADD ReceivedFrom NVARCHAR(MAX) NULL;
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceives') AND name = 'ReceiveDate')
+                BEGIN
+                    ALTER TABLE ProductReceives ADD ReceiveDate DATETIME2 NOT NULL DEFAULT GETUTCDATE();
                 END
             ");
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to update schema for ProductReceives columns.");
+        }
+
+        // Ensure ProductReceiveItems has ProductReceiveId and Quantity columns
+        try
+        {
+            db.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceiveItems') AND name = 'ProductReceiveId')
+                BEGIN
+                    ALTER TABLE ProductReceiveItems ADD ProductReceiveId INT NULL;
+                    IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = 'FK_ProductReceiveItems_ProductReceives')
+                    BEGIN
+                        ALTER TABLE ProductReceiveItems ADD CONSTRAINT FK_ProductReceiveItems_ProductReceives 
+                        FOREIGN KEY (ProductReceiveId) REFERENCES ProductReceives(Id);
+                    END
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceiveItems') AND name = 'Quantity')
+                BEGIN
+                    ALTER TABLE ProductReceiveItems ADD Quantity INT NOT NULL DEFAULT 0;
+                END
+            ");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to update schema for ProductReceiveItems columns.");
         }
     }
     catch (Exception ex)

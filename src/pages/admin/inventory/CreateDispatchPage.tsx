@@ -253,14 +253,14 @@ export const CreateDispatchPage: React.FC = () => {
   };
 
   const handleConfirm = async () => {
-    if (!customerId || items.length === 0) return showNotification({ type: 'error', title: 'Error', message: 'Fill all fields.' });
+    if (!customerId || !sourceWH || items.length === 0) return showNotification({ type: 'error', title: 'Error', message: 'Fill all fields including Source Warehouse.' });
     setLoading(true);
     try {
       const payload = {
         companyId,
         dispatchedTo: customers.find(c => c.id.toString() === customerId)?.name || sessionStorage.getItem('_editDispatchedTo') || 'Unknown',
         dispatchDate: new Date(dispatchDate).toISOString(),
-        notes: `${notes} | Carrier: ${carrier}`,
+        notes: `${notes} | Source: ${sourceWH} | Carrier: ${carrier}`,
         items: items.filter(i => i.productId).map(i => ({ productId: parseInt(i.productId), quantity: i.qty }))
       };
       if (id) {

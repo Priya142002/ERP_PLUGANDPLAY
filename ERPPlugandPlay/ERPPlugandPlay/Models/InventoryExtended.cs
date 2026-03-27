@@ -61,9 +61,10 @@ namespace ERPPlugandPlay.Models
         public string GrnNumber { get; set; } = string.Empty;
         public int? VendorId { get; set; }
         public Vendor? Vendor { get; set; }
+        public string? ReceivedFrom { get; set; }
         public string? PurchaseOrderRef { get; set; }
         public string Status { get; set; } = "Received";
-        public DateTime ReceivedDate { get; set; } = DateTime.UtcNow;
+        public DateTime ReceiveDate { get; set; } = DateTime.UtcNow;
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<ProductReceiveItem> Items { get; set; } = new List<ProductReceiveItem>();
@@ -72,12 +73,11 @@ namespace ERPPlugandPlay.Models
     public class ProductReceiveItem
     {
         public int Id { get; set; }
-        public int ReceiveId { get; set; }
+        public int ProductReceiveId { get; set; }
         public ProductReceive Receive { get; set; } = null!;
         public int ProductId { get; set; }
         public Product Product { get; set; } = null!;
-        public int OrderedQty { get; set; }
-        public int ReceivedQty { get; set; }
+        public int Quantity { get; set; }
         public decimal UnitCost { get; set; }
     }
 }
