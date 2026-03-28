@@ -49,8 +49,43 @@ namespace ERPPlugandPlay.Services
                     RoleId        = adminRole.Id,
                     IsActive      = true
                 };
+
+                // Create a trial company for this user
+                var company = new Company
+                {
+                    Name = user.Name + " Company",
+                    Email = user.Email,
+                    AdminEmail = user.Email,
+                    AdminName = user.Name,
+                    AdminPassword = user.PlainPassword,
+                    IsTrialActive = true,
+                    TrialStartDate = DateTime.UtcNow,
+                    TrialEndDate = DateTime.UtcNow.AddDays(30),
+                    Status = "active",
+                    Code = "TRL-" + Guid.NewGuid().ToString("N")[..6].ToUpper()
+                };
+                _db.Companies.Add(company);
+                await _db.SaveChangesAsync();
+
+                // Link user to company
+                user.CompanyId = company.Id;
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
+
+                // Assign default trial modules
+                var defaultTrialModules = new List<string> { "inventory", "sales", "purchase", "accounts" };
+                foreach (var moduleId in defaultTrialModules)
+                {
+                    _db.CompanyModules.Add(new CompanyModule
+                    {
+                        CompanyId = company.Id,
+                        ModuleId = moduleId,
+                        IsEnabled = true,
+                        IsTrialAccess = true
+                    });
+                }
+                await _db.SaveChangesAsync();
+
                 await _db.Entry(user).Reference(u => u.Role).LoadAsync();
             }
             else
@@ -115,8 +150,43 @@ namespace ERPPlugandPlay.Services
                     RoleId        = adminRole.Id,
                     IsActive      = true
                 };
+
+                // Create a trial company for this user
+                var company = new Company
+                {
+                    Name = user.Name + " Company",
+                    Email = user.Email,
+                    AdminEmail = user.Email,
+                    AdminName = user.Name,
+                    AdminPassword = user.PlainPassword,
+                    IsTrialActive = true,
+                    TrialStartDate = DateTime.UtcNow,
+                    TrialEndDate = DateTime.UtcNow.AddDays(30),
+                    Status = "active",
+                    Code = "TRL-" + Guid.NewGuid().ToString("N")[..6].ToUpper()
+                };
+                _db.Companies.Add(company);
+                await _db.SaveChangesAsync();
+
+                // Link user to company
+                user.CompanyId = company.Id;
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
+
+                // Assign default trial modules
+                var defaultTrialModules = new List<string> { "inventory", "sales", "purchase", "accounts" };
+                foreach (var moduleId in defaultTrialModules)
+                {
+                    _db.CompanyModules.Add(new CompanyModule
+                    {
+                        CompanyId = company.Id,
+                        ModuleId = moduleId,
+                        IsEnabled = true,
+                        IsTrialAccess = true
+                    });
+                }
+                await _db.SaveChangesAsync();
+
                 await _db.Entry(user).Reference(u => u.Role).LoadAsync();
             }
 
@@ -137,33 +207,38 @@ namespace ERPPlugandPlay.Services
                     Token = superToken, Name = user.Name, Email = user.Email,
                     Role = user.Role.RoleName, Expiry = superExpiry,
                     HasActiveSubscription = true, DaysRemaining = 9999,
-                    AllowedModules = AllModules()
+                    AllowedModules = await AllModulesAsync()
                 });
             }
 
-            // Find company by admin email
-            Company? company = await _db.Companies
-                .Include(c => c.Modules)
-                .FirstOrDefaultAsync(c => c.AdminEmail == user.Email);
-
-            // Try employee lookup
-            if (company == null)
+            // Find company by CompanyId
+            Company? company = null;
+            if (user.CompanyId.HasValue)
             {
-                var employee = await _db.Employees.FirstOrDefaultAsync(e => e.Email == user.Email);
-                if (employee != null)
-                    company = await _db.Companies.Include(c => c.Modules)
-                        .FirstOrDefaultAsync(c => c.Id == employee.CompanyId);
+                company = await _db.Companies
+                    .Include(c => c.Modules)
+                    .FirstOrDefaultAsync(c => c.Id == user.CompanyId.Value);
             }
-
-            // Check if trial company exists by email
+            
+            // Fallback for legacy data (admin email or employee lookup)
             if (company == null)
             {
-                var existingByEmail = await _db.Companies.Include(c => c.Modules)
-                    .FirstOrDefaultAsync(c => c.Email == user.Email);
+                company = await _db.Companies
+                    .Include(c => c.Modules)
+                    .FirstOrDefaultAsync(c => c.AdminEmail == user.Email);
 
-                if (existingByEmail != null)
+                if (company == null)
                 {
-                    company = existingByEmail;
+                    var employee = await _db.Employees.FirstOrDefaultAsync(e => e.Email == user.Email);
+                    if (employee != null)
+                        company = await _db.Companies.Include(c => c.Modules)
+                            .FirstOrDefaultAsync(c => c.Id == employee.CompanyId);
+                }
+
+                if (company != null && !user.CompanyId.HasValue)
+                {
+                    user.CompanyId = company.Id;
+                    await _db.SaveChangesAsync();
                 }
             }
 
@@ -208,7 +283,7 @@ namespace ERPPlugandPlay.Services
 
                 allowedModules = hasActiveSub
                     ? (company.Modules.Where(m => m.IsEnabled).Select(m => m.ModuleId).ToList() is { Count: > 0 } ml
-                        ? ml : AllModules())
+                        ? ml : await AllModulesAsync())
                     : company.Modules.Where(m => m.IsEnabled && m.IsTrialAccess).Select(m => m.ModuleId).ToList();
             }
             else
@@ -216,7 +291,7 @@ namespace ERPPlugandPlay.Services
                 isTrialActive = true;
                 trialEndDate = DateTime.UtcNow.AddDays(30);
                 daysRemaining = 30;
-                allowedModules = AllModules();
+                allowedModules = await AllModulesAsync();
             }
 
             var (token, expiry) = _jwt.GenerateToken(user);
@@ -231,6 +306,9 @@ namespace ERPPlugandPlay.Services
             });
         }
 
+        private async Task<List<string>> AllModulesAsync() =>
+            await _db.GlobalModules.Where(m => m.IsActive).Select(m => m.ModuleId).ToListAsync();
+        
         private static List<string> AllModules() =>
         [
             "inventory", "purchase", "sales", "accounts",

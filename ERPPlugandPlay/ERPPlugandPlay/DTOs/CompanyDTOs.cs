@@ -2,6 +2,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ERPPlugandPlay.DTOs
 {
+    public class CreateBranchDto
+    {
+        public string BranchName { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string ContactPhone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class BranchDto : CreateBranchDto
+    {
+        public int Id { get; set; }
+    }
+
     // Kept for Admin-scoped simple usage
     public class CreateCompanyDto
     {
@@ -10,6 +23,7 @@ namespace ERPPlugandPlay.DTOs
         public string Phone { get; set; } = string.Empty;
         [EmailAddress] public string Email { get; set; } = string.Empty;
         public string GSTNumber { get; set; } = string.Empty;
+        public List<CreateBranchDto> Branches { get; set; } = new();
     }
 
     public class UpdateCompanyDto : CreateCompanyDto
@@ -28,5 +42,6 @@ namespace ERPPlugandPlay.DTOs
         public string GSTNumber { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public List<BranchDto> Branches { get; set; } = new();
     }
 }

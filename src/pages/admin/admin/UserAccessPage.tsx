@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Select from "../../../components/ui/Select";
 import { adminNavigation } from "../../../config/navigation";
+import { adminApi } from "../../../services/api";
+import toast from "react-hot-toast";
 
 const ALL_MODULES = [
   { label: 'Select Module', value: '' },
@@ -45,7 +47,71 @@ const UserAccessPage: React.FC = () => {
   const [newScreenName, setNewScreenName] = useState("");
   const [showRoleInput, setShowRoleInput] = useState(false);
   const [newRoleName, setNewRoleName] = useState("");
-  const [roles, setRoles] = useState(['Admin', 'Manager', 'User', 'Accountant']);
+  const [roles, setRoles] = useState<any[]>([]);
+  const [allPermissions, setAllPermissions] = useState<any[]>([]);
+  const [rolePermissions, setRolePermissions] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      const [rolesRes, permsRes] = await Promise.all([
+        adminApi.getRoles(),
+        adminApi.getPermissions()
+      ]);
+      if (rolesRes.success) setRoles(rolesRes.data);
+      if (permsRes.success) setAllPermissions(permsRes.data);
+    } catch (error) {
+      toast.error("Failed to fetch initial data");
+    }
+  };
+
+  // Update screens when selectedRole or selectedModule changes
+  useEffect(() => {
+    if (selectedRole && selectedModule) {
+      fetchRolePermissions();
+    }
+  }, [selectedRole, selectedModule]);
+
+  const fetchRolePermissions = async () => {
+    const roleId = roles.find(r => r.roleName === selectedRole || r.id === parseInt(selectedRole))?.id;
+    if (!roleId) return;
+
+    setLoading(true);
+    try {
+      const res = await adminApi.getRolePermissions(roleId);
+      if (res.success) {
+        const pIds = res.data;
+        setRolePermissions(pIds);
+        
+        // Map to screens
+        const moduleScreens = getModuleScreens(selectedModule);
+        const mappedScreens = moduleScreens.map(screen => {
+          return {
+            ...screen,
+            view: hasPermission(screen.name, 'View', pIds),
+            insert: hasPermission(screen.name, 'Create', pIds),
+            update: hasPermission(screen.name, 'Edit', pIds),
+            delete: hasPermission(screen.name, 'Delete', pIds),
+          };
+        });
+        setScreens(mappedScreens);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch permissions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasPermission = (screenName: string, action: string, activeIds: number[]) => {
+    const permName = `${selectedModule}.${screenName.replace(/\s+/g, '')}.${action}`.toLowerCase();
+    const perm = allPermissions.find(p => p.name.toLowerCase() === permName);
+    return perm ? activeIds.includes(perm.id) : false;
+  };
 
   // Update screens when module changes
   useEffect(() => {
@@ -58,9 +124,49 @@ const UserAccessPage: React.FC = () => {
     }
   }, [selectedModule]);
 
-  const handleSave = () => {
-    console.log("Saving permissions:", { selectedRole, selectedModule, screens });
-    // Add save logic here
+  const handleSave = async () => {
+    const roleId = roles.find(r => r.roleName === selectedRole || r.id === parseInt(selectedRole))?.id;
+    if (!roleId) {
+      toast.error("Please select a role");
+      return;
+    }
+
+    const permissionIds: number[] = [];
+    screens.forEach(screen => {
+      const actions = [
+        { key: 'view', suffix: 'View' },
+        { key: 'insert', suffix: 'Create' },
+        { key: 'update', suffix: 'Edit' },
+        { key: 'delete', suffix: 'Delete' }
+      ];
+
+      actions.forEach(action => {
+        if ((screen as any)[action.key]) {
+          const permName = `${selectedModule}.${screen.name.replace(/\s+/g, '')}.${action.suffix}`.toLowerCase();
+          const perm = allPermissions.find(p => p.name.toLowerCase() === permName);
+          if (perm) permissionIds.push(perm.id);
+        }
+      });
+    });
+
+    // Also keep permissions from other modules
+    const otherModulePermissions = rolePermissions.filter(pid => {
+      const p = allPermissions.find(ap => ap.id === pid);
+      return p && !p.name.toLowerCase().startsWith(selectedModule.toLowerCase() + ".");
+    });
+
+    try {
+      const res = await adminApi.assignPermissions({
+        roleId,
+        permissionIds: [...new Set([...permissionIds, ...otherModulePermissions])]
+      });
+      if (res.success) {
+        toast.success("Permissions updated successfully");
+        fetchRolePermissions();
+      }
+    } catch (error) {
+      toast.error("Failed to save permissions");
+    }
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -160,7 +266,7 @@ const UserAccessPage: React.FC = () => {
                     onChange={(e) => setSelectedRole(e.target.value)}
                     options={[
                       { label: 'Select Role', value: '' },
-                      ...roles.map(role => ({ label: role, value: role }))
+                      ...roles.map(role => ({ label: role.roleName, value: role.roleName }))
                     ]}
                   />
                 </div>
@@ -206,7 +312,12 @@ const UserAccessPage: React.FC = () => {
       </div>
 
       {/* Permissions Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden relative">
+        {loading && (
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center z-10">
+            <div className="w-8 h-8 border-4 border-[#002147] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead className="bg-[#002147] text-white">

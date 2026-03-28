@@ -5,9 +5,11 @@ namespace ERPPlugandPlay.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty; // Basic, Pro, Enterprise
         public decimal MonthlyPrice { get; set; }
+        public decimal PricePerUser { get; set; }
         public string PlanType { get; set; } = "Monthly"; // Monthly, Yearly, Quarterly
         public int MaxSeats { get; set; } // 0 = unlimited
         public int MaxModules { get; set; }
+        public string AllowedModules { get; set; } = string.Empty; // Comma-separated or JSON list
         public string Description { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

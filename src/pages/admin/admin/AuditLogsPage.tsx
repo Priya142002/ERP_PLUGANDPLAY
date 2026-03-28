@@ -4,8 +4,8 @@ import { Activity, Download } from "lucide-react";
 import Select from "../../../components/ui/Select";
 
 const MOCK_LOGS = [
-  { 
-    id: 1, 
+  {
+    id: 1,
     timestamp: '2 mins ago',
     user: 'John Doe',
     userInitials: 'JD',
@@ -13,8 +13,8 @@ const MOCK_LOGS = [
     resource: 'Invoice #1234',
     status: 'Success'
   },
-  { 
-    id: 2, 
+  {
+    id: 2,
     timestamp: '15 mins ago',
     user: 'Jane Smith',
     userInitials: 'JS',
@@ -22,8 +22,8 @@ const MOCK_LOGS = [
     resource: 'Product SKU-789',
     status: 'Success'
   },
-  { 
-    id: 3, 
+  {
+    id: 3,
     timestamp: '1 hour ago',
     user: 'Bob Johnson',
     userInitials: 'BJ',
@@ -31,8 +31,8 @@ const MOCK_LOGS = [
     resource: 'Customer Record',
     status: 'Success'
   },
-  { 
-    id: 4, 
+  {
+    id: 4,
     timestamp: '2 hours ago',
     user: 'John Doe',
     userInitials: 'JD',
@@ -40,8 +40,8 @@ const MOCK_LOGS = [
     resource: 'System Access',
     status: 'Success'
   },
-  { 
-    id: 5, 
+  {
+    id: 5,
     timestamp: '3 hours ago',
     user: 'Jane Smith',
     userInitials: 'JS',
@@ -77,7 +77,7 @@ export const AuditLogsPage: React.FC = () => {
     const headers = ['Timestamp', 'User', 'Action', 'Resource', 'Status'];
     const csvContent = [
       headers.join(','),
-      ...MOCK_LOGS.map(log => 
+      ...MOCK_LOGS.map(log =>
         [log.timestamp, log.user, log.action, log.resource, log.status].join(',')
       )
     ].join('\n');
@@ -95,7 +95,7 @@ export const AuditLogsPage: React.FC = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6 p-6"
@@ -106,7 +106,7 @@ export const AuditLogsPage: React.FC = () => {
           <Activity size={20} className="text-slate-700" />
           <h1 className="text-xl font-semibold text-slate-900">Audit Logs</h1>
         </div>
-        <button 
+        <button
           onClick={handleExport}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
         >
@@ -207,11 +207,10 @@ export const AuditLogsPage: React.FC = () => {
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 text-sm font-medium rounded ${
-                currentPage === page
-                  ? 'bg-[#002147] text-white'
-                  : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
-              }`}
+              className={`px-3 py-1 text-sm font-medium rounded ${currentPage === page
+                ? 'bg-[#002147] text-white'
+                : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
+                }`}
             >
               {page}
             </button>

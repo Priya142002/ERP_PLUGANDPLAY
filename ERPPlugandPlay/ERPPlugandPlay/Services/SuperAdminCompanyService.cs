@@ -40,16 +40,20 @@ namespace ERPPlugandPlay.Services
             await _db.SaveChangesAsync();
 
             // Seed default trial modules
-            foreach (var moduleId in dto.AllowedModules)
-            {
-                _db.CompanyModules.Add(new CompanyModule
-                {
-                    CompanyId = company.Id,
-                    ModuleId = moduleId,
-                    IsEnabled = true,
-                    IsTrialAccess = true
-                });
-            }
+            var validModuleIds = await _db.GlobalModules.Where(m => m.IsActive).Select(m => m.ModuleId).ToListAsync();
+ 
+             foreach (var moduleId in dto.AllowedModules)
+             {
+                 if (!validModuleIds.Contains(moduleId)) continue;
+
+                 _db.CompanyModules.Add(new CompanyModule
+                 {
+                     CompanyId = company.Id,
+                     ModuleId = moduleId,
+                     IsEnabled = true,
+                     IsTrialAccess = true
+                 });
+             }
 
             // Create admin user for this company
             var adminRole = await _db.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
@@ -61,6 +65,7 @@ namespace ERPPlugandPlay.Services
                     Email = dto.AdminEmail,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.AdminPassword),
                     RoleId = adminRole.Id,
+                    CompanyId = company.Id, // Link to company
                     IsActive = true
                 });
             }
@@ -137,22 +142,27 @@ namespace ERPPlugandPlay.Services
             company.AdminName = dto.AdminName;
             company.AdminEmail = dto.AdminEmail;
             company.AdminPhone = dto.AdminPhone;
+            company.AdminPassword = dto.AdminPassword;
             company.UpdatedAt = DateTime.UtcNow;
 
             // Update allowed modules
             var existing = company.Modules.Where(m => m.IsTrialAccess).ToList();
             _db.CompanyModules.RemoveRange(existing);
 
-            foreach (var moduleId in dto.AllowedModules)
-            {
-                _db.CompanyModules.Add(new CompanyModule
-                {
-                    CompanyId = company.Id,
-                    ModuleId = moduleId,
-                    IsEnabled = true,
-                    IsTrialAccess = true
-                });
-            }
+            var validModuleIds = await _db.GlobalModules.Where(m => m.IsActive).Select(m => m.ModuleId).ToListAsync();
+ 
+             foreach (var moduleId in dto.AllowedModules)
+             {
+                 if (!validModuleIds.Contains(moduleId)) continue;
+
+                 _db.CompanyModules.Add(new CompanyModule
+                 {
+                     CompanyId = company.Id,
+                     ModuleId = moduleId,
+                     IsEnabled = true,
+                     IsTrialAccess = true
+                 });
+             }
 
             await _db.SaveChangesAsync();
             return ApiResponse<CompanyFullDto>.Ok(await BuildDtoAsync(company.Id));
@@ -195,6 +205,7 @@ namespace ERPPlugandPlay.Services
             GSTNumber = dto.GSTNumber, TaxNumber = dto.TaxNumber,
             Status = dto.Status, Logo = dto.Logo,
             AdminName = dto.AdminName, AdminEmail = dto.AdminEmail, AdminPhone = dto.AdminPhone,
+            AdminPassword = dto.AdminPassword,
             // Auto-activate 30-day trial for every new company
             IsTrialActive = true,
             TrialStartDate = DateTime.UtcNow,

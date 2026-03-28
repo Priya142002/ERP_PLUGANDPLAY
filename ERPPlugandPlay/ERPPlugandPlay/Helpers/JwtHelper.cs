@@ -28,6 +28,7 @@ namespace ERPPlugandPlay.Helpers
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
+                new Claim("CompanyId", user.CompanyId?.ToString() ?? ""),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

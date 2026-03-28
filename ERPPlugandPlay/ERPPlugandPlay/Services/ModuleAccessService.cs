@@ -18,36 +18,25 @@ namespace ERPPlugandPlay.Services
     {
         private readonly ERPDbContext _db;
 
-        private static readonly Dictionary<string, string> ModuleNames = new()
-        {
-            { "inventory", "Inventory Management" },
-            { "purchase", "Purchase Management" },
-            { "sales", "Sales Management" },
-            { "accounts", "Accounts & Finance" },
-            { "crm", "CRM" },
-            { "hrm", "HRM" },
-            { "projects", "Projects" },
-            { "helpdesk", "Helpdesk" },
-            { "assets", "Assets" },
-            { "logistics", "Logistics" },
-            { "production", "Production" },
-            { "billing", "Billing" }
-        };
-
         public ModuleAccessService(ERPDbContext db) => _db = db;
-
+ 
         public async Task<ApiResponse<List<CompanyModuleDto>>> GetCompanyModulesAsync(int companyId)
         {
             var modules = await _db.CompanyModules
                 .Where(m => m.CompanyId == companyId)
                 .ToListAsync();
 
-            var result = ModuleNames.Select(kv => new CompanyModuleDto
+            var allGlobalModules = await _db.GlobalModules
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.SortOrder)
+                .ToListAsync();
+
+            var result = allGlobalModules.Select(m => new CompanyModuleDto
             {
-                ModuleId = kv.Key,
-                ModuleName = kv.Value,
-                IsEnabled = modules.FirstOrDefault(m => m.ModuleId == kv.Key)?.IsEnabled ?? false,
-                IsTrialAccess = modules.FirstOrDefault(m => m.ModuleId == kv.Key)?.IsTrialAccess ?? false
+                ModuleId = m.ModuleId,
+                ModuleName = m.Name,
+                IsEnabled = modules.FirstOrDefault(cm => cm.ModuleId == m.ModuleId)?.IsEnabled ?? false,
+                IsTrialAccess = modules.FirstOrDefault(cm => cm.ModuleId == m.ModuleId)?.IsTrialAccess ?? false
             }).ToList();
 
             return ApiResponse<List<CompanyModuleDto>>.Ok(result);
@@ -59,16 +48,20 @@ namespace ERPPlugandPlay.Services
                 .Where(m => m.CompanyId == dto.CompanyId).ToListAsync();
             _db.CompanyModules.RemoveRange(existing);
 
-            foreach (var moduleId in dto.ModuleIds)
-            {
-                _db.CompanyModules.Add(new CompanyModule
-                {
-                    CompanyId = dto.CompanyId,
-                    ModuleId = moduleId,
-                    IsEnabled = true,
-                    IsTrialAccess = dto.IsTrialAccess
-                });
-            }
+            var validModuleIds = await _db.GlobalModules.Where(m => m.IsActive).Select(m => m.ModuleId).ToListAsync();
+ 
+             foreach (var moduleId in dto.ModuleIds)
+             {
+                 if (!validModuleIds.Contains(moduleId)) continue;
+
+                 _db.CompanyModules.Add(new CompanyModule
+                 {
+                     CompanyId = dto.CompanyId,
+                     ModuleId = moduleId,
+                     IsEnabled = true,
+                     IsTrialAccess = dto.IsTrialAccess
+                 });
+             }
 
             await _db.SaveChangesAsync();
             return ApiResponse<bool>.Ok(true, "Modules updated.");

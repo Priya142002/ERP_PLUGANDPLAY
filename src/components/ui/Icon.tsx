@@ -56,8 +56,9 @@ import {
   Tag,
   Puzzle,
   Code,
-  Mail,
-  Factory
+  Mail, 
+  Factory,
+  Lock
 } from 'lucide-react';
 
 interface IconProps {
@@ -138,7 +139,8 @@ const icons: Record<string, React.ComponentType<any>> = {
   puzzle: Puzzle,
   code: Code,
   mail: Mail,
-  factory: Factory
+  factory: Factory,
+  lock: Lock
 };
 
 export const Icon: React.FC<IconProps> = ({ name, className = '', size = 'md' }) => {

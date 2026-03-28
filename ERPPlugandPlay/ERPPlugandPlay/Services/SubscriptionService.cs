@@ -29,8 +29,10 @@ namespace ERPPlugandPlay.Services
             var plan = new SubscriptionPlan
             {
                 Name = dto.Name, MonthlyPrice = dto.MonthlyPrice,
+                PricePerUser = dto.PricePerUser,
                 PlanType = dto.PlanType,
                 MaxSeats = dto.MaxSeats, MaxModules = dto.MaxModules,
+                AllowedModules = dto.AllowedModules,
                 Description = dto.Description
             };
             _db.SubscriptionPlans.Add(plan);
@@ -50,8 +52,10 @@ namespace ERPPlugandPlay.Services
             var plan = await _db.SubscriptionPlans.FindAsync(id);
             if (plan == null) return ApiResponse<PlanDto>.Fail("Plan not found.");
             plan.Name = dto.Name; plan.MonthlyPrice = dto.MonthlyPrice;
+            plan.PricePerUser = dto.PricePerUser;
             plan.PlanType = dto.PlanType;
             plan.MaxSeats = dto.MaxSeats; plan.MaxModules = dto.MaxModules;
+            plan.AllowedModules = dto.AllowedModules;
             plan.Description = dto.Description;
             await _db.SaveChangesAsync();
             return ApiResponse<PlanDto>.Ok(Map(plan));
@@ -171,8 +175,10 @@ namespace ERPPlugandPlay.Services
         private static PlanDto Map(SubscriptionPlan p) => new()
         {
             Id = p.Id, Name = p.Name, MonthlyPrice = p.MonthlyPrice,
+            PricePerUser = p.PricePerUser,
             PlanType = p.PlanType,
             MaxSeats = p.MaxSeats, MaxModules = p.MaxModules,
+            AllowedModules = p.AllowedModules,
             Description = p.Description, IsActive = p.IsActive
         };
     }

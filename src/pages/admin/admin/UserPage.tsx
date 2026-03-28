@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  UserPlus, 
-  Search, 
+import {
+  UserPlus,
+  Search,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -12,10 +12,10 @@ import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 
 const MOCK_USERS = [
-  { 
-    id: 1, 
-    userName: 'harisilks@gmail.com', 
-    userRole: 'Admin,Enterprise Resource Planning', 
+  {
+    id: 1,
+    userName: 'harisilks@gmail.com',
+    userRole: 'Admin,Enterprise Resource Planning',
     employee: 'Head Office',
     branch: 'Head Office',
     status: 'Active'
@@ -41,7 +41,7 @@ const UserPage: React.FC = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6 p-6"
@@ -67,7 +67,7 @@ const UserPage: React.FC = () => {
       {/* Search Bar */}
       <div className="relative w-full md:w-[500px]">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input 
+        <input
           type="text"
           placeholder="Search here"
           className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
@@ -92,9 +92,8 @@ const UserPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {MOCK_USERS.map((user, i) => (
-                <tr key={user.id} className={`group transition-colors hover:bg-slate-50/70 ${
-                  i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
-                }`}>
+                <tr key={user.id} className={`group transition-colors hover:bg-slate-50/70 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
+                  }`}>
                   <td className="px-5 py-3.5">
                     <span className="text-sm text-blue-600 hover:underline cursor-pointer">
                       {user.userName}
@@ -110,8 +109,8 @@ const UserPage: React.FC = () => {
                     <span className="text-sm text-slate-700">{user.branch}</span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <Badge 
-                      variant={user.status === 'Active' ? 'success' : 'error'} 
+                    <Badge
+                      variant={user.status === 'Active' ? 'success' : 'error'}
                       className="text-xs px-2 py-1"
                     >
                       {user.status}
@@ -119,14 +118,14 @@ const UserPage: React.FC = () => {
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button 
+                      <button
                         onClick={() => handleEditUser(user)}
                         className="h-8 w-8 flex items-center justify-center rounded-xl transition bg-[#002147] hover:bg-[#003366] text-white"
                         title="Edit"
                       >
                         <Edit size={14} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteUser(user)}
                         className="h-8 w-8 flex items-center justify-center rounded-xl transition bg-red-600 hover:bg-red-700 text-white"
                         title="Delete"
@@ -149,13 +148,13 @@ const UserPage: React.FC = () => {
         </div>
       </div>
 
-      <AddUserModal 
-        isOpen={isAddUserModalOpen} 
-        onClose={() => setIsAddUserModalOpen(false)} 
+      <AddUserModal
+        isOpen={isAddUserModalOpen}
+        onClose={() => setIsAddUserModalOpen(false)}
       />
-      
-      <EditUserModal 
-        isOpen={isEditUserModalOpen} 
+
+      <EditUserModal
+        isOpen={isEditUserModalOpen}
         onClose={() => {
           setIsEditUserModalOpen(false);
           setSelectedUser(null);

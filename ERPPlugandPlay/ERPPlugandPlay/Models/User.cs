@@ -9,6 +9,8 @@ namespace ERPPlugandPlay.Models
         public string? PlainPassword { get; set; } // stored for admin visibility
         public int RoleId { get; set; }
         public Role Role { get; set; } = null!;
+        public int? CompanyId { get; set; }
+        public Company? Company { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

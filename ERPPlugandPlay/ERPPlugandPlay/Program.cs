@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
 
 // Swagger with JWT support
 builder.Services.AddSwaggerGen(c =>
@@ -106,6 +107,7 @@ builder.Services.AddScoped<IProductionService, ProductionService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
 builder.Services.AddScoped<IPOSService, POSService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 // Services — SuperAdmin
 builder.Services.AddScoped<ISuperAdminCompanyService, SuperAdminCompanyService>();
@@ -166,100 +168,7 @@ app.UseAuthorization();
 app.UseMiddleware<ERPPlugandPlay.Middleware.TrialAccessMiddleware>();
 app.MapControllers();
 
-// Auto-create DB on startup (safe — does nothing if DB already exists)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ERPDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    try
-    {
-        db.Database.EnsureCreated();
-        logger.LogInformation("Database ensured/created successfully.");
-        
-        // Execute schema update for TaxType and TaxTypeId
-        try 
-        { 
-            db.Database.SetCommandTimeout(300); // 5 minutes to allow for altering large tables
-            db.Database.ExecuteSqlRaw(@"
-                -- Create TaxTypes table if missing
-                IF OBJECT_ID('TaxTypes', 'U') IS NULL
-                BEGIN
-                    CREATE TABLE TaxTypes (
-                        Id INT IDENTITY(1,1) PRIMARY KEY,
-                        CompanyId INT NOT NULL,
-                        Name NVARCHAR(MAX) NOT NULL,
-                        Percentage DECIMAL(18,2) NOT NULL,
-                        CONSTRAINT FK_TaxTypes_Companies FOREIGN KEY (CompanyId) REFERENCES Companies(Id)
-                    );
-                END
-
-                -- Add TaxTypeId column to Products if missing
-                IF COL_LENGTH('Products', 'TaxTypeId') IS NULL
-                BEGIN
-                    ALTER TABLE Products ADD TaxTypeId INT NULL;
-                    ALTER TABLE Products ADD CONSTRAINT FK_Products_TaxTypes FOREIGN KEY (TaxTypeId) REFERENCES TaxTypes(Id);
-                END
-            ");
-        } 
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to update schema for TaxTypes/Products.TaxTypeId.");
-        }
-
-        // Ensure ProductReceives has PurchaseOrderRef and ReceivedDate columns
-        try
-        {
-            db.Database.ExecuteSqlRaw(@"
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceives') AND name = 'PurchaseOrderRef')
-                BEGIN
-                    ALTER TABLE ProductReceives ADD PurchaseOrderRef NVARCHAR(MAX) NULL;
-                END
-
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceives') AND name = 'ReceivedFrom')
-                BEGIN
-                    ALTER TABLE ProductReceives ADD ReceivedFrom NVARCHAR(MAX) NULL;
-                END
-
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceives') AND name = 'ReceiveDate')
-                BEGIN
-                    ALTER TABLE ProductReceives ADD ReceiveDate DATETIME2 NOT NULL DEFAULT GETUTCDATE();
-                END
-            ");
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to update schema for ProductReceives columns.");
-        }
-
-        // Ensure ProductReceiveItems has ProductReceiveId and Quantity columns
-        try
-        {
-            db.Database.ExecuteSqlRaw(@"
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceiveItems') AND name = 'ProductReceiveId')
-                BEGIN
-                    ALTER TABLE ProductReceiveItems ADD ProductReceiveId INT NULL;
-                    IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE name = 'FK_ProductReceiveItems_ProductReceives')
-                    BEGIN
-                        ALTER TABLE ProductReceiveItems ADD CONSTRAINT FK_ProductReceiveItems_ProductReceives 
-                        FOREIGN KEY (ProductReceiveId) REFERENCES ProductReceives(Id);
-                    END
-                END
-
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProductReceiveItems') AND name = 'Quantity')
-                BEGIN
-                    ALTER TABLE ProductReceiveItems ADD Quantity INT NOT NULL DEFAULT 0;
-                END
-            ");
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to update schema for ProductReceiveItems columns.");
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogWarning(ex, "EnsureCreated failed (DB may already exist with different schema). Continuing startup.");
-    }
-}
+// Auto-create DB and update schema on startup
+DatabaseInitializer.Initialize(app.Services);
 
 app.Run();

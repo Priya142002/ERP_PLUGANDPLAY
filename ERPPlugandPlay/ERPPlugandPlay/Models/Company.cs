@@ -40,5 +40,6 @@ namespace ERPPlugandPlay.Models
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();
         public ICollection<CompanySubscription> Subscriptions { get; set; } = new List<CompanySubscription>();
         public ICollection<CompanyModule> Modules { get; set; } = new List<CompanyModule>();
+        public ICollection<Branch> Branches { get; set; } = new List<Branch>();
     }
 }
