@@ -114,12 +114,6 @@ import {
   MaintenancePage,
   AssetDisposalPage,
   AssetReportsPage,
-  ShipmentListPage,
-  DeliveryPage,
-  LogisticsOrderPage,
-  CarrierPartnersPage,
-  CustomerFeedbackPage,
-  LogisticsDashboard,
   InvoicesPage,
   RemindersPage,
   BillingDashboard,
@@ -137,6 +131,18 @@ import {
   InventorySync,
   InvoiceReceipt,
 } from '../pages/admin';
+import { 
+  LogisticsManagementPage,
+  LogisticsReportsPage
+} from '../pages/admin/logistics';
+import { LogisticsDashboardPage } from '../pages/admin/logistics/LogisticsDashboardPage';
+import { 
+  ShipmentListPage,
+  DeliveryPage,
+  LogisticsOrderPage,
+  CarrierPartnersPage,
+  CustomerFeedbackPage
+} from '../pages/admin/logistics';
 import TaskBoardPage from '../pages/admin/projects/TaskBoardPage';
 import ProjectDashboardPage from '../pages/admin/projects/ProjectDashboardPage';
 import AdminCompanyPage from '../pages/admin/admin/CompanyPage';
@@ -381,7 +387,9 @@ export const AppRoutes = ({ user, onLogin, onLogout, onSwitchRole }: AppRoutesPr
         {/* Logistics */}
         <Route path="logistics">
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<LogisticsDashboard />} />
+          <Route path="dashboard" element={<LogisticsDashboardPage />} />
+          <Route path="management" element={<LogisticsManagementPage />} />
+          <Route path="reports" element={<LogisticsReportsPage />} />
           <Route path="shipments" element={<ShipmentListPage />} />
           <Route path="delivery" element={<DeliveryPage />} />
           <Route path="orders" element={<LogisticsOrderPage />} />

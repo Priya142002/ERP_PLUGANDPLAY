@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import Badge from '../../../components/ui/Badge';
 import { motion } from 'framer-motion';
 import { 
@@ -30,7 +30,7 @@ const mobileStyles = `
       width: 100%;
       justify-content: center;
     }
-    .logistics-stats-grid {
+  shipmentId: string;
       grid-template-columns: 1fr !important;
     }
     .logistics-cards-grid {
@@ -200,7 +200,7 @@ export const LogisticsDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-900 group-hover/zone:text-slate-700 transition-colors uppercase">{city.city}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{city.status} • {city.deliveries} Deliveries Today</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{city.status} â€¢ {city.deliveries} Deliveries Today</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -253,11 +253,11 @@ export const LogisticsOrderPage: React.FC = () => {
     const [packingStep, setPackingStep] = React.useState(0);
 
     const packingSteps = [
-        { icon: '🔍', title: 'Scanning Orders', desc: 'Pulling pending orders from the queue and scanning barcodes...' },
-        { icon: '📦', title: 'Assigning Packing Slots', desc: 'Allocating packing stations and assigning orders to workers...' },
-        { icon: '✅', title: 'QC Inspection', desc: 'Running quality checks on items before packing...' },
-        { icon: '🏷️', title: 'Labeling & Sealing', desc: 'Printing shipping labels and sealing packages...' },
-        { icon: '🚚', title: 'Ready for Dispatch', desc: 'All packages staged and ready for carrier pickup.' },
+        { icon: 'ðŸ”', title: 'Scanning Orders', desc: 'Pulling pending orders from the queue and scanning barcodes...' },
+        { icon: 'ðŸ“¦', title: 'Assigning Packing Slots', desc: 'Allocating packing stations and assigning orders to workers...' },
+        { icon: 'âœ…', title: 'QC Inspection', desc: 'Running quality checks on items before packing...' },
+        { icon: 'ðŸ·ï¸', title: 'Labeling & Sealing', desc: 'Printing shipping labels and sealing packages...' },
+        { icon: 'ðŸšš', title: 'Ready for Dispatch', desc: 'All packages staged and ready for carrier pickup.' },
     ];
 
     const handleStartPacking = () => {
@@ -364,11 +364,11 @@ export const LogisticsOrderPage: React.FC = () => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Batch Packing Process</h2>
                                 {!isPacking && (
-                                    <button onClick={handleClosePackingModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>✕</button>
+                                    <button onClick={handleClosePackingModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>âœ•</button>
                                 )}
                             </div>
                             <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-                                {isPacking ? 'Processing orders — please wait...' : 'All steps completed successfully.'}
+                                {isPacking ? 'Processing orders â€” please wait...' : 'All steps completed successfully.'}
                             </p>
                         </div>
 
@@ -396,7 +396,7 @@ export const LogisticsOrderPage: React.FC = () => {
                                             backgroundColor: done ? '#22c55e' : active ? '#1a2744' : '#e2e8f0',
                                             fontSize: done ? '16px' : '18px'
                                         }}>
-                                            {done ? <span style={{ color: '#fff', fontSize: '14px', fontWeight: 700 }}>✓</span> : <span>{step.icon}</span>}
+                                            {done ? <span style={{ color: '#fff', fontSize: '14px', fontWeight: 700 }}>âœ“</span> : <span>{step.icon}</span>}
                                         </div>
                                         <div style={{ flex: 1 }}>
                                             <p style={{ fontSize: '13px', fontWeight: 700, color: done ? '#15803d' : active ? '#1a2744' : '#94a3b8', margin: 0 }}>{step.title}</p>
@@ -758,7 +758,7 @@ export const ShipmentListPage: React.FC = () => {
                                 <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Track Shipment</h2>
                                 <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Real-time tracking details</p>
                             </div>
-                            <button onClick={() => setTrackedShipment(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px', lineHeight: 1 }}>✕</button>
+                            <button onClick={() => setTrackedShipment(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px', lineHeight: 1 }}>âœ•</button>
                         </div>
 
                         {/* Shipment ID badge */}
@@ -834,7 +834,7 @@ export const ShipmentListPage: React.FC = () => {
                                 <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Shipment Details</h2>
                                 <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Live tracking information</p>
                             </div>
-                            <button onClick={() => setSelectedShipment(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px', lineHeight: 1 }}>✕</button>
+                            <button onClick={() => setSelectedShipment(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px', lineHeight: 1 }}>âœ•</button>
                         </div>
 
                         <div style={{ backgroundColor: '#f8fafc', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
@@ -982,10 +982,10 @@ export const DeliveryPage: React.FC = () => {
                         <div style={{ padding: '24px 24px 16px', flexShrink: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <div>
-                                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>All Stops — Route R-{allStopsRoute}</h2>
-                                    <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Michael Henderson {allStopsRoute} · D-Fleet {allStopsRoute} · 12 Stops</p>
+                                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>All Stops â€” Route R-{allStopsRoute}</h2>
+                                    <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Michael Henderson {allStopsRoute} Â· D-Fleet {allStopsRoute} Â· 12 Stops</p>
                                 </div>
-                                <button onClick={() => setAllStopsRoute(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>✕</button>
+                                <button onClick={() => setAllStopsRoute(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>âœ•</button>
                             </div>
                         </div>
 
@@ -1049,11 +1049,11 @@ export const DeliveryPage: React.FC = () => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                                 <div>
                                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                                        Stop {selectedStop.stop} — Route R-{selectedStop.route}
+                                        Stop {selectedStop.stop} â€” Route R-{selectedStop.route}
                                     </h2>
                                     <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Delivery stop details</p>
                                 </div>
-                                <button onClick={() => setSelectedStop(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>✕</button>
+                                <button onClick={() => setSelectedStop(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>âœ•</button>
                             </div>
 
                             {(() => {
@@ -1114,7 +1114,7 @@ export const CarrierPartnersPage: React.FC = () => {
         if (!form.contact.trim()) e.contact = 'Contact person is required';
         if (!form.region.trim()) e.region = 'Region is required';
         if (!form.reliability || isNaN(Number(form.reliability)) || Number(form.reliability) < 1 || Number(form.reliability) > 100)
-            e.reliability = 'Enter a valid reliability % (1–100)';
+            e.reliability = 'Enter a valid reliability % (1â€“100)';
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -1198,7 +1198,7 @@ export const CarrierPartnersPage: React.FC = () => {
                                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Onboard New Carrier</h2>
                                     <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Add a new shipping partner to the network</p>
                                 </div>
-                                <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>✕</button>
+                                <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>âœ•</button>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1207,7 +1207,7 @@ export const CarrierPartnersPage: React.FC = () => {
                                     { key: 'code', label: 'Registration ID', placeholder: 'e.g., FTL-201' },
                                     { key: 'contact', label: 'Contact Person', placeholder: 'e.g., John Smith' },
                                     { key: 'region', label: 'Operating Region', placeholder: 'e.g., North East' },
-                                    { key: 'reliability', label: 'Reliability % (1–100)', placeholder: 'e.g., 90' },
+                                    { key: 'reliability', label: 'Reliability % (1â€“100)', placeholder: 'e.g., 90' },
                                 ].map(({ key, label, placeholder }) => (
                                     <div key={key}>
                                         <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>{label}</label>
@@ -1396,9 +1396,9 @@ export const CustomerFeedbackPage: React.FC = () => {
                         <div style={{ padding: '24px 24px 16px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
                                 <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>All Customer Feedback</h2>
-                                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>{reviews.length} reviews · Avg 4.92 / 5</p>
+                                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>{reviews.length} reviews Â· Avg 4.92 / 5</p>
                             </div>
-                            <button onClick={() => setShowAllModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>✕</button>
+                            <button onClick={() => setShowAllModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}>âœ•</button>
                         </div>
                         <div style={{ overflowY: 'auto', padding: '0 24px 24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {reviews.map(r => <ReviewCard key={r.id} review={r} showFull />)}
@@ -1417,3 +1417,10 @@ export const CustomerFeedbackPage: React.FC = () => {
         </motion.div>
     );
 };
+
+// Export new logistics pages
+export { LogisticsManagementPage } from './LogisticsManagementPage';
+export { LogisticsReportsPage } from './LogisticsReportsPage';
+
+export { LogisticsDashboardPage } from './LogisticsDashboardPage';
+

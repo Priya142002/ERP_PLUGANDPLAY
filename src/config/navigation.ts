@@ -187,12 +187,9 @@ export const adminNavigation: NavigationItem[] = [
     icon: 'truck',
     roles: ['admin'],
     children: [
-      { id: 'log-dash', label: 'Fleet Intelligence', path: '/admin/logistics/dashboard', roles: ['admin'], icon: 'dashboard' },
-      { id: 'log-order', label: 'Order Processing', path: '/admin/logistics/orders', roles: ['admin'], icon: 'clipboard-list' },
-      { id: 'log-ship', label: 'Shipment Tracking', path: '/admin/logistics/shipments', roles: ['admin'], icon: 'truck' },
-      { id: 'log-del', label: 'Delivery Routes', path: '/admin/logistics/delivery', roles: ['admin'], icon: 'map' },
-      { id: 'log-carrier', label: 'Carrier Partners', path: '/admin/logistics/carriers', roles: ['admin'], icon: 'building' },
-      { id: 'log-feedback', label: 'Customer Feedback', path: '/admin/logistics/feedback', roles: ['admin'], icon: 'chat-alt-2' },
+      { id: 'log-dash', label: 'Logistics Dashboard', path: '/admin/logistics/dashboard', roles: ['admin'], icon: 'dashboard' },
+      { id: 'log-manage', label: 'Logistics Management', path: '/admin/logistics/management', roles: ['admin'], icon: 'clipboard-list' },
+      { id: 'log-reports', label: 'Logistics Reports', path: '/admin/logistics/reports', roles: ['admin'], icon: 'document-report' },
     ]
   },
   {
