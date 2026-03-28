@@ -63,42 +63,18 @@ export function DashboardPage() {
   const QUICK_ACTIONS = [
     { label: "Add Company", icon: Building2, path: "/superadmin/companies", color: CHART_COLORS.primary },
     { label: "Manage Modules", icon: Package, path: "/superadmin/modules", color: CHART_COLORS.info },
+    { label: "Subscriptions", icon: CreditCard, path: "/superadmin/subscriptions", color: CHART_COLORS.warning },
     { label: "View Analytics", icon: TrendingUp, path: "/superadmin/analytics", color: CHART_COLORS.success },
-    { label: "System Settings", icon: Server, path: "/superadmin/system", color: CHART_COLORS.warning },
   ];
 
   return (
     <motion.div {...pageMotion} className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 superadmin-header">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-6 px-3 rounded-full text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-wider"
-              style={{ backgroundColor: "var(--sa-primary)", color: "white" }}>
-              <Award className="h-3 w-3" /> Super Admin
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--sa-text-primary)" }}>Platform Overview</h1>
-          <p className="text-slate-500 mt-1">Monitor and manage your entire ERP ecosystem</p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border shadow-sm"
-          style={{ borderColor: "var(--sa-border)", backgroundColor: "var(--sa-card)" }}>
-          <Globe className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
-          <span className="text-sm font-semibold" style={{ color: "var(--sa-text-primary)" }}>System Status</span>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: 'color-mix(in srgb, var(--sa-success), transparent 90%)' }}>
-            <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--sa-success)" }} />
-            <span className="text-xs font-medium" style={{ color: "var(--sa-success)" }}>Online</span>
-          </div>
-        </div>
-      </div>
-
       {/* Hero Banner */}
       <div className="relative py-6 px-8 rounded-2xl shadow-xl border overflow-hidden"
         style={{ background: `linear-gradient(135deg, var(--sa-primary) 0%, color-mix(in srgb, var(--sa-primary), #000 20%) 100%)`, borderColor: "var(--sa-border)" }}>
         <div className="absolute top-0 right-0 w-64 h-64 opacity-10"><Activity className="w-full h-full" /></div>
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-inner">
               <Zap className="h-6 w-6 text-white" fill="white" />
             </div>
@@ -106,14 +82,6 @@ export function DashboardPage() {
               <p className="!text-white/90 font-bold text-xs uppercase tracking-wider">Enterprise Platform</p>
               <h2 className="!text-white font-bold text-2xl tracking-tight">Vivify ERP Management System</h2>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-6 mt-4">
-            {[`${totalCompanies} Organizations`, "12 ERP Modules", "99.9% Uptime"].map(t => (
-              <div key={t} className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 !text-white" />
-                <span className="!text-white/90 font-semibold text-sm">{t}</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -124,7 +92,7 @@ export function DashboardPage() {
           { label: "Total Companies", value: analytics?.totalCompanies?.toLocaleString() || "0", trend: "+12%", color: "#3B82F6", icon: Globe, delta: "+48 this month" },
           { label: "Active Subscriptions", value: analytics?.activeCompanies?.toLocaleString() || "0", trend: "+8%", color: "#10B981", icon: Activity, delta: "92% retention rate" },
           { label: "Monthly Revenue", value: `₹${((analytics?.monthlyRevenue || 0) / 100000).toFixed(1)}L`, trend: "+15%", color: "#8B5CF6", icon: TrendingUp, delta: "7 new enterprise" },
-          { label: "System Health", value: "99.9%", trend: "Stable", color: "#F59E0B", icon: Shield, delta: "All systems online" }
+          { label: "Total Modules", value: "12", trend: "Stable", color: "#F59E0B", icon: Package, delta: "ERP modules available" }
         ].map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -220,7 +188,7 @@ export function DashboardPage() {
       </div>
 
       {/* Recent Companies & System Health */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         <div className="p-6 rounded-xl border shadow-sm" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -258,36 +226,6 @@ export function DashboardPage() {
                 <p className="text-sm" style={{ color: "var(--sa-text-secondary)" }}>No companies yet</p>
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="p-6 rounded-xl border shadow-sm" style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)" }}>
-          <div className="flex items-center gap-2 mb-5">
-            <Activity className="h-5 w-5" style={{ color: "var(--sa-primary)" }} />
-            <h3 className="text-base font-bold" style={{ color: "var(--sa-text-primary)" }}>System Health</h3>
-          </div>
-          <div className="space-y-4">
-            {[
-              { label: "API Response Time", value: "124ms", status: "excellent", percentage: 95 },
-              { label: "Database Performance", value: "98%", status: "good", percentage: 98 },
-              { label: "Server Uptime", value: "99.9%", status: "excellent", percentage: 99.9 },
-              { label: "Storage Usage", value: "61%", status: "warning", percentage: 61 },
-            ].map((item, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium" style={{ color: "var(--sa-text-secondary)" }}>{item.label}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold" style={{ color: item.status === 'excellent' ? CHART_COLORS.success : item.status === 'good' ? CHART_COLORS.info : CHART_COLORS.warning }}>{item.value}</span>
-                    {item.status === 'warning' ? <AlertCircle className="h-4 w-4" style={{ color: CHART_COLORS.warning }} /> : <CheckCircle2 className="h-4 w-4" style={{ color: CHART_COLORS.success }} />}
-                  </div>
-                </div>
-                <div className="h-2 w-full rounded-full overflow-hidden" style={{ backgroundColor: "var(--sa-hover)" }}>
-                  <motion.div className="h-full rounded-full"
-                    style={{ backgroundColor: item.status === 'excellent' ? CHART_COLORS.success : item.status === 'good' ? CHART_COLORS.info : CHART_COLORS.warning }}
-                    initial={{ width: 0 }} animate={{ width: `${item.percentage}%` }} transition={{ delay: 0.5 + i * 0.1, duration: 0.8 }} />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
