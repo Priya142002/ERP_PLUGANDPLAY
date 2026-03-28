@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, Building2, Search, Edit, Trash2, Power,
-  Users, Download, Filter, X, Save, Upload, Image, Layers
+  Users, Download, Filter, X, Save, Upload, Image, Layers, ToggleLeft, ToggleRight, List
 } from "lucide-react";
 import { superAdminApi } from "../../services/api";
 import "../../styles/superadmin-mobile.css";
@@ -53,6 +53,8 @@ interface CompanyFormData {
   industry: string;
   email: string;
   phone: string;
+  whatsapp: string;
+  whatsappSameAsPhone: boolean;
   address: {
     street: string;
     city: string;
@@ -89,6 +91,12 @@ function CompanyFormModal({
   onSave: (data: CompanyFormData) => void;
 }) {
   const [isSubmitHovered, setIsSubmitHovered] = useState(false);
+  const [showAddCompanyType, setShowAddCompanyType] = useState(false);
+  const [showAddIndustry, setShowAddIndustry] = useState(false);
+  const [newCompanyType, setNewCompanyType] = useState('');
+  const [newIndustry, setNewIndustry] = useState('');
+  const [customCompanyTypes, setCustomCompanyTypes] = useState<Array<{value: string, label: string}>>([]);
+  const [customIndustries, setCustomIndustries] = useState<string[]>([]);
   const [formData, setFormData] = useState<CompanyFormData>(() => {
     if (company) {
       return {
@@ -98,6 +106,8 @@ function CompanyFormModal({
         industry: company.industry || '',
         email: company.email || '',
         phone: company.phone || '',
+        whatsapp: company.whatsapp || '',
+        whatsappSameAsPhone: company.whatsappSameAsPhone || false,
         address: company.address || { street: '', city: '', state: '', country: '', postalCode: '' },
         gstNumber: company.gstNumber || '',
         taxNumber: company.taxNumber || '',
@@ -116,6 +126,8 @@ function CompanyFormModal({
       industry: '',
       email: '',
       phone: '',
+      whatsapp: '',
+      whatsappSameAsPhone: false,
       address: { street: '', city: '', state: '', country: '', postalCode: '' },
       gstNumber: '',
       taxNumber: '',
@@ -155,6 +167,45 @@ function CompanyFormModal({
   const removeLogo = () => {
     setFormData({ ...formData, logo: '' });
   };
+
+  const handleAddCompanyType = () => {
+    if (newCompanyType.trim()) {
+      const value = newCompanyType.toLowerCase().replace(/\s+/g, '_');
+      const newType = { value, label: newCompanyType.trim() };
+      setCustomCompanyTypes([...customCompanyTypes, newType]);
+      setFormData({ ...formData, companyType: value as any });
+      setNewCompanyType('');
+      setShowAddCompanyType(false);
+    }
+  };
+
+  const handleAddIndustry = () => {
+    if (newIndustry.trim()) {
+      setCustomIndustries([...customIndustries, newIndustry.trim()]);
+      setFormData({ ...formData, industry: newIndustry.trim() });
+      setNewIndustry('');
+      setShowAddIndustry(false);
+    }
+  };
+
+  const handleWhatsappCheckbox = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      whatsappSameAsPhone: checked,
+      whatsapp: checked ? formData.phone : formData.whatsapp
+    });
+  };
+
+  const handlePhoneChange = (phone: string) => {
+    setFormData({
+      ...formData,
+      phone,
+      whatsapp: formData.whatsappSameAsPhone ? phone : formData.whatsapp
+    });
+  };
+
+  const allCompanyTypes = [...COMPANY_TYPES, ...customCompanyTypes];
+  const allIndustries = [...INDUSTRIES, ...customIndustries];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,35 +272,123 @@ function CompanyFormModal({
                 <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
                   Company Type <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  value={formData.companyType}
-                  onChange={(e) => setFormData({ ...formData, companyType: e.target.value as any })}
-                  className="w-full h-10 rounded-lg border px-3 text-sm"
-                  style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-                >
-                  {COMPANY_TYPES.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
+                {showAddCompanyType ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCompanyType}
+                      onChange={(e) => setNewCompanyType(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCompanyType())}
+                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
+                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-primary)", color: "var(--sa-text-primary)" }}
+                      placeholder="New company type *..."
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCompanyType}
+                      className="px-4 h-10 rounded-lg text-sm font-semibold"
+                      style={{ backgroundColor: "var(--sa-primary)", color: "#FFFFFF" }}
+                    >
+                      Add
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddCompanyType(false);
+                        setNewCompanyType('');
+                      }}
+                      className="p-2 h-10 rounded-lg hover:bg-[var(--sa-hover)]"
+                    >
+                      <X className="h-4 w-4" style={{ color: "var(--sa-text-secondary)" }} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <select
+                      required
+                      value={formData.companyType}
+                      onChange={(e) => setFormData({ ...formData, companyType: e.target.value as any })}
+                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
+                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
+                    >
+                      {allCompanyTypes.map(type => (
+                        <option key={type.value} value={type.value}>{type.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddCompanyType(true)}
+                      className="flex items-center justify-center h-10 w-10 rounded-lg border hover:bg-[var(--sa-hover)] transition"
+                      style={{ borderColor: "var(--sa-border)" }}
+                      title="Add new company type"
+                    >
+                      <Plus className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
                   Industry <span className="text-red-500">*</span>
                 </label>
-                <select
-                  required
-                  value={formData.industry}
-                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  className="w-full h-10 rounded-lg border px-3 text-sm"
-                  style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-                >
-                  <option value="">Select Industry</option>
-                  {INDUSTRIES.map(ind => (
-                    <option key={ind} value={ind}>{ind}</option>
-                  ))}
-                </select>
+                {showAddIndustry ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newIndustry}
+                      onChange={(e) => setNewIndustry(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddIndustry())}
+                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
+                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-primary)", color: "var(--sa-text-primary)" }}
+                      placeholder="New industry *..."
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddIndustry}
+                      className="px-4 h-10 rounded-lg text-sm font-semibold"
+                      style={{ backgroundColor: "var(--sa-primary)", color: "#FFFFFF" }}
+                    >
+                      Add
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddIndustry(false);
+                        setNewIndustry('');
+                      }}
+                      className="p-2 h-10 rounded-lg hover:bg-[var(--sa-hover)]"
+                    >
+                      <X className="h-4 w-4" style={{ color: "var(--sa-text-secondary)" }} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <select
+                      required
+                      value={formData.industry}
+                      onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
+                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
+                    >
+                      <option value="">Select Industry</option>
+                      {allIndustries.map(ind => (
+                        <option key={ind} value={ind}>{ind}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddIndustry(true)}
+                      className="flex items-center justify-center h-10 w-10 rounded-lg border hover:bg-[var(--sa-hover)] transition"
+                      style={{ borderColor: "var(--sa-border)" }}
+                      title="Add new industry"
+                    >
+                      <Plus className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -333,11 +472,45 @@ function CompanyFormModal({
                   type="tel"
                   required
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
                   className="w-full h-10 rounded-lg border px-3 text-sm"
                   style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
                   placeholder="+1 234 567 8900"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
+                WhatsApp Number
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="tel"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                  disabled={formData.whatsappSameAsPhone}
+                  className="w-full h-10 rounded-lg border px-3 text-sm"
+                  style={{ 
+                    backgroundColor: formData.whatsappSameAsPhone ? "var(--sa-hover)" : "var(--sa-card)", 
+                    borderColor: "var(--sa-border)", 
+                    color: "var(--sa-text-primary)",
+                    cursor: formData.whatsappSameAsPhone ? "not-allowed" : "text"
+                  }}
+                  placeholder="+1 234 567 8900"
+                />
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.whatsappSameAsPhone}
+                    onChange={(e) => handleWhatsappCheckbox(e.target.checked)}
+                    className="h-4 w-4 rounded"
+                    style={{ accentColor: "var(--sa-primary)" }}
+                  />
+                  <span className="text-xs" style={{ color: "var(--sa-text-secondary)" }}>
+                    Same as phone number
+                  </span>
+                </label>
               </div>
             </div>
           </div>
@@ -883,8 +1056,8 @@ export function CompanyManagementPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--sa-text-secondary)" }} />
           <input
             type="text"
@@ -899,6 +1072,32 @@ export function CompanyManagementPage() {
             }}
           />
         </div>
+
+        {/* Status Toggle Icon */}
+        <button
+          onClick={() => {
+            if (filters.status === '') setFilters({ ...filters, status: 'active' });
+            else if (filters.status === 'active') setFilters({ ...filters, status: 'inactive' });
+            else setFilters({ ...filters, status: '' });
+          }}
+          className="flex items-center gap-2 px-4 h-10 rounded-xl border text-sm font-medium transition-all"
+          style={{
+            borderColor: filters.status ? (filters.status === 'active' ? 'var(--sa-success)' : 'var(--sa-error)') : "var(--sa-border)",
+            backgroundColor: filters.status ? (filters.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)') : "transparent",
+            color: filters.status ? (filters.status === 'active' ? 'var(--sa-success)' : 'var(--sa-error)') : "var(--sa-text-primary)"
+          }}
+          title={`Status: ${filters.status === '' ? 'All' : filters.status === 'active' ? 'Active' : 'Inactive'}`}
+        >
+          {filters.status === 'active' ? (
+            <ToggleRight className="h-5 w-5" />
+          ) : filters.status === 'inactive' ? (
+            <ToggleLeft className="h-5 w-5" />
+          ) : (
+            <List className="h-4 w-4" />
+          )}
+          {filters.status === '' ? 'All' : filters.status === 'active' ? 'Active' : 'Inactive'}
+        </button>
+
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center gap-2 px-4 h-10 rounded-xl border text-sm font-medium"
@@ -906,7 +1105,7 @@ export function CompanyManagementPage() {
         >
           <Filter className="h-4 w-4" />
           Filters
-          {(filters.industry || filters.status || filters.country || filters.companyType) && (
+          {(filters.industry || filters.country || filters.companyType) && (
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "var(--sa-primary)" }} />
           )}
         </button>
@@ -929,7 +1128,7 @@ export function CompanyManagementPage() {
               Clear All
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs mb-2" style={{ color: "var(--sa-text-secondary)" }}>Industry</label>
               <select
@@ -942,19 +1141,6 @@ export function CompanyManagementPage() {
                 {INDUSTRIES.map(ind => (
                   <option key={ind} value={ind}>{ind}</option>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs mb-2" style={{ color: "var(--sa-text-secondary)" }}>Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="w-full h-9 rounded-lg border px-3 text-sm"
-                style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-              >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
               </select>
             </div>
             <div>
@@ -1121,10 +1307,17 @@ export function CompanyManagementPage() {
                           className="p-1.5 rounded-lg hover:bg-[var(--sa-hover)] transition"
                           title={company.status === 'active' ? 'Deactivate company' : 'Activate company'}
                         >
-                          <Power
-                            className="h-4 w-4"
-                            style={{ color: company.status === 'active' ? 'var(--sa-success)' : 'var(--sa-text-secondary)' }}
-                          />
+                          {company.status === 'active' ? (
+                            <ToggleRight
+                              className="h-5 w-5"
+                              style={{ color: 'var(--sa-success)' }}
+                            />
+                          ) : (
+                            <ToggleLeft
+                              className="h-5 w-5"
+                              style={{ color: 'var(--sa-text-secondary)' }}
+                            />
+                          )}
                         </button>
                         <button
                           onClick={() => {
