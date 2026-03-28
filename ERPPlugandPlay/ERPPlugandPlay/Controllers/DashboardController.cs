@@ -150,7 +150,7 @@ namespace ERPPlugandPlay.Controllers
                 TotalBudget = await _db.Projects.Where(p => p.CompanyId == companyId).SumAsync(p => (decimal?)p.Budget) ?? 0,
                 RecentProjects = await _db.Projects.Where(p => p.CompanyId == companyId)
                     .OrderByDescending(p => p.CreatedAt).Take(5)
-                    .Select(p => new { p.Id, p.Name, p.Status, p.StartDate, p.EndDate, p.ClientName })
+                    .Select(p => new { p.Id, Name = p.ProjectName, p.Status, p.StartDate, p.EndDate, p.ClientName })
                     .ToListAsync()
             };
             return Ok(ApiResponse<object>.Ok(result));

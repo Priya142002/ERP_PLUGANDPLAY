@@ -30,7 +30,7 @@ namespace ERPPlugandPlay.Services
         {
             var project = new Project
             {
-                CompanyId = dto.CompanyId, Name = dto.Name, Description = dto.Description,
+                CompanyId = dto.CompanyId, ProjectName = dto.Name, Description = dto.Description,
                 StartDate = dto.StartDate, EndDate = dto.EndDate,
                 Budget = dto.Budget, ClientName = dto.ClientName
             };
@@ -52,7 +52,7 @@ namespace ERPPlugandPlay.Services
         {
             var project = await _db.Projects.FindAsync(id);
             if (project == null) return ApiResponse<ProjectDto>.Fail("Project not found.");
-            project.Name = dto.Name; project.Description = dto.Description;
+            project.ProjectName = dto.Name; project.Description = dto.Description;
             project.StartDate = dto.StartDate; project.EndDate = dto.EndDate;
             project.Budget = dto.Budget; project.ClientName = dto.ClientName;
             await _db.SaveChangesAsync();
@@ -87,7 +87,7 @@ namespace ERPPlugandPlay.Services
             _db.ProjectTasks.Add(task);
             await _db.SaveChangesAsync();
             var project = await _db.Projects.FindAsync(dto.ProjectId);
-            return ApiResponse<ProjectTaskDto>.Ok(MapTask(task, project?.Name ?? ""), "Task created.");
+            return ApiResponse<ProjectTaskDto>.Ok(MapTask(task, project?.ProjectName ?? ""), "Task created.");
         }
 
         public async Task<ApiResponse<List<ProjectTaskDto>>> ListTasksAsync(int projectId)
@@ -96,7 +96,7 @@ namespace ERPPlugandPlay.Services
             var tasks = await _db.ProjectTasks
                 .Where(t => t.ProjectId == projectId)
                 .OrderBy(t => t.CreatedAt).ToListAsync();
-            return ApiResponse<List<ProjectTaskDto>>.Ok(tasks.Select(t => MapTask(t, project?.Name ?? "")).ToList());
+            return ApiResponse<List<ProjectTaskDto>>.Ok(tasks.Select(t => MapTask(t, project?.ProjectName ?? "")).ToList());
         }
 
         public async Task<ApiResponse<bool>> UpdateTaskStatusAsync(int id, string status)
@@ -122,7 +122,7 @@ namespace ERPPlugandPlay.Services
             var emp = await _db.Employees.FindAsync(dto.EmployeeId);
             return ApiResponse<TimesheetDto>.Ok(new TimesheetDto
             {
-                Id = ts.Id, ProjectId = ts.ProjectId, ProjectName = project?.Name ?? "",
+                Id = ts.Id, ProjectId = ts.ProjectId, ProjectName = project?.ProjectName ?? "",
                 EmployeeId = ts.EmployeeId, EmployeeName = emp?.Name ?? "",
                 WorkDate = ts.WorkDate, HoursWorked = ts.HoursWorked,
                 Description = ts.Description, BillableAmount = ts.BillableAmount, CreatedAt = ts.CreatedAt
@@ -137,7 +137,7 @@ namespace ERPPlugandPlay.Services
                 .OrderByDescending(t => t.WorkDate).ToListAsync();
             return ApiResponse<List<TimesheetDto>>.Ok(timesheets.Select(t => new TimesheetDto
             {
-                Id = t.Id, ProjectId = t.ProjectId, ProjectName = project?.Name ?? "",
+                Id = t.Id, ProjectId = t.ProjectId, ProjectName = project?.ProjectName ?? "",
                 EmployeeId = t.EmployeeId, EmployeeName = t.Employee?.Name ?? "",
                 WorkDate = t.WorkDate, HoursWorked = t.HoursWorked,
                 Description = t.Description, BillableAmount = t.BillableAmount, CreatedAt = t.CreatedAt
@@ -146,7 +146,7 @@ namespace ERPPlugandPlay.Services
 
         private static ProjectDto MapProject(Project p, int taskCount) => new()
         {
-            Id = p.Id, CompanyId = p.CompanyId, Name = p.Name, Description = p.Description,
+            Id = p.Id, CompanyId = p.CompanyId, Name = p.ProjectName, Description = p.Description,
             Status = p.Status, StartDate = p.StartDate, EndDate = p.EndDate,
             Budget = p.Budget, ClientName = p.ClientName, CreatedAt = p.CreatedAt, TaskCount = taskCount
         };

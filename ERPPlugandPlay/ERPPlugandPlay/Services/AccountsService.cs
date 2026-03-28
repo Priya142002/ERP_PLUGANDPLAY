@@ -25,6 +25,13 @@ namespace ERPPlugandPlay.Services
         // Receipt Voucher
         Task<ApiResponse<ReceiptVoucherDto>> CreateReceiptVoucherAsync(CreateReceiptVoucherDto dto);
         Task<ApiResponse<List<ReceiptVoucherDto>>> ListReceiptVouchersAsync(int companyId);
+ 
+        // Ledger and Posting (Merged from AccountingService)
+        Task<JournalVoucher> CreateJournalEntryAsync(CreateJournalVoucherDto dto, int userId);
+        Task<JournalVoucher> PostJournalVoucherAsync(int voucherId, int userId);
+        Task<decimal> GetAccountBalanceAsync(int accountId, DateTime? asOnDate = null);
+        Task<AccountLedgerDto> GetAccountLedgerAsync(int accountId, DateTime fromDate, DateTime toDate);
+        Task<TrialBalanceDto> GetTrialBalanceAsync(int companyId, int financialYearId, DateTime asOnDate);
     }
 
     public class AccountsService : IAccountsService
@@ -41,8 +48,16 @@ namespace ERPPlugandPlay.Services
                 AccountCode = dto.AccountCode,
                 AccountName = dto.AccountName,
                 AccountType = dto.AccountType,
+                AccountGroup = dto.AccountGroup,
                 ParentAccountCode = dto.ParentAccountCode,
-                OpeningBalance = dto.OpeningBalance
+                IsGroup = dto.IsGroup,
+                Level = dto.Level,
+                OpeningBalance = dto.OpeningBalance,
+                OpeningBalanceType = dto.OpeningBalanceType,
+                Currency = dto.Currency,
+                TaxType = dto.TaxType,
+                IsBankAccount = dto.IsBankAccount,
+                IsSystemAccount = dto.IsSystemAccount
             };
             _db.ChartOfAccounts.Add(account);
             await _db.SaveChangesAsync();
@@ -66,8 +81,15 @@ namespace ERPPlugandPlay.Services
             account.AccountCode = dto.AccountCode;
             account.AccountName = dto.AccountName;
             account.AccountType = dto.AccountType;
+            account.AccountGroup = dto.AccountGroup;
             account.ParentAccountCode = dto.ParentAccountCode;
+            account.IsGroup = dto.IsGroup;
+            account.Level = dto.Level;
             account.OpeningBalance = dto.OpeningBalance;
+            account.OpeningBalanceType = dto.OpeningBalanceType;
+            account.TaxType = dto.TaxType;
+            account.IsBankAccount = dto.IsBankAccount;
+            account.IsActive = true;
             
             await _db.SaveChangesAsync();
             return ApiResponse<AccountDto>.Ok(MapAccount(account));
@@ -282,11 +304,105 @@ namespace ERPPlugandPlay.Services
             AccountCode = a.AccountCode,
             AccountName = a.AccountName,
             AccountType = a.AccountType,
+            AccountGroup = a.AccountGroup,
             ParentAccountCode = a.ParentAccountCode,
+            IsGroup = a.IsGroup,
+            Level = a.Level,
             OpeningBalance = a.OpeningBalance,
+            OpeningBalanceType = a.OpeningBalanceType,
+            Currency = a.Currency,
+            TaxType = a.TaxType,
+            IsBankAccount = a.IsBankAccount,
+            IsSystemAccount = a.IsSystemAccount,
             IsActive = a.IsActive
         };
 
+        /* ── Post and Ledger Implementation (Merged) ── */
+ 
+        public async Task<JournalVoucher> CreateJournalEntryAsync(CreateJournalVoucherDto dto, int userId)
+        {
+            if (!ValidateDoubleEntry(dto.Entries)) throw new Exception("Total Debit must equal Total Credit");
+            
+            var voucherNumber = await GenerateVoucherNumberAsync(dto.CompanyId, "Journal", dto.VoucherDate);
+            var voucher = new JournalVoucher
+            {
+                CompanyId = dto.CompanyId, FinancialYearId = dto.FinancialYearId,
+                VoucherNumber = voucherNumber, VoucherDate = dto.VoucherDate,
+                Description = dto.Description, Status = "Draft", CreatedAt = DateTime.UtcNow, CreatedBy = userId
+            };
+            foreach (var e in dto.Entries) {
+                voucher.Entries.Add(new JournalVoucherEntry { AccountId = e.AccountId, Type = e.Type, Amount = e.Amount, Narration = e.Narration });
+            }
+            _db.JournalVouchers.Add(voucher);
+            await _db.SaveChangesAsync();
+            return voucher;
+        }
+ 
+        public async Task<JournalVoucher> PostJournalVoucherAsync(int id, int userId)
+        {
+            var v = await _db.JournalVouchers.FindAsync(id);
+            if (v == null) throw new Exception("Voucher not found");
+            v.Status = "Posted"; v.PostedAt = DateTime.UtcNow; v.PostedBy = userId;
+            await _db.SaveChangesAsync();
+            return v;
+        }
+ 
+        public async Task<decimal> GetAccountBalanceAsync(int accountId, DateTime? asOnDate = null)
+        {
+            var query = _db.JournalVoucherEntries.Include(e => e.JournalVoucher)
+                .Where(e => e.AccountId == accountId && e.JournalVoucher.Status == "Posted");
+            if (asOnDate.HasValue) query = query.Where(e => e.JournalVoucher.VoucherDate <= asOnDate.Value);
+            
+            var entries = await query.ToListAsync();
+            var totalDebit = entries.Where(e => e.Type == "Debit").Sum(e => e.Amount);
+            var totalCredit = entries.Where(e => e.Type == "Credit").Sum(e => e.Amount);
+ 
+            var account = await _db.ChartOfAccounts.FindAsync(accountId);
+            if (account == null) return 0;
+            if (account.OpeningBalanceType == "Debit") totalDebit += account.OpeningBalance;
+            else totalCredit += account.OpeningBalance;
+ 
+            return (account.AccountType == "Asset" || account.AccountType == "Expense") ? totalDebit - totalCredit : totalCredit - totalDebit;
+        }
+ 
+        public async Task<AccountLedgerDto> GetAccountLedgerAsync(int id, DateTime from, DateTime to)
+        {
+            var acc = await _db.ChartOfAccounts.FindAsync(id);
+            if (acc == null) throw new Exception("Account not found");
+            var entries = await _db.JournalVoucherEntries.Include(e => e.JournalVoucher)
+                .Where(e => e.AccountId == id && e.JournalVoucher.Status == "Posted" && e.JournalVoucher.VoucherDate >= from && e.JournalVoucher.VoucherDate <= to)
+                .OrderBy(e => e.JournalVoucher.VoucherDate).ToListAsync();
+            
+            decimal bal = acc.OpeningBalance;
+            var ledger = new List<LedgerEntryDto>();
+            foreach (var e in entries) {
+                if (e.Type == "Debit") bal += e.Amount; else bal -= e.Amount;
+                ledger.Add(new LedgerEntryDto { Date = e.JournalVoucher.VoucherDate, VoucherNumber = e.JournalVoucher.VoucherNumber, Narration = e.Narration, Debit = e.Type == "Debit" ? e.Amount : 0, Credit = e.Type == "Credit" ? e.Amount : 0, Balance = bal });
+            }
+            return new AccountLedgerDto { AccountId = id, AccountName = acc.AccountName, OpeningBalance = acc.OpeningBalance, Entries = ledger, ClosingBalance = bal };
+        }
+ 
+        public async Task<TrialBalanceDto> GetTrialBalanceAsync(int companyId, int financialYearId, DateTime asOnDate)
+        {
+            var accounts = await _db.ChartOfAccounts.Where(a => a.CompanyId == companyId && !a.IsGroup).ToListAsync();
+            var items = new List<TrialBalanceItemDto>();
+            foreach (var a in accounts) {
+                var bal = await GetAccountBalanceAsync(a.Id, asOnDate);
+                if (bal == 0) continue;
+                items.Add(new TrialBalanceItemDto { AccountCode = a.AccountCode, AccountName = a.AccountName, Debit = bal > 0 ? bal : 0, Credit = bal < 0 ? -bal : 0 });
+            }
+            return new TrialBalanceDto { AsOnDate = asOnDate, Items = items.OrderBy(i => i.AccountCode).ToList() };
+        }
+ 
+        private bool ValidateDoubleEntry(List<JournalEntryDto> entries) => 
+            Math.Abs(entries.Where(e => e.Type == "Debit").Sum(e => e.Amount) - entries.Where(e => e.Type == "Credit").Sum(e => e.Amount)) < 0.01m;
+ 
+        private async Task<string> GenerateVoucherNumberAsync(int companyId, string type, DateTime date)
+        {
+            var count = await _db.JournalVouchers.CountAsync(v => v.CompanyId == companyId && v.VoucherType == type && v.VoucherDate.Year == date.Year);
+            return $"{type.Substring(0, 2).ToUpper()}-{date:yyyyMM}-{count + 1:D4}";
+        }
+ 
         private static JournalVoucherDto MapJournalVoucher(JournalVoucher v) => new()
         {
             Id = v.Id,

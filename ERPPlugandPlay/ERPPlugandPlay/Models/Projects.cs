@@ -5,7 +5,7 @@ namespace ERPPlugandPlay.Models
         public int Id { get; set; }
         public int CompanyId { get; set; }
         public Company Company { get; set; } = null!;
-        public string Name { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string Status { get; set; } = "Planning"; // Planning | Active | On Hold | Completed | Cancelled
         public DateTime StartDate { get; set; }

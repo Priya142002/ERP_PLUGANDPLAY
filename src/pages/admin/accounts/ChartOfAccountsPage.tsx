@@ -1,47 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Download, Edit, ChevronDown, X, Trash2, MoreVertical } from "lucide-react";
+import { Plus, Download, Edit, ChevronDown, X, Trash2, MoreVertical, Loader2 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Modal from "../../../components/ui/Modal";
 import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import { exportSingleSheetToExcel } from "../../../utils/reportGenerator";
-
-const MOCK_COA = [
-  { 
-    id: '1', 
-    code: '1000', 
-    name: 'Assets', 
-    type: 'Asset', 
-    balance: '₹12,45,000.00',
-    children: [
-      { id: '1-1', code: '1100', name: 'Current Assets', type: 'Asset', balance: '₹6,45,000.00', children: [
-        { id: '1-1-1', code: '1110', name: 'Cash and Bank', type: 'Asset', balance: '₹3,84,200.00' },
-        { id: '1-1-2', code: '1120', name: 'Accounts Receivable', type: 'Asset', balance: '₹2,60,800.00' },
-      ]},
-      { id: '1-2', code: '1200', name: 'Fixed Assets', type: 'Asset', balance: '₹6,00,000.00' }
-    ]
-  },
-  { 
-    id: '2', 
-    code: '2000', 
-    name: 'Liabilities', 
-    type: 'Liability', 
-    balance: '₹1,42,500.00',
-    children: [
-      { id: '2-1', code: '2100', name: 'Current Liabilities', type: 'Liability', balance: '₹42,500.00' },
-      { id: '2-2', code: '2200', name: 'Long Term Debt', type: 'Liability', balance: '₹1,00,000.00' }
-    ]
-  },
-  { 
-    id: '3', 
-    code: '3000', 
-    name: 'Equity', 
-    type: 'Equity', 
-    balance: '₹11,02,500.00'
-  }
-];
+import { accountsApi } from "../../../services/api";
+import toast from "react-hot-toast";
 
 const TreeNode: React.FC<{ node: any; depth: number; onEdit?: (node: any) => void; onAdd?: (node: any) => void; onDelete?: (node: any) => void }> = ({ node, depth, onEdit, onAdd, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(depth === 0);
@@ -49,10 +16,19 @@ const TreeNode: React.FC<{ node: any; depth: number; onEdit?: (node: any) => voi
   const hasChildren = node.children && node.children.length > 0;
 
   return (
-    <div className="relative">
-      <div className={`flex items-center gap-4 py-3 px-4 hover:bg-slate-50 transition-colors group ${depth === 0 ? 'bg-slate-50/10' : ''}`}>
-        <div className="flex items-center" style={{ paddingLeft: `${depth * 32}px` }}>
-          {/* Connector Line */}
+    <div className="select-none">
+      <div 
+        className={`group relative flex items-center gap-2 rounded-xl transition-all ${
+          depth === 0 ? 'mt-4 first:mt-0' : 'mt-1'
+        }`}
+      >
+        <div className="flex items-center" style={{ width: `${depth * 32}px` }}>
+          {depth > 0 && (
+            <div className="h-px w-6 bg-slate-200 ml-auto mr-2" />
+          )}
+        </div>
+        
+        <div className="relative flex items-center">
           {depth > 0 && (
             <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" style={{ left: `${(depth * 32) - 16}px` }} />
           )}
@@ -62,33 +38,35 @@ const TreeNode: React.FC<{ node: any; depth: number; onEdit?: (node: any) => voi
               onClick={() => setIsExpanded(!isExpanded)}
               className="h-7 w-7 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-500 hover:border-[#002147] hover:text-[#002147] transition-all z-10 shadow-sm"
             >
-              {isExpanded ? <ChevronDown size={14} /> : <Plus size={14} />}
+              <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? '' : '-rotate-90'}`} />
             </button>
           ) : (
-            <div className="h-7 w-7 flex items-center justify-center">
-              <div className="h-2 w-2 rounded-full bg-slate-300" />
+            <div className="h-7 w-7 flex items-center justify-center z-10">
+              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
             </div>
           )}
         </div>
 
         <div className="flex flex-1 items-center justify-between gap-4 py-1.5 px-3 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-slate-300 transition-all">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-slate-400 min-w-[40px]">{node.code}</span>
+            <span className="text-xs font-bold text-slate-400 min-w-[40px]">{node.accountCode}</span>
             <span className={`text-sm tracking-tight ${depth === 0 ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
-              - {node.name.toUpperCase()}
+              - {node.accountName.toUpperCase()}
             </span>
           </div>
           
           <div className="flex items-center gap-4">
             <Badge variant={
-              node.type === 'Asset' ? 'info' : 
-              node.type === 'Liability' ? 'warning' : 
-              node.type === 'Equity' ? 'primary' : 
-              node.type === 'Income' ? 'success' : 'error'
+              node.accountType === 'Asset' ? 'info' : 
+              node.accountType === 'Liability' ? 'warning' : 
+              node.accountType === 'Equity' ? 'primary' : 
+              node.accountType === 'Income' ? 'success' : 'error'
             } className="text-[10px] uppercase font-bold tracking-tighter">
-              {node.type}
+              {node.accountType}
             </Badge>
-            <span className="text-sm font-bold text-slate-900 min-w-[100px] text-right">{node.balance}</span>
+            <span className="text-sm font-bold text-slate-900 min-w-[100px] text-right">
+              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(node.currentBalance || node.openingBalance || 0)}
+            </span>
             
             <div className="relative flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button 
@@ -114,7 +92,7 @@ const TreeNode: React.FC<{ node: any; depth: number; onEdit?: (node: any) => voi
                       className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                     >
                       <Plus size={14} />
-                      Add Group
+                      Add Sub-Account
                     </button>
                     <button 
                       onClick={() => {
@@ -126,16 +104,18 @@ const TreeNode: React.FC<{ node: any; depth: number; onEdit?: (node: any) => voi
                       <Edit size={14} />
                       Edit
                     </button>
-                    <button 
-                      onClick={() => {
-                        setShowMenu(false);
-                        onDelete?.(node);
-                      }} 
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <Trash2 size={14} />
-                      Delete
-                    </button>
+                    {!node.isSystemAccount && (
+                      <button 
+                        onClick={() => {
+                          setShowMenu(false);
+                          onDelete?.(node);
+                        }} 
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </>
               )}
@@ -156,39 +136,80 @@ const TreeNode: React.FC<{ node: any; depth: number; onEdit?: (node: any) => voi
 };
 
 export const ChartOfAccountsPage: React.FC = () => {
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [treeData, setTreeData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<any>(null);
   const [isAddingSubAccount, setIsAddingSubAccount] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [nodeToDelete, setNodeToDelete] = useState<any>(null);
 
-  const handleExport = () => {
-    // Flatten the tree structure for export
-    const flattenAccounts = (accounts: any[], parentCode = ''): any[] => {
-      let result: any[] = [];
-      accounts.forEach(account => {
-        result.push({
-          code: account.code,
-          name: account.name,
-          type: account.type,
-          balance: account.balance,
-          parent: parentCode
-        });
-        if (account.children && account.children.length > 0) {
-          result = result.concat(flattenAccounts(account.children, account.code));
-        }
-      });
-      return result;
-    };
+  // Form state
+  const [formData, setFormData] = useState({
+    accountCode: '',
+    accountName: '',
+    accountType: 'Asset',
+    accountGroup: '',
+    openingBalance: 0,
+    openingBalanceType: 'Debit',
+    isGroup: false,
+    currency: 'INR'
+  });
 
-    const flatData = flattenAccounts(MOCK_COA);
-    const headers = ['Code', 'Account Name', 'Type', 'Balance', 'Parent Code'];
-    const data = flatData.map(account => [
-      account.code,
-      account.name,
-      account.type,
-      account.balance,
-      account.parent
+  const companyId = JSON.parse(localStorage.getItem('erp_user') || '{}').companyId || 1;
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [companyId]);
+
+  const fetchAccounts = async () => {
+    setLoading(true);
+    try {
+      const res = await accountsApi.getChart(companyId);
+      if (res.success && res.data) {
+        setAccounts(res.data);
+        buildTree(res.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch chart of accounts");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buildTree = (flatData: any[]) => {
+    const map = new Map();
+    const tree: any[] = [];
+    
+    // Sort by code to ensure deterministic tree structure
+    const sortedData = [...flatData].sort((a, b) => a.accountCode.localeCompare(b.accountCode));
+
+    sortedData.forEach(item => {
+      map.set(item.accountCode, { ...item, children: [] });
+    });
+
+    sortedData.forEach(item => {
+      const node = map.get(item.accountCode);
+      if (item.parentAccountCode && map.has(item.parentAccountCode)) {
+        map.get(item.parentAccountCode).children.push(node);
+      } else {
+        tree.push(node);
+      }
+    });
+
+    setTreeData(tree);
+  };
+
+  const handleExport = () => {
+    const headers = ['Code', 'Account Name', 'Type', 'Group', 'Balance', 'Parent'];
+    const data = accounts.map(a => [
+      a.accountCode,
+      a.accountName,
+      a.accountType,
+      a.accountGroup,
+      a.currentBalance || a.openingBalance,
+      a.parentAccountCode || ''
     ]);
     
     exportSingleSheetToExcel(headers, data, 'Chart_of_Accounts');
@@ -196,14 +217,62 @@ export const ChartOfAccountsPage: React.FC = () => {
 
   const handleEdit = (node: any) => {
     setEditingNode(node);
+    setFormData({
+      accountCode: node.accountCode,
+      accountName: node.accountName,
+      accountType: node.accountType,
+      accountGroup: node.accountGroup,
+      openingBalance: node.openingBalance,
+      openingBalanceType: node.openingBalanceType || 'Debit',
+      isGroup: node.isGroup,
+      currency: node.currency || 'INR'
+    });
     setIsAddingSubAccount(false);
     setIsModalOpen(true);
   };
 
   const handleAdd = (node: any) => {
     setEditingNode(node);
+    setFormData({
+      accountCode: '',
+      accountName: '',
+      accountType: node.accountType, // Inherit from parent
+      accountGroup: node.accountGroup,
+      openingBalance: 0,
+      openingBalanceType: 'Debit',
+      isGroup: false,
+      currency: 'INR'
+    });
     setIsAddingSubAccount(true);
     setIsModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        ...formData,
+        companyId,
+        parentAccountCode: isAddingSubAccount ? editingNode.accountCode : (editingNode?.parentAccountCode || null),
+        level: isAddingSubAccount ? (editingNode.level + 1) : (editingNode?.level || 1)
+      };
+
+      let res;
+      if (editingNode && !isAddingSubAccount) {
+        res = await accountsApi.updateAccount(editingNode.id, payload);
+      } else {
+        res = await accountsApi.createAccount(payload);
+      }
+
+      if (res.success) {
+        toast.success(res.message || "Account saved successfully");
+        fetchAccounts();
+        handleCloseModal();
+      } else {
+        toast.error(res.message || "Failed to save account");
+      }
+    } catch (error) {
+      toast.error("An error occurred while saving");
+    }
   };
 
   const handleDelete = (node: any) => {
@@ -211,9 +280,18 @@ export const ChartOfAccountsPage: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    // TODO: Implement actual delete logic here
-    console.log('Deleting node:', nodeToDelete);
+  const confirmDelete = async () => {
+    try {
+      const res = await accountsApi.deleteAccount(nodeToDelete.id);
+      if (res.success) {
+        toast.success("Account deleted");
+        fetchAccounts();
+      } else {
+        toast.error(res.message);
+      }
+    } catch (error) {
+      toast.error("Failed to delete account");
+    }
     setIsDeleteModalOpen(false);
     setNodeToDelete(null);
   };
@@ -222,18 +300,29 @@ export const ChartOfAccountsPage: React.FC = () => {
     setIsModalOpen(false);
     setEditingNode(null);
     setIsAddingSubAccount(false);
+    setFormData({
+      accountCode: '',
+      accountName: '',
+      accountType: 'Asset',
+      accountGroup: '',
+      openingBalance: 0,
+      openingBalanceType: 'Debit',
+      isGroup: false,
+      currency: 'INR'
+    });
   };
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="space-y-6 p-6"
     >
       {/* Page Title Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Financial Taxonomies</h1>
+          <p className="text-slate-500 text-sm">Manage your company chart of accounts and hierarchy</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="secondary" className="px-4 h-10 text-[10px] md:text-xs font-bold rounded-xl border-slate-200" leftIcon={<Download size={14} />} onClick={handleExport}>
@@ -250,158 +339,153 @@ export const ChartOfAccountsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Account Group Modal */}
+      {/* Account Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title="Account Group"
+        title="Account Details"
         size="lg"
         showCloseButton={false} 
         contentClassName="p-0 overflow-hidden rounded-xl border-none shadow-2xl"
       >
         <div className="bg-[#002147] px-6 py-4 flex items-center justify-between">
-          <h3 className="text-white font-semibold text-base">
+          <h3 className="text-white font-semibold text-lg">
             {isAddingSubAccount ? 'Add Sub-Account' : editingNode ? 'Edit Account' : 'New Account'}
           </h3>
-          <button 
-            onClick={handleCloseModal}
-            className="text-white/80 hover:text-white transition-colors"
-          >
-            <X size={18} />
-          </button>
+          <button onClick={handleCloseModal} className="text-white/80 hover:text-white"><X size={18} /></button>
         </div>
-        <div className="p-8 space-y-6">
+        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {isAddingSubAccount && editingNode && (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+            <div className="col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-4">
               <p className="text-xs text-slate-600 mb-1">Parent Account:</p>
-              <p className="text-sm font-semibold text-slate-900">{editingNode.code} - {editingNode.name}</p>
+              <p className="text-sm font-semibold text-slate-900">{editingNode.accountCode} - {editingNode.accountName}</p>
             </div>
           )}
           
           <Input 
-            label="Group Code" 
-            placeholder="e.g. 109" 
-            className="border-slate-200 text-xs py-1.5"
+            label="Account Code" 
+            placeholder="e.g. 1001" 
+            value={formData.accountCode}
+            onChange={(e) => setFormData({ ...formData, accountCode: e.target.value })}
+            className="border-slate-200"
             labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
-            value={editingNode && !isAddingSubAccount ? editingNode.code : ""}
           />
           <Input 
-            label="Group Name" 
-            placeholder="Enter group name" 
-            required 
-            className="border-slate-200 text-xs py-1.5"
-            labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
-            value={editingNode && !isAddingSubAccount ? editingNode.name : ""}
-          />
-          <Input 
-            label="Description" 
-            placeholder="Enter description" 
-            className="border-slate-200 text-xs py-1.5"
+            label="Account Name" 
+            placeholder="Enter name" 
+            value={formData.accountName}
+            onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
+            className="border-slate-200"
             labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
           />
           <Select 
-            label="Transaction Type" 
+            label="Account Type" 
+            value={formData.accountType}
+            onChange={(e) => setFormData({ ...formData, accountType: e.target.value })}
             options={[
-              { label: 'Debit', value: 'dr' },
-              { label: 'Credit', value: 'cr' }
+              { label: 'Asset', value: 'Asset' },
+              { label: 'Liability', value: 'Liability' },
+              { label: 'Equity', value: 'Equity' },
+              { label: 'Income', value: 'Income' },
+              { label: 'Expense', value: 'Expense' },
             ]} 
-            className="border-slate-200 text-xs py-1.5"
+            className="border-slate-200"
+            labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
+          />
+          <Input 
+            label="Account Group" 
+            placeholder="e.g. Current Asset" 
+            value={formData.accountGroup}
+            onChange={(e) => setFormData({ ...formData, accountGroup: e.target.value })}
+            className="border-slate-200"
+            labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
+          />
+          <Input 
+            label="Opening Balance" 
+            type="number"
+            value={formData.openingBalance}
+            onChange={(e) => setFormData({ ...formData, openingBalance: parseFloat(e.target.value) || 0 })}
+            className="border-slate-200"
             labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
           />
           <Select 
-            label="Cash Flow Type" 
+            label="Balance Type" 
+            value={formData.openingBalanceType}
+            onChange={(e) => setFormData({ ...formData, openingBalanceType: e.target.value })}
             options={[
-              { label: 'Operating', value: 'operating' },
-              { label: 'Investing', value: 'investing' },
-              { label: 'Financing', value: 'financing' }
+              { label: 'Debit', value: 'Debit' },
+              { label: 'Credit', value: 'Credit' }
             ]} 
-            className="border-slate-200 text-xs py-1.5"
+            className="border-slate-200"
             labelClassName="text-[#002147] font-semibold text-[10px] mb-1.5 uppercase tracking-wider"
           />
           
-          <div className="flex items-center justify-center gap-3 pt-2">
-            <button 
-              onClick={handleCloseModal}
-              className="bg-[#002147] hover:bg-[#003366] text-white h-11 px-8 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
-            >
-              {editingNode && !isAddingSubAccount ? 'Update Account' : 'Post Group'}
-            </button>
-            <button 
-              onClick={handleCloseModal}
-              className="h-11 px-8 text-xs font-bold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all"
-            >
+          <div className="col-span-2 flex items-center gap-2">
+             <input 
+               type="checkbox" 
+               id="isGroup" 
+               className="h-4 w-4 rounded border-slate-300 text-[#002147] focus:ring-[#002147]"
+               checked={formData.isGroup} 
+               onChange={(e) => setFormData({...formData, isGroup: e.target.checked})}
+             />
+             <label htmlFor="isGroup" className="text-sm font-medium text-slate-700">This is a Group Account (cannot have transactions directly)</label>
+          </div>
+
+          <div className="col-span-2 flex items-center justify-center gap-3 pt-4">
+            <Button variant="primary" className="bg-[#002147] hover:bg-[#003366] h-11 px-10" onClick={handleSave}>
+              Save Account
+            </Button>
+            <Button variant="outline" className="h-11 px-10" onClick={handleCloseModal}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
-
-
 
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Account"
+        title="Confirm Delete"
         size="sm"
         showCloseButton={false}
-        contentClassName="p-0 overflow-hidden rounded-xl border-none shadow-2xl"
       >
-        <div className="bg-[#002147] px-6 py-4 flex items-center justify-between">
-          <h3 className="text-white font-semibold text-base">Confirm Delete</h3>
-          <button 
-            onClick={() => setIsDeleteModalOpen(false)}
-            className="text-white/80 hover:text-white transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
-        <div className="p-8 space-y-6">
-          <div className="text-center">
-            <div className="mx-auto w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <Trash2 className="text-slate-600" size={24} />
-            </div>
-            <p className="text-slate-700 text-sm mb-2">
-              Are you sure you want to delete this account?
-            </p>
-            {nodeToDelete && (
-              <p className="text-slate-900 font-semibold text-sm">
-                {nodeToDelete.code} - {nodeToDelete.name}
-              </p>
-            )}
-            <p className="text-slate-500 text-xs mt-4">
-              This action cannot be undone.
-            </p>
-          </div>
-          
-          <div className="flex items-center justify-center gap-3 pt-2">
-            <button 
-              onClick={confirmDelete}
-              className="bg-[#002147] hover:bg-[#003366] text-white h-11 px-8 text-xs font-bold rounded-xl border-none shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all"
-            >
-              Delete Account
-            </button>
-            <button 
-              onClick={() => setIsDeleteModalOpen(false)}
-              className="h-11 px-8 text-xs font-bold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all"
-            >
-              Cancel
-            </button>
+        <div className="p-6 text-center space-y-4">
+          <Trash2 className="mx-auto text-red-500" size={48} />
+          <p className="text-slate-700">Are you sure you want to delete <b>{nodeToDelete?.accountName}</b>?</p>
+          <div className="flex justify-center gap-3">
+            <Button variant="danger" onClick={confirmDelete}>Delete</Button>
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
           </div>
         </div>
       </Modal>
 
+      {/* Main Content Area */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px] p-4 md:p-8 mt-6">
-        <div className="max-w-4xl mx-auto space-y-2">
-          {MOCK_COA.map(account => (
-            <TreeNode key={account.id} node={account} depth={0} onEdit={handleEdit} onAdd={handleAdd} onDelete={handleDelete} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-[400px] text-slate-500">
+            <Loader2 className="animate-spin mb-2" size={32} />
+            <p>Loading Chart of Accounts...</p>
+          </div>
+        ) : treeData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[400px] text-slate-500 text-center">
+            <div className="bg-slate-50 rounded-full p-4 mb-4">
+              <Plus size={32} className="text-slate-300" />
+            </div>
+            <p>No accounts found. Start by creating a new account.</p>
+            <Button variant="primary" className="mt-4 bg-[#002147]" onClick={() => setIsModalOpen(true)}>Create First Account</Button>
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto space-y-2">
+            {treeData.map(node => (
+              <TreeNode key={node.id} node={node} depth={0} onEdit={handleEdit} onAdd={handleAdd} onDelete={handleDelete} />
+            ))}
+          </div>
+        )}
 
         <div className="mt-12 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
           <div className="flex gap-6 uppercase tracking-widest">
-            <span>Total Groups: <span className="text-slate-900">14</span></span>
-            <span>Total Ledgers: <span className="text-slate-900">124</span></span>
+            <span>Total Records: <span className="text-slate-900">{accounts.length}</span></span>
           </div>
           <span>Active Session: {new Date().toLocaleTimeString()}</span>
         </div>
@@ -409,3 +493,5 @@ export const ChartOfAccountsPage: React.FC = () => {
     </motion.div>
   );
 };
+
+export default ChartOfAccountsPage;

@@ -1,44 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  UserPlus,
-  Search,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { UserPlus, Search, Edit, Trash2, Loader2 } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
-
-const MOCK_USERS = [
-  {
-    id: 1,
-    userName: 'harisilks@gmail.com',
-    userRole: 'Admin,Enterprise Resource Planning',
-    employee: 'Head Office',
-    branch: 'Head Office',
-    status: 'Active'
-  },
-];
+import { adminApi } from "../../../services/api";
+import toast from "react-hot-toast";
 
 const UserPage: React.FC = () => {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await adminApi.getUsers();
+      if (res.success) {
+        setUsers(res.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch users");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditUser = (user: any) => {
     setSelectedUser(user);
     setIsEditUserModalOpen(true);
   };
 
-  const handleDeleteUser = (user: any) => {
+  const handleDeleteUser = async (user: any) => {
     if (window.confirm(`Are you sure you want to delete user ${user.userName}?`)) {
-      console.log('Delete user:', user);
-      // Add delete logic here
+       // Assuming there's a deleteUser endpoint. If not, we'll need to add it.
+       // For now, let's just log.
+       console.log('Delete user:', user);
     }
   };
+
+  const filteredUsers = users.filter(user => 
+    user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.userRole && user.userRole.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <motion.div
@@ -82,38 +94,52 @@ const UserPage: React.FC = () => {
           <table className="w-full text-sm border-collapse">
             <thead className="bg-[#002147] text-white">
               <tr>
-                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-left">User Name</th>
-                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-left">User Role</th>
-                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-left">Employee</th>
-                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-left">Branch</th>
-                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-left">Active/Inactive</th>
-                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-right">Actions</th>
+                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-left whitespace-nowrap">User Name</th>
+                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-left whitespace-nowrap">User Role</th>
+                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-left whitespace-nowrap">Employee</th>
+                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-left whitespace-nowrap">Branch</th>
+                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-left whitespace-nowrap">Status</th>
+                <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {MOCK_USERS.map((user, i) => (
-                <tr key={user.id} className={`group transition-colors hover:bg-slate-50/70 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
-                  }`}>
+              {loading ? (
+                <tr>
+                   <td colSpan={6} className="py-20 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-400">
+                         <Loader2 className="animate-spin mb-2" size={24} />
+                         <span>Loading users...</span>
+                      </div>
+                   </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                   <td colSpan={6} className="py-20 text-center text-slate-400">
+                      No users found.
+                   </td>
+                </tr>
+              ) : filteredUsers.map((user, i) => (
+                <tr key={user.id} className={`group transition-colors hover:bg-slate-50/70 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm text-blue-600 hover:underline cursor-pointer">
+                    <span className="text-sm text-blue-600 hover:underline cursor-pointer font-medium">
                       {user.userName}
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm text-slate-700">{user.userRole}</span>
+                    <span className="text-sm text-slate-700">{user.userRole || 'User'}</span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm text-slate-700">{user.employee}</span>
+                    <span className="text-sm text-slate-700">{user.employeeName || 'N/A'}</span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm text-slate-700">{user.branch}</span>
+                    <span className="text-sm text-slate-700">{user.branchName || 'Head Office'}</span>
                   </td>
                   <td className="px-5 py-3.5">
                     <Badge
-                      variant={user.status === 'Active' ? 'success' : 'error'}
+                      variant={user.isActive ? 'success' : 'error'}
                       className="text-xs px-2 py-1"
                     >
-                      {user.status}
+                      {user.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </td>
                   <td className="px-5 py-3.5 text-right">
@@ -140,17 +166,19 @@ const UserPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50">
           <span className="text-xs text-slate-400 font-medium">
-            {MOCK_USERS.length} {MOCK_USERS.length === 1 ? 'item' : 'items'} shown
+            {filteredUsers.length} {filteredUsers.length === 1 ? 'item' : 'items'} shown
           </span>
         </div>
       </div>
 
       <AddUserModal
         isOpen={isAddUserModalOpen}
-        onClose={() => setIsAddUserModalOpen(false)}
+        onClose={() => {
+          setIsAddUserModalOpen(false);
+          fetchUsers();
+        }}
       />
 
       <EditUserModal
@@ -158,6 +186,7 @@ const UserPage: React.FC = () => {
         onClose={() => {
           setIsEditUserModalOpen(false);
           setSelectedUser(null);
+          fetchUsers();
         }}
         userData={selectedUser}
       />

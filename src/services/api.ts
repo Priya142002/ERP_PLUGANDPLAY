@@ -156,7 +156,7 @@ export const superAdminApi = {
 export const inventoryApi = {
   getDashboard: (companyId: number, lowStockThreshold?: number) =>
     request<any>(`/api/inventory/dashboard/${companyId}${lowStockThreshold ? `?lowStockThreshold=${lowStockThreshold}` : ''}`),
-  
+
   getProducts: (companyId: number, search?: string) =>
     request<any>(`/api/inventory/products/${companyId}${search ? `?search=${search}` : ''}`),
   createProduct: (data: any) =>
@@ -247,7 +247,7 @@ export const fileApi = {
   upload: (file: File, folder = "products") => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     const token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -262,11 +262,11 @@ export const fileApi = {
 
 /* ── Logistics API ─────────────────────────────────────── */
 export const logisticsApi = {
-  getCarriers: (companyId: number) => 
+  getCarriers: (companyId: number) =>
     request<any>(`/api/logistics/carriers/${companyId}`),
-  createCarrier: (data: any) => 
+  createCarrier: (data: any) =>
     request<any>('/api/logistics/carriers', { method: 'POST', body: JSON.stringify(data) }),
-  deleteCarrier: (id: number) => 
+  deleteCarrier: (id: number) =>
     request<any>(`/api/logistics/carriers/${id}`, { method: 'DELETE' }),
 };
 
@@ -303,7 +303,39 @@ export const adminApi = {
     request<any>('/api/admin/roles/assign-permissions', { method: 'POST', body: JSON.stringify(data) }),
 
   // Audit Logs
-  getAuditLogs: (page = 1, pageSize = 50, search = '') =>
+  getAuditLogs: (page: number, pageSize: number, search: string) =>
     request<any>(`/api/admin/audit-logs?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`),
 };
 
+/* ── Accounts API ─────────────────────────────────────── */
+export const accountsApi = {
+  // Chart of Accounts
+  getChart: (companyId: number) =>
+    request<any[]>(`/api/accounts/chart/${companyId}`),
+  createAccount: (data: any) =>
+    request<any>('/api/accounts/chart', { method: 'POST', body: JSON.stringify(data) }),
+  updateAccount: (id: number, data: any) =>
+    request<any>(`/api/accounts/chart/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteAccount: (id: number) =>
+    request<any>(`/api/accounts/chart/${id}`, { method: 'DELETE' }),
+
+  // Journal Vouchers
+  getJournalVouchers: (companyId: number) =>
+    request<any[]>(`/api/accounts/journal-vouchers/${companyId}`),
+  createJournalVoucher: (data: any) =>
+    request<any>('/api/accounts/journal-vouchers', { method: 'POST', body: JSON.stringify(data) }),
+  getJournalVoucher: (id: number) =>
+    request<any>(`/api/accounts/journal-vouchers/detail/${id}`),
+
+  // Payment Vouchers
+  getPaymentVouchers: (companyId: number) =>
+    request<any[]>(`/api/accounts/payment-vouchers/${companyId}`),
+  createPaymentVoucher: (data: any) =>
+    request<any>('/api/accounts/payment-vouchers', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Receipt Vouchers
+  getReceiptVouchers: (companyId: number) =>
+    request<any[]>(`/api/accounts/receipt-vouchers/${companyId}`),
+  createReceiptVoucher: (data: any) =>
+    request<any>('/api/accounts/receipt-vouchers', { method: 'POST', body: JSON.stringify(data) }),
+};

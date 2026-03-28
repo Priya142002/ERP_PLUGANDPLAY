@@ -1,65 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Activity, Download } from "lucide-react";
-import Select from "../../../components/ui/Select";
-
-const MOCK_LOGS = [
-  {
-    id: 1,
-    timestamp: '2 mins ago',
-    user: 'John Doe',
-    userInitials: 'JD',
-    action: 'Created',
-    resource: 'Invoice #1234',
-    status: 'Success'
-  },
-  {
-    id: 2,
-    timestamp: '15 mins ago',
-    user: 'Jane Smith',
-    userInitials: 'JS',
-    action: 'Updated',
-    resource: 'Product SKU-789',
-    status: 'Success'
-  },
-  {
-    id: 3,
-    timestamp: '1 hour ago',
-    user: 'Bob Johnson',
-    userInitials: 'BJ',
-    action: 'Deleted',
-    resource: 'Customer Record',
-    status: 'Success'
-  },
-  {
-    id: 4,
-    timestamp: '2 hours ago',
-    user: 'John Doe',
-    userInitials: 'JD',
-    action: 'Login',
-    resource: 'System Access',
-    status: 'Success'
-  },
-  {
-    id: 5,
-    timestamp: '3 hours ago',
-    user: 'Jane Smith',
-    userInitials: 'JS',
-    action: 'Updated',
-    resource: 'Company Profile',
-    status: 'Success'
-  },
-];
+import { Activity, Download, Loader2 } from "lucide-react";
+import { adminApi } from "../../../services/api";
+import toast from "react-hot-toast";
 
 const getActionBadgeClass = (action: string) => {
-  switch (action) {
-    case 'Created':
-      return 'bg-slate-100 text-slate-700';
-    case 'Updated':
+  switch (action.toUpperCase()) {
+    case 'CREATE':
+    case 'CREATED':
+      return 'bg-green-100 text-green-700';
+    case 'UPDATE':
+    case 'UPDATED':
       return 'bg-blue-100 text-blue-700';
-    case 'Deleted':
+    case 'DELETE':
+    case 'DELETED':
       return 'bg-red-500 text-white';
-    case 'Login':
+    case 'LOGIN':
       return 'bg-slate-100 text-slate-700';
     default:
       return 'bg-slate-100 text-slate-700';
@@ -67,22 +23,41 @@ const getActionBadgeClass = (action: string) => {
 };
 
 export const AuditLogsPage: React.FC = () => {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [userFilter, setUserFilter] = useState("All Users");
-  const [actionFilter, setActionFilter] = useState("All Actions");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 15;
+
+  useEffect(() => {
+    fetchLogs();
+  }, [currentPage, searchTerm]);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const res = await adminApi.getAuditLogs(currentPage, pageSize, searchTerm);
+      if (res.success) {
+        setLogs(res.data.items || []);
+        setTotalPages(res.data.totalPages || 1);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch audit logs");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleExport = () => {
-    // Create CSV content
-    const headers = ['Timestamp', 'User', 'Action', 'Resource', 'Status'];
+    const headers = ['Timestamp', 'User', 'Action', 'Entity', 'Entity ID'];
     const csvContent = [
       headers.join(','),
-      ...MOCK_LOGS.map(log =>
-        [log.timestamp, log.user, log.action, log.resource, log.status].join(',')
+      ...logs.map(log =>
+        [new Date(log.createdAt).toLocaleString(), log.userName, log.action, log.entity, log.entityId || ''].join(',')
       )
     ].join('\n');
 
-    // Create blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -117,75 +92,70 @@ export const AuditLogsPage: React.FC = () => {
 
       {/* Filters */}
       <div className="flex items-stretch gap-4">
-        <input
-          type="text"
-          placeholder="Search logs..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 h-10 px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-        <div className="w-48">
-          <Select
-            value={userFilter}
-            onChange={(e) => setUserFilter(e.target.value)}
-            options={[
-              { label: 'All Users', value: 'All Users' },
-              { label: 'John Doe', value: 'John Doe' },
-              { label: 'Jane Smith', value: 'Jane Smith' },
-              { label: 'Bob Johnson', value: 'Bob Johnson' },
-            ]}
+        <div className="relative flex-1">
+           <input
+            type="text"
+            placeholder="Search by user, action or entity..."
+            value={searchTerm}
+            onChange={(e) => {
+               setSearchTerm(e.target.value);
+               setCurrentPage(1);
+            }}
+            className="w-full h-10 px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div className="w-48">
-          <Select
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            options={[
-              { label: 'All Actions', value: 'All Actions' },
-              { label: 'Created', value: 'Created' },
-              { label: 'Updated', value: 'Updated' },
-              { label: 'Deleted', value: 'Deleted' },
-              { label: 'Login', value: 'Login' },
-            ]}
-          />
-        </div>
-        <input
-          type="date"
-          className="h-10 px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+        <table className="w-full text-sm">
           <thead className="bg-[#002147] text-white">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Timestamp</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">User</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Action</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Resource</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">Timestamp</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">User</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">Action</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">Resource</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">Details</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
-            {MOCK_LOGS.map((log) => (
+          <tbody className="divide-y divide-slate-100">
+            {loading ? (
+                <tr>
+                   <td colSpan={5} className="py-20 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-400">
+                         <Loader2 className="animate-spin mb-2" size={24} />
+                         <span>Loading logs...</span>
+                      </div>
+                   </td>
+                </tr>
+            ) : logs.length === 0 ? (
+               <tr>
+                  <td colSpan={5} className="py-20 text-center text-slate-400">
+                     No audit records found.
+                  </td>
+               </tr>
+            ) : logs.map((log) => (
               <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4 text-sm text-slate-600">{log.timestamp}</td>
+                <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
+                   {new Date(log.createdAt).toLocaleString()}
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-[#002147] text-white flex items-center justify-center text-xs font-semibold">
-                      {log.userInitials}
+                    <div className="h-8 w-8 rounded-full bg-[#E8EBF5] text-[#002147] flex items-center justify-center text-xs font-bold">
+                      {log.userName?.substring(0, 2).toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-slate-900">{log.user}</span>
+                    <span className="font-medium text-slate-900">{log.userName}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getActionBadgeClass(log.action)}`}>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${getActionBadgeClass(log.action)}`}>
                     {log.action}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-700">{log.resource}</td>
-                <td className="px-6 py-4 text-sm text-slate-700">{log.status}</td>
+                <td className="px-6 py-4 font-medium text-slate-700">{log.entity}</td>
+                <td className="px-6 py-4 text-slate-500 max-w-xs truncate" title={log.newValues}>
+                   ID: {log.entityId}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -193,31 +163,22 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-600">Showing 1 to 5 of 50 entries</p>
+      <div className="flex items-center justify-between pt-4">
+        <p className="text-sm text-slate-600">
+           Page {currentPage} of {totalPages}
+        </p>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1 || loading}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
           >
             Previous
           </button>
-          {[1, 2, 3].map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 text-sm font-medium rounded ${currentPage === page
-                ? 'bg-[#002147] text-white'
-                : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
-                }`}
-            >
-              {page}
-            </button>
-          ))}
           <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className="px-3 py-1 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages || loading}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
           >
             Next
           </button>

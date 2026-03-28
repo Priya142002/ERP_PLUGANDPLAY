@@ -162,7 +162,89 @@ namespace ERPPlugandPlay.Helpers
                     END
                 ");
 
-                // 8. Seed GlobalModules if empty
+                // 8. Admin Access & Audit Patch
+                ExecutePatch(db, logger, "Admin Roles/Permissions/Audit tables", @"
+                    IF OBJECT_ID('Roles', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE Roles (
+                            Id INT IDENTITY(1,1) PRIMARY KEY,
+                            RoleName NVARCHAR(450) NOT NULL UNIQUE
+                        );
+                    END
+
+                    IF OBJECT_ID('Permissions', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE Permissions (
+                            Id INT IDENTITY(1,1) PRIMARY KEY,
+                            Name NVARCHAR(450) NOT NULL UNIQUE,
+                            Description NVARCHAR(MAX) NULL,
+                            Category NVARCHAR(MAX) NULL
+                        );
+                    END
+
+                    IF OBJECT_ID('RolePermissions', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE RolePermissions (
+                            RoleId INT NOT NULL,
+                            PermissionId INT NOT NULL,
+                            PRIMARY KEY (RoleId, PermissionId),
+                            CONSTRAINT FK_RolePermissions_Roles FOREIGN KEY (RoleId) REFERENCES Roles(Id) ON DELETE CASCADE,
+                            CONSTRAINT FK_RolePermissions_Permissions FOREIGN KEY (PermissionId) REFERENCES Permissions(Id) ON DELETE CASCADE
+                        );
+                    END
+
+                    IF OBJECT_ID('AuditLogs', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE AuditLogs (
+                            Id INT IDENTITY(1,1) PRIMARY KEY,
+                            UserId INT NULL,
+                            UserName NVARCHAR(MAX) NOT NULL,
+                            Action NVARCHAR(MAX) NOT NULL,
+                            Entity NVARCHAR(MAX) NOT NULL,
+                            EntityId NVARCHAR(MAX) NULL,
+                            OldValues NVARCHAR(MAX) NULL,
+                            NewValues NVARCHAR(MAX) NULL,
+                            IPAddress NVARCHAR(MAX) NULL,
+                            CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+                        );
+                    END
+                ");
+
+                // 9. Seed Roles if empty
+                if (!db.Roles.Any())
+                {
+                    db.Roles.AddRange(new List<Role> {
+                        new Role { RoleName = "SuperAdmin" },
+                        new Role { RoleName = "Admin" },
+                        new Role { RoleName = "Manager" },
+                        new Role { RoleName = "Employee" }
+                    });
+                    db.SaveChanges();
+                }
+
+                // 10. Seed Permissions if empty
+                if (!db.Permissions.Any())
+                {
+                    var perms = new List<Permission>
+                    {
+                        new Permission { Name = "Dashboard_View", Category = "General" },
+                        new Permission { Name = "Inventory_View", Category = "Inventory" },
+                        new Permission { Name = "Inventory_Manage", Category = "Inventory" },
+                        new Permission { Name = "Purchase_View", Category = "Purchase" },
+                        new Permission { Name = "Purchase_Manage", Category = "Purchase" },
+                        new Permission { Name = "Sales_View", Category = "Sales" },
+                        new Permission { Name = "Sales_Manage", Category = "Sales" },
+                        new Permission { Name = "Accounts_View", Category = "Finance" },
+                        new Permission { Name = "Accounts_Manage", Category = "Finance" },
+                        new Permission { Name = "Users_View", Category = "Admin" },
+                        new Permission { Name = "Users_Manage", Category = "Admin" },
+                        new Permission { Name = "AuditLogs_View", Category = "Admin" }
+                    };
+                    db.Permissions.AddRange(perms);
+                    db.SaveChanges();
+                }
+
+                // 11. Seed GlobalModules if empty
                 if (!db.GlobalModules.Any())
                 {
                     logger.LogInformation("Seeding default GlobalModules...");
