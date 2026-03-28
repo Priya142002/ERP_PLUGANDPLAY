@@ -66,11 +66,16 @@ namespace ERPPlugandPlay.Data
         public DbSet<CustomerDebitNote> CustomerDebitNotes { get; set; }
 
         // ── Accounts ──────────────────────────────────────────
+        public DbSet<FinancialYear> FinancialYears { get; set; }
         public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
         public DbSet<JournalVoucher> JournalVouchers { get; set; }
         public DbSet<JournalVoucherEntry> JournalVoucherEntries { get; set; }
         public DbSet<PaymentVoucher> PaymentVouchers { get; set; }
         public DbSet<ReceiptVoucher> ReceiptVouchers { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
+        public DbSet<PaymentMode> PaymentModes { get; set; }
+        public DbSet<CostCenter> CostCenters { get; set; }
+        public DbSet<AccountOpeningBalance> AccountOpeningBalances { get; set; }
 
         // ── CRM ───────────────────────────────────────────────
         public DbSet<Lead> Leads { get; set; }
@@ -204,6 +209,9 @@ namespace ERPPlugandPlay.Data
             modelBuilder.Entity<JournalVoucherEntry>().Property(j => j.Amount).HasPrecision(18, 2);
             modelBuilder.Entity<PaymentVoucher>().Property(p => p.Amount).HasPrecision(18, 2);
             modelBuilder.Entity<ReceiptVoucher>().Property(r => r.Amount).HasPrecision(18, 2);
+            modelBuilder.Entity<BankAccount>().Property(b => b.OpeningBalance).HasPrecision(18, 2);
+            modelBuilder.Entity<BankAccount>().Property(b => b.CurrentBalance).HasPrecision(18, 2);
+            modelBuilder.Entity<AccountOpeningBalance>().Property(a => a.OpeningBalance).HasPrecision(18, 2);
 
             // CRM decimals
             modelBuilder.Entity<Opportunity>().Property(o => o.Value).HasPrecision(18, 2);

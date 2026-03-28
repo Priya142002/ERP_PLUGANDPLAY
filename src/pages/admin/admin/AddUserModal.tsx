@@ -5,7 +5,7 @@ import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 import { Mail, User, Shield } from 'lucide-react';
 import { adminApi } from '../../../services/api';
-import toast from 'react-hot-toast';
+import { useNotifications } from '../../../context/AppContext';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ interface AddUserModalProps {
 }
 
 const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) => {
+  const { showNotification } = useNotifications();
   const [formData, setFormData] = useState({
     email: '',
     name: '',
@@ -39,14 +40,24 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
         setRoles(res.data.map((r: any) => ({ label: r.roleName, value: r.id.toString() })));
       }
     } catch (error) {
-      toast.error("Failed to load roles");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to load roles',
+        duration: 3000
+      });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.roleId) {
-      toast.error("Please select a role");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Please select a role',
+        duration: 3000
+      });
       return;
     }
     setLoading(true);
@@ -57,14 +68,29 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
       };
       const res = await adminApi.createUser(payload);
       if (res.success) {
-        toast.success(res.message || "User invited successfully");
+        showNotification({
+          type: 'success',
+          title: 'Success',
+          message: res.message || 'User invited successfully',
+          duration: 3000
+        });
         if (onSave) onSave();
         onClose();
       } else {
-        toast.error(res.message || "Failed to invite user");
+        showNotification({
+          type: 'error',
+          title: 'Error',
+          message: res.message || 'Failed to invite user',
+          duration: 3000
+        });
       }
     } catch (error) {
-      toast.error("An error occurred");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'An error occurred',
+        duration: 3000
+      });
     } finally {
       setLoading(false);
     }

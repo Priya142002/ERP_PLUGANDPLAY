@@ -10,5 +10,9 @@ namespace ERPPlugandPlay.Models
         public string Type { get; set; } = string.Empty; // Debit, Credit
         public decimal Amount { get; set; }
         public string? Narration { get; set; }
+        public int? CostCenterId { get; set; }
+        public CostCenter? CostCenter { get; set; }
+        public int? ProjectId { get; set; }
+        public Project? Project { get; set; }
     }
 }

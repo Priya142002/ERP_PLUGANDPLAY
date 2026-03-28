@@ -5,7 +5,7 @@ import Button from "../../../components/ui/Button";
 import Select from "../../../components/ui/Select";
 import { adminNavigation } from "../../../config/navigation";
 import { adminApi } from "../../../services/api";
-import toast from "react-hot-toast";
+import { useNotifications } from "../../../context/AppContext";
 
 const ALL_MODULES = [
   { label: 'Select Module', value: '' },
@@ -40,6 +40,7 @@ const getModuleScreens = (moduleId: string) => {
 };
 
 const UserAccessPage: React.FC = () => {
+  const { showNotification } = useNotifications();
   const [selectedRole, setSelectedRole] = useState("Admin");
   const [selectedModule, setSelectedModule] = useState("");
   const [selectAll, setSelectAll] = useState(false);
@@ -65,7 +66,12 @@ const UserAccessPage: React.FC = () => {
       if (rolesRes.success) setRoles(rolesRes.data);
       if (permsRes.success) setAllPermissions(permsRes.data);
     } catch (error) {
-      toast.error("Failed to fetch initial data");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch initial data',
+        duration: 3000
+      });
     }
   };
 
@@ -101,7 +107,12 @@ const UserAccessPage: React.FC = () => {
         setScreens(mappedScreens);
       }
     } catch (error) {
-      toast.error("Failed to fetch permissions");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch permissions',
+        duration: 3000
+      });
     } finally {
       setLoading(false);
     }
@@ -127,7 +138,12 @@ const UserAccessPage: React.FC = () => {
   const handleSave = async () => {
     const roleId = roles.find(r => r.roleName === selectedRole || r.id === parseInt(selectedRole))?.id;
     if (!roleId) {
-      toast.error("Please select a role");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Please select a role',
+        duration: 3000
+      });
       return;
     }
 
@@ -161,11 +177,21 @@ const UserAccessPage: React.FC = () => {
         permissionIds: [...new Set([...permissionIds, ...otherModulePermissions])]
       });
       if (res.success) {
-        toast.success("Permissions updated successfully");
+        showNotification({
+          type: 'success',
+          title: 'Success',
+          message: 'Permissions updated successfully',
+          duration: 3000
+        });
         fetchRolePermissions();
       }
     } catch (error) {
-      toast.error("Failed to save permissions");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to save permissions',
+        duration: 3000
+      });
     }
   };
 
