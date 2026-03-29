@@ -302,3 +302,15 @@ namespace ERPPlugandPlay.DTOs
         public string? TransactionRef { get; set; }
         public string? Notes { get; set; }
     }
+public class CompanyFilterOptionsDto
+{
+    public List<string> Industries { get; set; } = new();
+    public List<string> Countries { get; set; } = new();
+    public List<CompanyTypeOption> CompanyTypes { get; set; } = new();
+}
+
+public class CompanyTypeOption
+{
+    public string Value { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+}

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  Plus, Building2, Search, Edit, Trash2,
+  Plus, Building2, Search, Edit, Trash2, CreditCard,
   Users, Download, Filter, X, Save, Upload, Image, Layers, ToggleLeft, ToggleRight, List, RefreshCw, CheckCircle, Lock
 } from "lucide-react";
 import { superAdminApi } from "../../services/api";
+import CompanyBillingPage from "./CompanyBillingPage";
 import "../../styles/superadmin-mobile.css";
 
 // Modules are loaded from DB — this is just the fallback
@@ -185,24 +186,6 @@ function EditableDropdown({
   );
 }
 
-const INDUSTRIES = [
-  "Manufacturing", "Construction", "Retail", "Healthcare",
-  "Technology", "Finance", "Education", "Logistics", "Other"
-];
-
-const COMPANY_TYPES = [
-  { value: 'private_limited', label: 'Private Limited' },
-  { value: 'public_limited', label: 'Public Limited' },
-  { value: 'llp', label: 'LLP' },
-  { value: 'partnership', label: 'Partnership' },
-  { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
-  { value: 'opc', label: 'OPC' },
-  { value: 'government', label: 'Government' },
-  { value: 'non_profit', label: 'Non-Profit' }
-];
-
-const COUNTRIES = ["USA", "UK", "India", "Canada", "Australia", "Germany", "France"];
-
 interface CompanyFormData {
   code: string;
   name: string;
@@ -239,14 +222,22 @@ interface FilterState {
   companyType: string;
 }
 
+interface CompanyFilterOptions {
+  industries: string[];
+  countries: string[];
+  companyTypes: { value: string; label: string }[];
+}
+
 function CompanyFormModal({
   company,
   onClose,
-  onSave
+  onSave,
+  filterOptions
 }: {
   company?: any;
   onClose: () => void;
   onSave: (data: CompanyFormData) => void;
+  filterOptions: CompanyFilterOptions;
 }) {
   const [isSubmitHovered, setIsSubmitHovered] = useState(false);
   const [formData, setFormData] = useState<CompanyFormData>(() => {
@@ -404,7 +395,7 @@ function CompanyFormModal({
                 required
                 value={formData.companyType}
                 onChange={v => setFormData({ ...formData, companyType: v as any })}
-                options={COMPANY_TYPES}
+                options={filterOptions.companyTypes}
                 placeholder="Select type"
                 dbKey="company_types"
               />
@@ -413,7 +404,7 @@ function CompanyFormModal({
                 required
                 value={formData.industry}
                 onChange={v => setFormData({ ...formData, industry: v })}
-                options={INDUSTRIES.map(i => ({ value: i, label: i }))}
+                options={filterOptions.industries.map(i => ({ value: i, label: i }))}
                 placeholder="Select industry"
                 dbKey="industries"
               />
@@ -674,7 +665,7 @@ function CompanyFormModal({
                 required
                 value={formData.address.country}
                 onChange={v => setFormData({ ...formData, address: { ...formData.address, country: v } })}
-                options={COUNTRIES.map(c => ({ value: c, label: c }))}
+                options={filterOptions.countries.map(c => ({ value: c, label: c }))}
                 placeholder="Select Country"
                 dbKey="countries"
               />
@@ -927,33 +918,62 @@ function TrialAccessModal({
                 return (
                   <label
                     key={mod.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition"
+                    className="group flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-200 ease-in-out hover:shadow-md"
                     style={{
-                      borderColor: isChecked ? "#6366f1" : "#e2e8f0",
-                      backgroundColor: isChecked ? "rgba(99,102,241,0.06)" : "#f8fafc",
+                      borderColor: isChecked ? "#3B82F6" : "#E5E7EB",
+                      backgroundColor: isChecked ? "#F0F9FF" : "#FFFFFF",
+                      boxShadow: isChecked ? "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+                      transform: isChecked ? "translateY(-1px)" : "translateY(0px)"
                     }}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => toggle(mod.id)}
-                      className="h-4 w-4 rounded flex-shrink-0"
-                      style={{ accentColor: "#6366f1" }}
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-slate-800">{mod.name}</span>
+                    {/* Checkbox */}
+                    <div className="flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggle(mod.id)}
+                        className="h-5 w-5 rounded-md border-2 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 transition-colors"
+                        style={{ 
+                          accentColor: "#3B82F6",
+                          borderColor: isChecked ? "#3B82F6" : "#D1D5DB"
+                        }}
+                      />
+                    </div>
+
+                    {/* Module Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">
+                          {mod.name}
+                        </h3>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                          TRIAL
+                        </span>
+                      </div>
+                      
+                      {/* Status badges */}
                       {dbEntry && (
-                        <div className="flex gap-1 mt-0.5">
+                        <div className="flex gap-1.5">
                           {dbEntry.isTrialAccess && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">TRIAL</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+                              Trial Access
+                            </span>
                           )}
                           {dbEntry.isEnabled && !dbEntry.isTrialAccess && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">SUBSCRIBED</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+                              Subscribed
+                            </span>
                           )}
                         </div>
                       )}
                     </div>
-                    {isChecked && <CheckCircle size={14} className="text-indigo-500 flex-shrink-0" />}
+
+                    {/* Selection Indicator */}
+                    {isChecked && (
+                      <div className="flex-shrink-0">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      </div>
+                    )}
                   </label>
                 );
               })}
@@ -1020,6 +1040,12 @@ export function CompanyManagementPage() {
   const [isAddBtnHovered, setIsAddBtnHovered] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [filters, setFilters] = useState<FilterState>({ industry: '', status: '', country: '', companyType: '' });
+  const [filterOptions, setFilterOptions] = useState<CompanyFilterOptions>({
+    industries: [],
+    countries: [],
+    companyTypes: []
+  });
+  const [selectedCompanyForBilling, setSelectedCompanyForBilling] = useState<any>(null);
 
   // Debounce search
   useEffect(() => {
@@ -1043,7 +1069,23 @@ export function CompanyManagementPage() {
     }
   }, [debouncedSearch]);
 
+  const loadFilterOptions = useCallback(async () => {
+    try {
+      const res = await superAdminApi.getCompanyFilterOptions();
+      if (res.success && res.data) {
+        setFilterOptions({
+          industries: res.data.industries || [],
+          countries: res.data.countries || [],
+          companyTypes: res.data.companyTypes || []
+        });
+      }
+    } catch (e) {
+      console.error('Failed to load filter options:', e);
+    }
+  }, []);
+
   useEffect(() => { loadCompanies(); }, [loadCompanies]);
+  useEffect(() => { loadFilterOptions(); }, [loadFilterOptions]);
 
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = !search || company.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -1132,6 +1174,17 @@ export function CompanyManagementPage() {
   };
 
   const clearFilters = () => setFilters({ industry: '', status: '', country: '', companyType: '' });
+
+  // Show billing page if company is selected for billing
+  if (selectedCompanyForBilling) {
+    return (
+      <CompanyBillingPage
+        companyId={selectedCompanyForBilling.id}
+        companyName={selectedCompanyForBilling.name}
+        onBack={() => setSelectedCompanyForBilling(null)}
+      />
+    );
+  }
 
   return (
     <motion.div {...pageMotion} className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -1272,7 +1325,7 @@ export function CompanyManagementPage() {
                 style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
               >
                 <option value="">All Industries</option>
-                {INDUSTRIES.map(ind => (
+                {filterOptions.industries.map(ind => (
                   <option key={ind} value={ind}>{ind}</option>
                 ))}
               </select>
@@ -1286,7 +1339,7 @@ export function CompanyManagementPage() {
                 style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
               >
                 <option value="">All Countries</option>
-                {COUNTRIES.map(country => (
+                {filterOptions.countries.map(country => (
                   <option key={country} value={country}>{country}</option>
                 ))}
               </select>
@@ -1300,7 +1353,7 @@ export function CompanyManagementPage() {
                 style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
               >
                 <option value="">All Types</option>
-                {COMPANY_TYPES.map(type => (
+                {filterOptions.companyTypes.map(type => (
                   <option key={type.value} value={type.value}>{type.label}</option>
                 ))}
               </select>
@@ -1378,7 +1431,7 @@ export function CompanyManagementPage() {
                           backgroundColor: "rgba(59, 130, 246, 0.1)",
                           color: "#3b82f6"
                         }}>
-                        {COMPANY_TYPES.find(t => t.value === company.companyType)?.label || 'Private Limited'}
+                        {filterOptions.companyTypes.find(t => t.value === company.companyType)?.label || 'Private Limited'}
                       </span>
                     </td>
                     <td className="p-4" style={{ color: "var(--sa-text-secondary)" }}>
@@ -1429,6 +1482,13 @@ export function CompanyManagementPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setSelectedCompanyForBilling(company)}
+                          className="p-1.5 rounded-lg hover:bg-[var(--sa-hover)] transition"
+                          title="View billing & subscription details"
+                        >
+                          <CreditCard className="h-4 w-4" style={{ color: "#10b981" }} />
+                        </button>
                         <button
                           onClick={() => setTrialAccessCompany(company)}
                           className="p-1.5 rounded-lg hover:bg-[var(--sa-hover)] transition"
@@ -1489,6 +1549,7 @@ export function CompanyManagementPage() {
             setEditingCompany(null);
           }}
           onSave={handleSaveCompany}
+          filterOptions={filterOptions}
         />
       )}
 

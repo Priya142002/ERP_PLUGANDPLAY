@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Plus, CheckCircle, Clock, AlertTriangle,
-  Bell, BellOff, Download, RefreshCw, X, Save, CreditCard
+  ArrowLeft, Plus, CheckCircle, Clock, AlertTriangle, Edit, Eye, BarChart3,
+  Bell, BellOff, Download, RefreshCw, X, Save, CreditCard, Calendar, TrendingUp,
+  Users, Package, Trash2, Filter, DollarSign
 } from "lucide-react";
 import { superAdminApi } from "../../services/api";
 
@@ -49,96 +50,295 @@ function RecordPaymentModal({ companyId, activePlan, onClose, onSaved }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg rounded-xl border shadow-2xl bg-white overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-800">Record Payment</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.05)", backdropFilter: "blur(2px)" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-2xl rounded-xl overflow-hidden"
+        style={{ 
+          backgroundColor: "#FFFFFF",
+          boxShadow: "0px 6px 24px rgba(0, 0, 0, 0.1)"
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: "#E5E7EB" }}>
+          <h3 className="text-xl font-bold" style={{ color: "#1F2937" }}>Record Payment</h3>
+          <button 
+            onClick={onClose} 
+            className="p-2 rounded-lg transition-all duration-200 hover:bg-gray-50"
+            style={{ color: "#6B7280" }}
+          >
+            <X size={20} />
+          </button>
         </div>
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-2 gap-4">
+
+        {/* Form Content */}
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Plan Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Plan Name</label>
-              <input value={form.planName} onChange={e => set('planName', e.target.value)}
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Plan Name
+              </label>
+              <input 
+                value={form.planName} 
+                onChange={e => set('planName', e.target.value)}
+                placeholder="Enter plan name"
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Plan Type</label>
-              <select value={form.planType} onChange={e => set('planType', e.target.value)}
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none">
-                <option>Monthly</option><option>Quarterly</option><option>Yearly</option>
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Plan Type
+              </label>
+              <select 
+                value={form.planType} 
+                onChange={e => set('planType', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              >
+                <option value="Monthly">Monthly</option>
+                <option value="Quarterly">Quarterly</option>
+                <option value="Yearly">Yearly</option>
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          {/* Amount Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Amount (₹) *</label>
-              <input type="number" value={form.amount} onChange={e => set('amount', e.target.value)}
-                placeholder="0.00" className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Amount (₹) <span style={{ color: "#EF4444" }}>*</span>
+              </label>
+              <input 
+                type="number" 
+                value={form.amount} 
+                onChange={e => set('amount', e.target.value)}
+                placeholder="0.00"
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Tax Amount (₹)</label>
-              <input type="number" value={form.taxAmount} onChange={e => set('taxAmount', e.target.value)}
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Tax Amount (₹)
+              </label>
+              <input 
+                type="number" 
+                value={form.taxAmount} 
+                onChange={e => set('taxAmount', e.target.value)}
+                placeholder="0"
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          {/* Period Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Period Start</label>
-              <input type="date" value={form.billingPeriodStart} onChange={e => set('billingPeriodStart', e.target.value)}
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none" />
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Period Start
+              </label>
+              <input 
+                type="date" 
+                value={form.billingPeriodStart} 
+                onChange={e => set('billingPeriodStart', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Period End</label>
-              <input type="date" value={form.billingPeriodEnd} onChange={e => set('billingPeriodEnd', e.target.value)}
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none" />
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Period End
+              </label>
+              <input 
+                type="date" 
+                value={form.billingPeriodEnd} 
+                onChange={e => set('billingPeriodEnd', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          {/* Due Date & Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Due Date</label>
-              <input type="date" value={form.dueDate} onChange={e => set('dueDate', e.target.value)}
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none" />
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Due Date
+              </label>
+              <input 
+                type="date" 
+                value={form.dueDate} 
+                onChange={e => set('dueDate', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Status</label>
-              <select value={form.status} onChange={e => set('status', e.target.value)}
-                className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none">
-                <option>Pending</option><option>Paid</option><option>Overdue</option>
+              <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                Status
+              </label>
+              <select 
+                value={form.status} 
+                onChange={e => set('status', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  backgroundColor: "#FFFFFF",
+                  borderColor: "#D1D5DB",
+                  color: "#111827"
+                }}
+              >
+                <option value="Pending">Pending</option>
+                <option value="Paid">Paid</option>
+                <option value="Overdue">Overdue</option>
               </select>
             </div>
           </div>
+
+          {/* Payment Details (shown only when status is Paid) */}
           {form.status === 'Paid' && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Payment Mode</label>
-                <select value={form.paymentMode} onChange={e => set('paymentMode', e.target.value)}
-                  className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none">
-                  <option value="">Select...</option>
-                  <option>Cash</option><option>Bank Transfer</option><option>UPI</option><option>Card</option>
+                <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                  Payment Mode
+                </label>
+                <select 
+                  value={form.paymentMode} 
+                  onChange={e => set('paymentMode', e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ 
+                    backgroundColor: "#FFFFFF",
+                    borderColor: "#D1D5DB",
+                    color: "#111827"
+                  }}
+                >
+                  <option value="">Select payment mode...</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Card">Credit/Debit Card</option>
+                  <option value="Cheque">Cheque</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Transaction Ref</label>
-                <input value={form.transactionRef} onChange={e => set('transactionRef', e.target.value)}
-                  placeholder="UTR / Ref No." className="w-full h-9 px-3 text-sm border border-slate-200 rounded-lg outline-none" />
+                <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+                  Transaction Reference
+                </label>
+                <input 
+                  value={form.transactionRef} 
+                  onChange={e => set('transactionRef', e.target.value)}
+                  placeholder="UTR / Reference Number"
+                  className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ 
+                    backgroundColor: "#FFFFFF",
+                    borderColor: "#D1D5DB",
+                    color: "#111827"
+                  }}
+                />
               </div>
             </div>
           )}
+
+          {/* Notes */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Notes</label>
-            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none resize-none" />
+            <label className="block text-sm font-semibold mb-2" style={{ color: "#374151" }}>
+              Notes
+            </label>
+            <textarea 
+              value={form.notes} 
+              onChange={e => set('notes', e.target.value)} 
+              rows={3}
+              placeholder="Add any additional notes or comments..."
+              className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              style={{ 
+                backgroundColor: "#FFFFFF",
+                borderColor: "#D1D5DB",
+                color: "#111827"
+              }}
+            />
           </div>
         </div>
-        <div className="flex gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50">
-          <button onClick={onClose} className="flex-1 h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-slate-100 transition">Cancel</button>
-          <button onClick={handleSave} disabled={saving || !form.amount}
-            className="flex-1 h-10 rounded-xl bg-[#002147] text-white text-sm font-bold hover:bg-[#003366] transition disabled:opacity-60 flex items-center justify-center gap-2">
-            {saving && <RefreshCw size={13} className="animate-spin" />}
-            <Save size={13} /> Record Payment
+
+        {/* Footer */}
+        <div className="flex gap-4 px-6 py-5 border-t" style={{ borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" }}>
+          <button 
+            onClick={onClose} 
+            className="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 border"
+            style={{ 
+              backgroundColor: "#F3F4F6",
+              color: "#374151",
+              borderColor: "#D1D5DB"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#E5E7EB";
+              e.currentTarget.style.color = "#1D4ED8";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#F3F4F6";
+              e.currentTarget.style.color = "#374151";
+            }}
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleSave} 
+            disabled={saving || !form.amount}
+            className="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{ 
+              backgroundColor: "#2563EB",
+              color: "#FFFFFF"
+            }}
+            onMouseEnter={(e) => {
+              if (!saving && form.amount) {
+                e.currentTarget.style.backgroundColor = "#1D4ED8";
+                e.currentTarget.style.color = "#FFFFFF";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!saving && form.amount) {
+                e.currentTarget.style.backgroundColor = "#2563EB";
+                e.currentTarget.style.color = "#FFFFFF";
+              }
+            }}
+          >
+            {saving && <RefreshCw size={16} className="animate-spin" />}
+            <Save size={16} />
+            Record Payment
           </button>
         </div>
       </motion.div>
@@ -204,6 +404,316 @@ function MarkPaidModal({ payment, onClose, onSaved }: { payment: any; onClose: (
   );
 }
 
+// ── Subscription Management Modal ────────────────────────────────────────────
+function SubscriptionManagementModal({ 
+  companyId, 
+  currentSubscription, 
+  onClose, 
+  onSaved 
+}: { 
+  companyId: number; 
+  currentSubscription: any; 
+  onClose: () => void; 
+  onSaved: () => void; 
+}) {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [billingCycle, setBillingCycle] = useState('Monthly');
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [seats, setSeats] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const res = await superAdminApi.getPlans();
+        if (res.success) {
+          setPlans(res.data || []);
+          if (currentSubscription) {
+            setSelectedPlan(currentSubscription.plan);
+            setBillingCycle(currentSubscription.planType || 'Monthly');
+            setSeats(currentSubscription.usedSeats || 1);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load plans:', e);
+      }
+    };
+    loadPlans();
+  }, [currentSubscription]);
+
+  const calculatePrice = () => {
+    if (!selectedPlan) return 0;
+    const basePrice = selectedPlan.monthlyPrice || 0;
+    const perUserPrice = (selectedPlan.pricePerUser || 0) * seats;
+    const total = basePrice + perUserPrice;
+    
+    if (billingCycle === 'Yearly') return total * 12 * 0.9;
+    if (billingCycle === 'Quarterly') return total * 3 * 0.95;
+    return total;
+  };
+
+  const handleSave = async () => {
+    if (!selectedPlan) return;
+    
+    setLoading(true);
+    try {
+      const payload = {
+        companyId,
+        planId: selectedPlan.id,
+        planType: billingCycle,
+        startDate,
+        seats
+      };
+      
+      if (currentSubscription) {
+        await superAdminApi.updateSubscription?.(currentSubscription.id, payload);
+      } else {
+        await superAdminApi.assignPlan(payload);
+      }
+      
+      onSaved();
+      onClose();
+    } catch (e) {
+      console.error('Failed to save subscription:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0, 0, 0, 0.05)", backdropFilter: "blur(2px)" }}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-5xl rounded-xl max-h-[90vh] overflow-y-auto"
+        style={{ 
+          backgroundColor: "#FFFFFF",
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)"
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: "#E5E7EB" }}>
+          <h2 className="text-xl font-bold" style={{ color: "#1F2937" }}>
+            Assign Subscription Plan
+          </h2>
+          <button 
+            onClick={onClose} 
+            className="p-2 rounded-lg transition-colors hover:bg-gray-50"
+            style={{ color: "#6B7280" }}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-8">
+          {/* Plan Selection */}
+          <div>
+            <h3 className="text-lg font-semibold mb-6" style={{ color: "#111827" }}>Select Plan</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {plans.map(plan => (
+                <div
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan)}
+                  className="p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-md"
+                  style={{
+                    backgroundColor: "#FFFFFF",
+                    borderColor: selectedPlan?.id === plan.id ? "#3B82F6" : "#E5E7EB",
+                    boxShadow: selectedPlan?.id === plan.id 
+                      ? "0px 4px 12px rgba(59, 130, 246, 0.15)" 
+                      : "0px 1px 3px rgba(0, 0, 0, 0.05)",
+                    transform: selectedPlan?.id === plan.id ? "translateY(-2px)" : "translateY(0px)"
+                  }}
+                >
+                  {/* Plan Badge */}
+                  {selectedPlan?.id === plan.id && (
+                    <div className="flex justify-end mb-2">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: "#3B82F6" }}>
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <h4 className="font-bold text-lg mb-3" style={{ color: "#111827" }}>
+                    {plan.name}
+                  </h4>
+                  
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold" style={{ color: "#2563EB" }}>
+                      ₹{plan.monthlyPrice?.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-sm ml-1" style={{ color: "#6B7280" }}>/month</span>
+                  </div>
+                  
+                  {plan.pricePerUser > 0 && (
+                    <p className="text-sm mb-3" style={{ color: "#6B7280" }}>
+                      + ₹{plan.pricePerUser?.toLocaleString('en-IN')} per user
+                    </p>
+                  )}
+                  
+                  <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+                    {plan.description || "Perfect for growing businesses"}
+                  </p>
+                  
+                  {/* Features list could go here */}
+                  <div className="mt-4 space-y-1">
+                    <div className="flex items-center gap-2 text-xs" style={{ color: "#6B7280" }}>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#10B981" }}></div>
+                      <span>Up to {plan.maxSeats || 'Unlimited'} users</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: "#6B7280" }}>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#10B981" }}></div>
+                      <span>{plan.maxModules || 'All'} modules included</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {selectedPlan && (
+            <>
+              {/* Configuration Options */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium mb-3" style={{ color: "#374151" }}>
+                    Billing Cycle
+                  </label>
+                  <select
+                    value={billingCycle}
+                    onChange={(e) => setBillingCycle(e.target.value)}
+                    className="w-full p-3 rounded-lg border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{ 
+                      backgroundColor: "#FFFFFF",
+                      borderColor: "#D1D5DB",
+                      color: "#111827"
+                    }}
+                  >
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly (5% discount)</option>
+                    <option value="Yearly">Yearly (10% discount)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-3" style={{ color: "#374151" }}>
+                    Number of Seats
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={seats}
+                    onChange={(e) => setSeats(parseInt(e.target.value) || 1)}
+                    className="w-full p-3 rounded-lg border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{ 
+                      backgroundColor: "#FFFFFF",
+                      borderColor: "#D1D5DB",
+                      color: "#111827"
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-3" style={{ color: "#374151" }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full p-3 rounded-lg border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{ 
+                      backgroundColor: "#FFFFFF",
+                      borderColor: "#D1D5DB",
+                      color: "#111827"
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Price Summary */}
+              <div className="p-6 rounded-xl" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                <h4 className="font-semibold text-lg mb-4" style={{ color: "#111827" }}>Price Summary</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span style={{ color: "#6B7280" }}>Base Price ({billingCycle})</span>
+                    <span className="font-medium" style={{ color: "#111827" }}>
+                      ₹{(selectedPlan.monthlyPrice * (billingCycle === 'Yearly' ? 12 : billingCycle === 'Quarterly' ? 3 : 1))?.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  
+                  {selectedPlan.pricePerUser > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span style={{ color: "#6B7280" }}>Per User ({seats} seats)</span>
+                      <span className="font-medium" style={{ color: "#111827" }}>
+                        ₹{(selectedPlan.pricePerUser * seats * (billingCycle === 'Yearly' ? 12 : billingCycle === 'Quarterly' ? 3 : 1))?.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {billingCycle !== 'Monthly' && (
+                    <div className="flex justify-between items-center">
+                      <span style={{ color: "#10B981" }}>Discount ({billingCycle === 'Yearly' ? '10%' : '5%'})</span>
+                      <span className="font-medium" style={{ color: "#10B981" }}>
+                        -₹{(calculatePrice() * (billingCycle === 'Yearly' ? 0.1111 : 0.0526))?.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="border-t pt-3 mt-3" style={{ borderColor: "#E5E7EB" }}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold" style={{ color: "#111827" }}>Total Amount</span>
+                      <span className="text-2xl font-bold" style={{ color: "#2563EB" }}>
+                        ₹{calculatePrice()?.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-6 border-t" style={{ borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" }}>
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-lg font-medium transition-colors hover:bg-gray-200"
+            style={{ 
+              backgroundColor: "#F3F4F6",
+              color: "#374151"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!selectedPlan || loading}
+            className="px-8 py-2.5 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg flex items-center gap-2"
+            style={{ 
+              backgroundColor: "#2563EB",
+              color: "#FFFFFF"
+            }}
+            onMouseEnter={(e) => {
+              if (!loading && selectedPlan) {
+                e.currentTarget.style.backgroundColor = "#1D4ED8";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading && selectedPlan) {
+                e.currentTarget.style.backgroundColor = "#2563EB";
+              }
+            }}
+          >
+            {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
+            {currentSubscription ? 'Update Subscription' : 'Assign Plan'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export function CompanyBillingPage({ companyId, companyName, onBack }: {
   companyId: number; companyName: string; onBack: () => void;
@@ -212,8 +722,10 @@ export function CompanyBillingPage({ companyId, companyName, onBack }: {
   const [loading, setLoading] = useState(true);
   const [showRecord, setShowRecord] = useState(false);
   const [markPaidPayment, setMarkPaidPayment] = useState<any>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [sendingReminder, setSendingReminder] = useState<number | null>(null);
   const [sendingBulk, setSendingBulk] = useState(false);
+  const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -259,6 +771,10 @@ export function CompanyBillingPage({ companyId, companyName, onBack }: {
               Send Reminders ({overdueCount})
             </button>
           )}
+          <button onClick={() => setShowSubscriptionModal(true)}
+            className="flex items-center gap-2 px-4 h-10 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition">
+            <Edit size={13} /> Manage Subscription
+          </button>
           <button onClick={() => setShowRecord(true)}
             className="flex items-center gap-2 px-4 h-10 rounded-xl bg-[#002147] text-white text-xs font-bold hover:bg-[#003366] transition shadow-lg">
             <Plus size={13} /> Record Payment
@@ -288,12 +804,44 @@ export function CompanyBillingPage({ companyId, companyName, onBack }: {
             ))}
           </div>
 
-          {/* Subscription Info */}
-          <div className="p-4 bg-white rounded-xl border border-slate-200 flex flex-wrap gap-6 text-sm">
-            <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Company Email</span><p className="font-medium text-slate-800 mt-0.5">{data.companyEmail}</p></div>
-            <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Active Plan</span><p className="font-medium text-slate-800 mt-0.5">{data.activePlan || '—'}</p></div>
-            <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Status</span><p className={`font-bold mt-0.5 ${data.activeStatus === 'Active' ? 'text-emerald-600' : 'text-slate-500'}`}>{data.activeStatus || '—'}</p></div>
-            <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Next Billing</span><p className="font-medium text-slate-800 mt-0.5">{data.nextBillingDate ? new Date(data.nextBillingDate).toLocaleDateString('en-IN') : '—'}</p></div>
+          {/* Subscription Info & Controls */}
+          <div className="bg-white rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-bold text-slate-800">Subscription Details</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">View:</span>
+                <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('monthly')}
+                    className={`px-3 py-1 text-xs font-medium transition ${
+                      viewMode === 'monthly' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setViewMode('yearly')}
+                    className={`px-3 py-1 text-xs font-medium transition ${
+                      viewMode === 'yearly' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    Yearly
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 flex flex-wrap gap-6 text-sm">
+              <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Company Email</span><p className="font-medium text-slate-800 mt-0.5">{data.companyEmail}</p></div>
+              <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Active Plan</span><p className="font-medium text-slate-800 mt-0.5">{data.activePlan || '—'}</p></div>
+              <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Status</span><p className={`font-bold mt-0.5 ${data.activeStatus === 'Active' ? 'text-emerald-600' : 'text-slate-500'}`}>{data.activeStatus || '—'}</p></div>
+              <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Next Billing</span><p className="font-medium text-slate-800 mt-0.5">{data.nextBillingDate ? new Date(data.nextBillingDate).toLocaleDateString('en-IN') : '—'}</p></div>
+              <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Seats Used</span><p className="font-medium text-slate-800 mt-0.5">{data.usedSeats || 0}</p></div>
+              <div><span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Modules</span><p className="font-medium text-slate-800 mt-0.5">{data.allowedModules?.length || 0} active</p></div>
+            </div>
           </div>
 
           {/* Payments Table */}
@@ -399,6 +947,14 @@ export function CompanyBillingPage({ companyId, companyName, onBack }: {
         {markPaidPayment && (
           <MarkPaidModal payment={markPaidPayment}
             onClose={() => setMarkPaidPayment(null)} onSaved={load} />
+        )}
+        {showSubscriptionModal && (
+          <SubscriptionManagementModal 
+            companyId={companyId}
+            currentSubscription={data?.currentSubscription}
+            onClose={() => setShowSubscriptionModal(false)}
+            onSaved={load}
+          />
         )}
       </AnimatePresence>
     </motion.div>

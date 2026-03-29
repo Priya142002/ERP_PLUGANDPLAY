@@ -14,6 +14,7 @@ namespace ERPPlugandPlay.Services
         Task<ApiResponse<CompanyFullDto>> UpdateAsync(int id, UpdateCompanyFullDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
         Task<ApiResponse<bool>> ToggleStatusAsync(int id);
+        Task<ApiResponse<CompanyFilterOptionsDto>> GetFilterOptionsAsync();
     }
 
     public class SuperAdminCompanyService : ISuperAdminCompanyService
@@ -241,6 +242,68 @@ namespace ERPPlugandPlay.Services
                 SubscriptionStatus = activeSub?.Status,
                 UsedSeats = activeSub?.UsedSeats ?? 0,
                 CreatedAt = c.CreatedAt, UpdatedAt = c.UpdatedAt
+            };
+        }
+
+        public async Task<ApiResponse<CompanyFilterOptionsDto>> GetFilterOptionsAsync()
+        {
+            try
+            {
+                var companies = await _db.Companies.ToListAsync();
+                
+                var industries = companies
+                    .Where(c => !string.IsNullOrEmpty(c.Industry))
+                    .Select(c => c.Industry)
+                    .Distinct()
+                    .OrderBy(i => i)
+                    .ToList();
+                    
+                var countries = companies
+                    .Where(c => !string.IsNullOrEmpty(c.Country))
+                    .Select(c => c.Country)
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToList();
+                    
+                var companyTypes = companies
+                    .Where(c => !string.IsNullOrEmpty(c.CompanyType))
+                    .Select(c => c.CompanyType)
+                    .Distinct()
+                    .Select(ct => new CompanyTypeOption
+                    {
+                        Value = ct,
+                        Label = GetCompanyTypeLabel(ct)
+                    })
+                    .OrderBy(ct => ct.Label)
+                    .ToList();
+                    
+                var result = new CompanyFilterOptionsDto
+                {
+                    Industries = industries,
+                    Countries = countries,
+                    CompanyTypes = companyTypes
+                };
+                
+                return ApiResponse<CompanyFilterOptionsDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<CompanyFilterOptionsDto>.Fail($"Failed to get filter options: {ex.Message}");
+            }
+        }
+        
+        private static string GetCompanyTypeLabel(string companyType)
+        {
+            return companyType switch
+            {
+                "private_limited" => "Private Limited",
+                "public_limited" => "Public Limited",
+                "partnership" => "Partnership",
+                "sole_proprietorship" => "Sole Proprietorship",
+                "llp" => "Limited Liability Partnership",
+                "ngo" => "Non-Governmental Organization",
+                "government" => "Government",
+                _ => companyType
             };
         }
     }

@@ -78,6 +78,8 @@ export const superAdminApi = {
   // Companies
   getCompanies: (page = 1, pageSize = 50, search = '') =>
     request<any>(`/api/superadmin/companies?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`),
+  getCompanyFilterOptions: () =>
+    request<any>('/api/superadmin/companies/filter-options'),
   createCompany: (data: any) =>
     request<any>('/api/superadmin/companies', { method: 'POST', body: JSON.stringify(data) }),
   updateCompany: (id: number, data: any) =>
@@ -94,6 +96,8 @@ export const superAdminApi = {
     request<any>('/api/superadmin/subscriptions/plans'),
   assignPlan: (data: any) =>
     request<any>('/api/superadmin/subscriptions/assign', { method: 'POST', body: JSON.stringify(data) }),
+  updateSubscription: (id: number, data: any) =>
+    request<any>(`/api/superadmin/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   createPlan: (data: any) =>
     request<any>('/api/superadmin/subscriptions/plans', { method: 'POST', body: JSON.stringify(data) }),
   updatePlan: (id: number, data: any) =>

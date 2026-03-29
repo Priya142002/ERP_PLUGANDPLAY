@@ -61,5 +61,13 @@ namespace ERPPlugandPlay.Controllers.SuperAdmin
             var result = await _service.ToggleStatusAsync(id);
             return result.Success ? Ok(result) : NotFound(result);
         }
+        /// <summary>GET /api/superadmin/companies/filter-options</summary>
+        [HttpGet("filter-options")]
+        public async Task<IActionResult> GetFilterOptions()
+        {
+            var result = await _service.GetFilterOptionsAsync();
+            return Ok(result);
+        }
+
     }
 }
