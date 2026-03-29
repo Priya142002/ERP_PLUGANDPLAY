@@ -22,7 +22,12 @@ namespace ERPPlugandPlay.Services
     public class AssetsService : IAssetsService
     {
         private readonly ERPDbContext _db;
-        public AssetsService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public AssetsService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         public async Task<ApiResponse<AssetDto>> CreateAssetAsync(CreateAssetDto dto)
         {
@@ -38,6 +43,11 @@ namespace ERPPlugandPlay.Services
             };
             _db.Assets.Add(asset);
             await _db.SaveChangesAsync();
+
+            // Auto-post: DR Fixed Asset Account / CR Cash (asset capitalization)
+            try { await _accounting.PostAssetPurchaseAsync(dto.CompanyId, asset.Id, dto.PurchasePrice, dto.Name); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<AssetDto>.Ok(await GetAssetDtoAsync(asset.Id), "Asset created.");
         }
 
@@ -92,6 +102,12 @@ namespace ERPPlugandPlay.Services
             var asset = await _db.Assets.FindAsync(dto.AssetId);
             if (asset != null) asset.Status = "Under Maintenance";
             await _db.SaveChangesAsync();
+
+            // Auto-post: DR Maintenance Expense / CR Cash (if cost > 0)
+            if (dto.Cost > 0 && asset != null)
+                try { await _accounting.PostMaintenanceCostAsync(asset.CompanyId, log.Id, dto.Cost, asset.Name); }
+                catch { /* Non-blocking */ }
+
             return ApiResponse<MaintenanceDto>.Ok(new MaintenanceDto
             {
                 Id = log.Id, AssetId = log.AssetId, AssetName = asset?.Name ?? "",
@@ -128,6 +144,11 @@ namespace ERPPlugandPlay.Services
             _db.AssetDisposals.Add(disposal);
             asset.Status = "Disposed";
             await _db.SaveChangesAsync();
+
+            // Auto-post: DR Disposal Loss / CR Fixed Asset (write-off)
+            try { await _accounting.PostAssetDisposalAsync(asset.CompanyId, disposal.Id, asset.CurrentValue, dto.SaleValue, asset.Name); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<DisposalDto>.Ok(new DisposalDto
             {
                 Id = disposal.Id, AssetId = disposal.AssetId, AssetName = asset.Name,

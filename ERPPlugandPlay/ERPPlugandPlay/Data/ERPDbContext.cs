@@ -24,6 +24,7 @@ namespace ERPPlugandPlay.Data
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<CompanySubscription> CompanySubscriptions { get; set; }
         public DbSet<CompanyModule> CompanyModules { get; set; }
+        public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
 
         // ── Payroll ───────────────────────────────────────────
         public DbSet<Salary> Salaries { get; set; }

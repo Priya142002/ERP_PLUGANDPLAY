@@ -4,12 +4,13 @@ export interface ModuleState {
   id: string;
   name: string;
   enabled: boolean;
-  locked?: boolean; // locked = not subscribed, hidden from sidebar
+  locked: boolean;
 }
 
 interface ModuleContextType {
   modules: ModuleState[];
   enabledModuleIds: string[];
+  setAllowedModules: (ids: string[]) => void;
   toggleModule: (id: string) => void;
   isModuleEnabled: (id: string) => boolean;
   isModuleLocked: (id: string) => boolean;
@@ -17,104 +18,102 @@ interface ModuleContextType {
 
 const ModuleContext = createContext<ModuleContextType | undefined>(undefined);
 
-// Default module states - these would be persisted in localStorage or backend
-const MODULE_VERSION = '1.2'; // Increment this when module structure changes
-
-const DEFAULT_MODULES: ModuleState[] = [
-  { id: 'dashboard',  name: 'Dashboard',            enabled: true,  locked: false },
-  { id: 'inventory',  name: 'Inventory Management', enabled: true,  locked: false },
-  { id: 'purchase',   name: 'Purchase Management',  enabled: true,  locked: false },
-  { id: 'sales',      name: 'Sales Management',     enabled: true,  locked: false },
-  { id: 'accounts',   name: 'Accounts & Finance',   enabled: true,  locked: false },
-  { id: 'crm',        name: 'CRM',                  enabled: true,  locked: false },
-  { id: 'hrm',        name: 'HRM',                  enabled: true,  locked: false },
-  { id: 'projects',   name: 'Projects',             enabled: true,  locked: false },
-  { id: 'helpdesk',   name: 'Helpdesk',             enabled: true,  locked: false },
-  { id: 'assets',     name: 'Assets',               enabled: true,  locked: false },
-  { id: 'logistics',  name: 'Logistics',            enabled: true,  locked: false },
-  { id: 'production', name: 'Production',           enabled: true,  locked: false },
-  { id: 'billing',    name: 'Billing',              enabled: true,  locked: false },
-  { id: 'admin',      name: 'Admin',                enabled: true,  locked: false },
+// All known modules in display order
+const ALL_MODULES: Omit<ModuleState, 'enabled' | 'locked'>[] = [
+  { id: 'inventory',  name: 'Inventory Management' },
+  { id: 'purchase',   name: 'Purchase Management'  },
+  { id: 'sales',      name: 'Sales Management'     },
+  { id: 'accounts',   name: 'Accounts & Finance'   },
+  { id: 'crm',        name: 'CRM'                  },
+  { id: 'hrm',        name: 'HRM'                  },
+  { id: 'projects',   name: 'Projects'             },
+  { id: 'helpdesk',   name: 'Helpdesk'             },
+  { id: 'assets',     name: 'Assets'               },
+  { id: 'logistics',  name: 'Logistics'            },
+  { id: 'production', name: 'Production'           },
+  { id: 'billing',    name: 'Billing'              },
+  { id: 'pos',        name: 'POS'                  },
 ];
 
+// Build module states from an allowedModules list
+function buildModules(allowedIds: string[]): ModuleState[] {
+  // If no restriction (super_admin or empty), enable all
+  const hasRestriction = allowedIds.length > 0;
+  return ALL_MODULES.map(m => ({
+    ...m,
+    enabled: !hasRestriction || allowedIds.includes(m.id),
+    locked:  hasRestriction && !allowedIds.includes(m.id),
+  }));
+}
+
+// Read allowedModules from stored user
+function getAllowedModulesFromStorage(): string[] {
+  try {
+    const raw = localStorage.getItem('erp_user') || sessionStorage.getItem('erp_user');
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data.allowedModules) ? data.allowedModules : [];
+  } catch { return []; }
+}
+
 export const ModuleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [modules, setModules] = useState<ModuleState[]>(() => {
-    try {
-      const storedVersion = localStorage.getItem('moduleVersion');
-      const stored = localStorage.getItem('enabledModules');
-      
-      // If version doesn't match or no version, reset to defaults
-      if (storedVersion !== MODULE_VERSION) {
-        localStorage.setItem('moduleVersion', MODULE_VERSION);
-        localStorage.setItem('enabledModules', JSON.stringify(DEFAULT_MODULES));
-        return DEFAULT_MODULES;
-      }
-      
-      if (stored) {
-        const parsed: ModuleState[] = JSON.parse(stored);
-        // If stored data is missing the locked field, discard it and use defaults
-        const hasLockField = parsed.some(m => 'locked' in m);
-        if (hasLockField) return parsed;
-      }
-    } catch (error) {
-      console.error('Error loading modules from localStorage:', error);
-    }
-    return DEFAULT_MODULES;
-  });
+  const [modules, setModules] = useState<ModuleState[]>(() =>
+    buildModules(getAllowedModulesFromStorage())
+  );
 
-  // Persist to localStorage whenever modules change
+  // Re-seed whenever storage changes (e.g. after login in another tab)
   useEffect(() => {
-    try {
-      localStorage.setItem('enabledModules', JSON.stringify(modules));
-    } catch (error) {
-      console.error('Error saving modules to localStorage:', error);
-    }
-  }, [modules]);
+    const sync = () => setModules(buildModules(getAllowedModulesFromStorage()));
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
 
+  // Called right after login to immediately update sidebar
+  const setAllowedModules = (ids: string[]) => {
+    setModules(buildModules(ids));
+  };
+
+  // Admin can toggle modules they have access to (local UI preference)
   const toggleModule = (id: string) => {
-    setModules(prev => 
-      prev.map(m => m.id === id ? { ...m, enabled: !m.enabled } : m)
+    setModules(prev =>
+      prev.map(m => m.id === id && !m.locked ? { ...m, enabled: !m.enabled } : m)
     );
   };
 
-  const isModuleEnabled = (id: string): boolean => {
-    const module = modules.find(m => m.id === id);
-    return module?.enabled ?? true; // Default to true if not found
-  };
+  const isModuleEnabled = (id: string) =>
+    modules.find(m => m.id === id)?.enabled ?? true;
 
-  const isModuleLocked = (id: string): boolean => {
-    const module = modules.find(m => m.id === id);
-    return module?.locked ?? false;
-  };
+  const isModuleLocked = (id: string) =>
+    modules.find(m => m.id === id)?.locked ?? false;
 
   const enabledModuleIds = modules.filter(m => m.enabled).map(m => m.id);
 
   return (
-    <ModuleContext.Provider value={{ modules, enabledModuleIds, toggleModule, isModuleEnabled, isModuleLocked }}>
+    <ModuleContext.Provider value={{
+      modules, enabledModuleIds,
+      setAllowedModules, toggleModule,
+      isModuleEnabled, isModuleLocked
+    }}>
       {children}
     </ModuleContext.Provider>
   );
 };
 
 export const useModules = () => {
-  const context = useContext(ModuleContext);
-  if (!context) {
-    throw new Error('useModules must be used within ModuleProvider');
-  }
-  return context;
+  const ctx = useContext(ModuleContext);
+  if (!ctx) throw new Error('useModules must be used within ModuleProvider');
+  return ctx;
 };
 
-// Safe hook that returns default values if context is not available
 export const useModulesSafe = () => {
-  const context = useContext(ModuleContext);
-  if (!context) {
-    return {
-      modules: DEFAULT_MODULES,
-      enabledModuleIds: DEFAULT_MODULES.filter(m => m.enabled).map(m => m.id),
-      toggleModule: () => {},
-      isModuleEnabled: () => true,
-      isModuleLocked: (id: string) => DEFAULT_MODULES.find(m => m.id === id)?.locked ?? false
-    };
-  }
-  return context;
+  const ctx = useContext(ModuleContext);
+  if (!ctx) return {
+    modules: buildModules([]),
+    enabledModuleIds: ALL_MODULES.map(m => m.id),
+    setAllowedModules: () => {},
+    toggleModule: () => {},
+    isModuleEnabled: () => true,
+    isModuleLocked: () => false,
+  };
+  return ctx;
 };

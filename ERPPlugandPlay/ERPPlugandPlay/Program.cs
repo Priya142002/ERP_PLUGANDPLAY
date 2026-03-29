@@ -109,6 +109,10 @@ builder.Services.AddScoped<IPOSService, POSService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 
+// Accounting & Auto-posting
+builder.Services.AddScoped<IAutoAccountingService, AutoAccountingService>();
+builder.Services.AddScoped<IChartOfAccountsInitializer, ChartOfAccountsInitializer>();
+
 // Services — SuperAdmin
 builder.Services.AddScoped<ISuperAdminCompanyService, SuperAdminCompanyService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();

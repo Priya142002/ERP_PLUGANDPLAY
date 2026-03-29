@@ -2,6 +2,7 @@ using ERPPlugandPlay.Data;
 using ERPPlugandPlay.DTOs;
 using ERPPlugandPlay.Models;
 using ERPPlugandPlay.Services;
+using ERPPlugandPlay.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,13 +33,31 @@ namespace ERPPlugandPlay.Controllers
         [HttpPost("financial-years")]
         public async Task<IActionResult> CreateFinancialYear([FromBody] CreateFinancialYearDto dto)
         {
+            // Prevent duplicate FY for same company + same start year
+            var duplicate = await _context.FinancialYears
+                .AnyAsync(f => f.CompanyId == dto.CompanyId
+                            && f.StartDate.Year == dto.StartDate.Year);
+            if (duplicate)
+                return BadRequest(new { success = false, message = "A financial year starting in that year already exists for this company." });
+
+            var fyCode = FYCodeGenerator.Generate(dto.CompanyId, dto.StartDate, dto.EndDate);
+
+            // Deactivate all other years if this one is set active
+            if (dto.IsActive)
+            {
+                var others = await _context.FinancialYears
+                    .Where(f => f.CompanyId == dto.CompanyId).ToListAsync();
+                foreach (var o in others) o.IsActive = false;
+            }
+
             var financialYear = new FinancialYear
             {
                 CompanyId = dto.CompanyId,
-                YearName = dto.YearName,
+                FYCode    = fyCode,
+                YearName  = dto.YearName,
                 StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
-                IsActive = dto.IsActive,
+                EndDate   = dto.EndDate,
+                IsActive  = dto.IsActive,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = GetUserId()
             };
@@ -46,7 +65,7 @@ namespace ERPPlugandPlay.Controllers
             _context.FinancialYears.Add(financialYear);
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, data = financialYear });
+            return Ok(new { success = true, data = MapFY(financialYear) });
         }
 
         [HttpGet("financial-years/{companyId}")]
@@ -55,21 +74,23 @@ namespace ERPPlugandPlay.Controllers
             var years = await _context.FinancialYears
                 .Where(f => f.CompanyId == companyId)
                 .OrderByDescending(f => f.StartDate)
-                .Select(f => new FinancialYearDto
-                {
-                    Id = f.Id,
-                    CompanyId = f.CompanyId,
-                    YearName = f.YearName,
-                    StartDate = f.StartDate,
-                    EndDate = f.EndDate,
-                    IsActive = f.IsActive,
-                    IsClosed = f.IsClosed,
-                    ClosedAt = f.ClosedAt
-                })
                 .ToListAsync();
 
-            return Ok(new { success = true, data = years });
+            return Ok(new { success = true, data = years.Select(MapFY).ToList() });
         }
+
+        private static FinancialYearDto MapFY(FinancialYear f) => new()
+        {
+            Id        = f.Id,
+            CompanyId = f.CompanyId,
+            FYCode    = f.FYCode,
+            YearName  = f.YearName,
+            StartDate = f.StartDate,
+            EndDate   = f.EndDate,
+            IsActive  = f.IsActive,
+            IsClosed  = f.IsClosed,
+            ClosedAt  = f.ClosedAt
+        };
 
         [HttpPut("financial-years/{id}/close")]
         public async Task<IActionResult> CloseFinancialYear(int id)
@@ -85,6 +106,203 @@ namespace ERPPlugandPlay.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Financial year closed successfully" });
+        }
+
+        /// <summary>
+        /// Year-End Rollover:
+        ///   1. Closes the current financial year
+        ///   2. Creates the next financial year
+        ///   3. Carries forward closing balances of Balance Sheet accounts (Assets/Liabilities/Equity)
+        ///      as opening balances in the new year
+        ///   4. Transfers net P&L to Retained Earnings
+        ///   5. Optionally carries forward master data (vendors, customers, accounts, products)
+        ///      — they are always company-scoped so they carry forward automatically
+        /// </summary>
+        [HttpPost("financial-years/{id}/year-end-close")]
+        public async Task<IActionResult> YearEndClose(int id, [FromBody] YearEndCloseDto dto)
+        {
+            var currentYear = await _context.FinancialYears.FindAsync(id);
+            if (currentYear == null)
+                return NotFound(new { success = false, message = "Financial year not found" });
+            if (currentYear.IsClosed)
+                return BadRequest(new { success = false, message = "Financial year is already closed" });
+
+            var companyId = currentYear.CompanyId;
+            var userId    = GetUserId();
+
+            // ── Step 1: Close current year ────────────────────────────────
+            currentYear.IsClosed  = true;
+            currentYear.ClosedAt  = DateTime.UtcNow;
+            currentYear.ClosedBy  = userId;
+            currentYear.IsActive  = false;
+
+            // ── Step 2: Create next financial year ────────────────────────
+            var nextStart = currentYear.EndDate.AddDays(1);
+            var nextEnd   = nextStart.AddYears(1).AddDays(-1);
+            var nextYear  = new FinancialYear
+            {
+                CompanyId = companyId,
+                FYCode    = FYCodeGenerator.Generate(companyId, nextStart, nextEnd),
+                YearName  = dto.NewYearName ?? $"FY {nextStart.Year}-{nextEnd.Year % 100:D2}",
+                StartDate = nextStart,
+                EndDate   = nextEnd,
+                IsActive  = true,
+                IsClosed  = false,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId
+            };
+            _context.FinancialYears.Add(nextYear);
+            await _context.SaveChangesAsync(); // get nextYear.Id
+
+            // ── Step 3: Calculate closing balances for B/S accounts ───────
+            var bsAccounts = await _context.ChartOfAccounts
+                .Where(a => a.CompanyId == companyId && !a.IsGroup && a.IsActive
+                         && (a.AccountType == "Asset" || a.AccountType == "Liability" || a.AccountType == "Equity"))
+                .ToListAsync();
+
+            var openingBalances = new List<AccountOpeningBalance>();
+
+            foreach (var acc in bsAccounts)
+            {
+                var entries = await _context.JournalVoucherEntries
+                    .Include(e => e.JournalVoucher)
+                    .Where(e => e.AccountId == acc.Id
+                             && e.JournalVoucher.Status == "Posted"
+                             && e.JournalVoucher.VoucherDate >= currentYear.StartDate
+                             && e.JournalVoucher.VoucherDate <= currentYear.EndDate)
+                    .ToListAsync();
+
+                var debit  = entries.Where(e => e.Type == "Debit").Sum(e => e.Amount);
+                var credit = entries.Where(e => e.Type == "Credit").Sum(e => e.Amount);
+
+                // Net balance considering opening balance
+                decimal openingDebit  = acc.OpeningBalanceType == "Debit"  ? acc.OpeningBalance : 0;
+                decimal openingCredit = acc.OpeningBalanceType == "Credit" ? acc.OpeningBalance : 0;
+
+                var totalDebit  = openingDebit  + debit;
+                var totalCredit = openingCredit + credit;
+
+                decimal closingBalance;
+                string  closingType;
+
+                if (acc.AccountType == "Asset" || acc.AccountType == "Expense")
+                {
+                    closingBalance = totalDebit - totalCredit;
+                    closingType    = closingBalance >= 0 ? "Debit" : "Credit";
+                }
+                else
+                {
+                    closingBalance = totalCredit - totalDebit;
+                    closingType    = closingBalance >= 0 ? "Credit" : "Debit";
+                }
+
+                if (Math.Abs(closingBalance) < 0.01m) continue;
+
+                openingBalances.Add(new AccountOpeningBalance
+                {
+                    CompanyId       = companyId,
+                    FinancialYearId = nextYear.Id,
+                    AccountId       = acc.Id,
+                    OpeningBalance  = Math.Abs(closingBalance),
+                    BalanceType     = closingType,
+                    CreatedAt       = DateTime.UtcNow
+                });
+
+                // Also update the account's opening balance for quick access
+                acc.OpeningBalance     = Math.Abs(closingBalance);
+                acc.OpeningBalanceType = closingType;
+            }
+
+            if (openingBalances.Any())
+                _context.AccountOpeningBalances.AddRange(openingBalances);
+
+            // ── Step 4: Transfer net P&L to Retained Earnings ─────────────
+            var incomeAccounts  = await _context.ChartOfAccounts
+                .Where(a => a.CompanyId == companyId && !a.IsGroup && a.AccountType == "Income").ToListAsync();
+            var expenseAccounts = await _context.ChartOfAccounts
+                .Where(a => a.CompanyId == companyId && !a.IsGroup && a.AccountType == "Expense").ToListAsync();
+
+            decimal totalIncome = 0, totalExpense = 0;
+
+            foreach (var acc in incomeAccounts)
+            {
+                var entries = await _context.JournalVoucherEntries
+                    .Include(e => e.JournalVoucher)
+                    .Where(e => e.AccountId == acc.Id && e.JournalVoucher.Status == "Posted"
+                             && e.JournalVoucher.VoucherDate >= currentYear.StartDate
+                             && e.JournalVoucher.VoucherDate <= currentYear.EndDate)
+                    .ToListAsync();
+                totalIncome += entries.Where(e => e.Type == "Credit").Sum(e => e.Amount)
+                             - entries.Where(e => e.Type == "Debit").Sum(e => e.Amount);
+            }
+
+            foreach (var acc in expenseAccounts)
+            {
+                var entries = await _context.JournalVoucherEntries
+                    .Include(e => e.JournalVoucher)
+                    .Where(e => e.AccountId == acc.Id && e.JournalVoucher.Status == "Posted"
+                             && e.JournalVoucher.VoucherDate >= currentYear.StartDate
+                             && e.JournalVoucher.VoucherDate <= currentYear.EndDate)
+                    .ToListAsync();
+                totalExpense += entries.Where(e => e.Type == "Debit").Sum(e => e.Amount)
+                              - entries.Where(e => e.Type == "Credit").Sum(e => e.Amount);
+            }
+
+            var netProfit = totalIncome - totalExpense;
+
+            // Post closing entry to Retained Earnings
+            var retainedEarningsAcc = await _context.ChartOfAccounts
+                .FirstOrDefaultAsync(a => a.CompanyId == companyId && a.AccountCode == "3200");
+
+            if (retainedEarningsAcc != null && Math.Abs(netProfit) > 0.01m)
+            {
+                retainedEarningsAcc.OpeningBalance += Math.Abs(netProfit);
+                retainedEarningsAcc.OpeningBalanceType = netProfit >= 0 ? "Credit" : "Debit";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Year-end close completed. New financial year '{nextYear.YearName}' created.",
+                data = new
+                {
+                    closedYearId    = currentYear.Id,
+                    closedYearName  = currentYear.YearName,
+                    closedYearFYCode= currentYear.FYCode,
+                    newYearId       = nextYear.Id,
+                    newYearName     = nextYear.YearName,
+                    newYearFYCode   = nextYear.FYCode,
+                    newYearStart    = nextYear.StartDate,
+                    newYearEnd      = nextYear.EndDate,
+                    openingBalancesCarriedForward = openingBalances.Count,
+                    netProfitTransferred = netProfit,
+                    vendorsCarriedForward   = dto.CarryForwardVendors,
+                    customersCarriedForward = dto.CarryForwardCustomers,
+                    productsCarriedForward  = dto.CarryForwardProducts,
+                    accountsCarriedForward  = dto.CarryForwardAccounts
+                }
+            });
+        }
+
+        [HttpPut("financial-years/{id}/set-active")]
+        public async Task<IActionResult> SetActiveFinancialYear(int id)
+        {
+            var year = await _context.FinancialYears.FindAsync(id);
+            if (year == null)
+                return NotFound(new { success = false, message = "Financial year not found" });
+
+            // Deactivate all other years for this company
+            var others = await _context.FinancialYears
+                .Where(f => f.CompanyId == year.CompanyId && f.Id != id)
+                .ToListAsync();
+            foreach (var other in others) other.IsActive = false;
+
+            year.IsActive = true;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = $"'{year.YearName}' is now the active financial year" });
         }
 
         // ══════════════════════════════════════════════════════
@@ -592,6 +810,145 @@ namespace ERPPlugandPlay.Controllers
                 .ToListAsync();
 
             return Ok(new { success = true, data = costCenters });
+        }
+
+        // ══════════════════════════════════════════════════════
+        // PAYMENT & RECEIPT VOUCHERS
+        // ══════════════════════════════════════════════════════
+
+        [HttpPost("payment-vouchers")]
+        public async Task<IActionResult> CreatePaymentVoucher([FromBody] CreatePaymentVoucherDto dto)
+        {
+            var result = await _accountsService.CreatePaymentVoucherAsync(dto);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpGet("payment-vouchers/{companyId}")]
+        public async Task<IActionResult> GetPaymentVouchers(int companyId)
+        {
+            var result = await _accountsService.ListPaymentVouchersAsync(companyId);
+            return Ok(result);
+        }
+
+        [HttpPost("receipt-vouchers")]
+        public async Task<IActionResult> CreateReceiptVoucher([FromBody] CreateReceiptVoucherDto dto)
+        {
+            var result = await _accountsService.CreateReceiptVoucherAsync(dto);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpGet("receipt-vouchers/{companyId}")]
+        public async Task<IActionResult> GetReceiptVouchers(int companyId)
+        {
+            var result = await _accountsService.ListReceiptVouchersAsync(companyId);
+            return Ok(result);
+        }
+
+        // ══════════════════════════════════════════════════════
+        // PROFIT & LOSS REPORT
+        // ══════════════════════════════════════════════════════
+
+        [HttpGet("profit-loss/{companyId}")]
+        public async Task<IActionResult> GetProfitLoss(int companyId, [FromQuery] DateTime fromDate, [FromQuery] DateTime toDate)
+        {
+            var accounts = await _context.ChartOfAccounts
+                .Where(a => a.CompanyId == companyId && !a.IsGroup && a.IsActive
+                         && (a.AccountType == "Income" || a.AccountType == "Expense"))
+                .ToListAsync();
+
+            var incomeLines  = new List<ProfitLossLineDto>();
+            var expenseLines = new List<ProfitLossLineDto>();
+
+            foreach (var acc in accounts)
+            {
+                var entries = await _context.JournalVoucherEntries
+                    .Include(e => e.JournalVoucher)
+                    .Where(e => e.AccountId == acc.Id
+                             && e.JournalVoucher.Status == "Posted"
+                             && e.JournalVoucher.VoucherDate >= fromDate
+                             && e.JournalVoucher.VoucherDate <= toDate)
+                    .ToListAsync();
+
+                var debit  = entries.Where(e => e.Type == "Debit").Sum(e => e.Amount);
+                var credit = entries.Where(e => e.Type == "Credit").Sum(e => e.Amount);
+                var amount = acc.AccountType == "Income" ? credit - debit : debit - credit;
+                if (amount == 0) continue;
+
+                var line = new ProfitLossLineDto
+                {
+                    AccountCode  = acc.AccountCode,
+                    AccountName  = acc.AccountName,
+                    AccountGroup = acc.AccountGroup,
+                    Amount       = amount
+                };
+
+                if (acc.AccountType == "Income")  incomeLines.Add(line);
+                else                              expenseLines.Add(line);
+            }
+
+            var totalIncome  = incomeLines.Sum(l => l.Amount);
+            var totalExpense = expenseLines.Sum(l => l.Amount);
+
+            return Ok(new { success = true, data = new ProfitLossDto
+            {
+                FromDate     = fromDate,
+                ToDate       = toDate,
+                IncomeLines  = incomeLines.OrderBy(l => l.AccountCode).ToList(),
+                ExpenseLines = expenseLines.OrderBy(l => l.AccountCode).ToList(),
+                TotalIncome  = totalIncome,
+                TotalExpense = totalExpense,
+                NetProfit    = totalIncome - totalExpense
+            }});
+        }
+
+        // ══════════════════════════════════════════════════════
+        // BALANCE SHEET REPORT
+        // ══════════════════════════════════════════════════════
+
+        [HttpGet("balance-sheet/{companyId}")]
+        public async Task<IActionResult> GetBalanceSheet(int companyId, [FromQuery] DateTime asOnDate)
+        {
+            var accounts = await _context.ChartOfAccounts
+                .Where(a => a.CompanyId == companyId && !a.IsGroup && a.IsActive)
+                .ToListAsync();
+
+            var assetLines     = new List<BalanceSheetLineDto>();
+            var liabilityLines = new List<BalanceSheetLineDto>();
+            var equityLines    = new List<BalanceSheetLineDto>();
+
+            foreach (var acc in accounts)
+            {
+                var balance = await _accountsService.GetAccountBalanceAsync(acc.Id, asOnDate);
+                if (balance == 0) continue;
+
+                var line = new BalanceSheetLineDto
+                {
+                    AccountCode  = acc.AccountCode,
+                    AccountName  = acc.AccountName,
+                    AccountGroup = acc.AccountGroup,
+                    Balance      = Math.Abs(balance)
+                };
+
+                switch (acc.AccountType)
+                {
+                    case "Asset":     assetLines.Add(line);     break;
+                    case "Liability": liabilityLines.Add(line); break;
+                    case "Equity":    equityLines.Add(line);    break;
+                }
+            }
+
+            var totalAssets = assetLines.Sum(l => l.Balance);
+            var totalLiabEq = liabilityLines.Sum(l => l.Balance) + equityLines.Sum(l => l.Balance);
+
+            return Ok(new { success = true, data = new BalanceSheetDto
+            {
+                AsOnDate               = asOnDate,
+                Assets                 = assetLines.OrderBy(l => l.AccountCode).ToList(),
+                Liabilities            = liabilityLines.OrderBy(l => l.AccountCode).ToList(),
+                Equity                 = equityLines.OrderBy(l => l.AccountCode).ToList(),
+                TotalAssets            = totalAssets,
+                TotalLiabilitiesAndEquity = totalLiabEq
+            }});
         }
     }
 }

@@ -45,7 +45,12 @@ namespace ERPPlugandPlay.Services
     public class SalesService : ISalesService
     {
         private readonly ERPDbContext _db;
-        public SalesService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public SalesService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         // ── Customer ─────────────────────────────────────────
         public async Task<ApiResponse<CustomerDto>> CreateCustomerAsync(CreateCustomerDto dto)
@@ -215,6 +220,12 @@ namespace ERPPlugandPlay.Services
 
             _db.SalesInvoices.Add(invoice);
             await _db.SaveChangesAsync();
+
+            // Auto-post accounting entry: DR Accounts Receivable / CR Sales Account
+            var customer = await _db.Customers.FindAsync(dto.CustomerId);
+            try { await _accounting.PostSalesInvoiceAsync(dto.CompanyId, invoice.Id, invoice.TotalAmount, customer?.Name ?? "Customer"); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<SalesInvoiceDto>.Ok(await GetInvoiceDtoAsync(invoice.Id), "Sales invoice created.");
         }
 
@@ -267,7 +278,7 @@ namespace ERPPlugandPlay.Services
         // ── Sales Return ──────────────────────────────────────
         public async Task<ApiResponse<SalesReturnDto>> CreateReturnAsync(CreateSalesReturnDto dto)
         {
-            var invoice = await _db.SalesInvoices.FindAsync(dto.SalesInvoiceId);
+            var invoice = await _db.SalesInvoices.Include(i => i.Customer).FirstOrDefaultAsync(i => i.Id == dto.SalesInvoiceId);
             if (invoice == null) return ApiResponse<SalesReturnDto>.Fail("Invoice not found.");
 
             var returnNumber = $"SR-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
@@ -290,6 +301,11 @@ namespace ERPPlugandPlay.Services
 
             _db.SalesReturns.Add(ret);
             await _db.SaveChangesAsync();
+
+            // Auto-post reversal: DR Sales Account / CR Accounts Receivable
+            try { await _accounting.PostSalesReturnAsync(invoice.CompanyId, ret.Id, ret.ReturnAmount, invoice.Customer?.Name ?? "Customer"); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<SalesReturnDto>.Ok(await GetReturnDtoAsync(ret.Id), "Sales return created.");
         }
 
@@ -350,7 +366,12 @@ namespace ERPPlugandPlay.Services
             invoice.Status = invoice.BalanceAmount <= 0 ? "Paid" : "Partial";
 
             await _db.SaveChangesAsync();
+
+            // Auto-post: DR Cash or Bank / CR Accounts Receivable
             var customer = await _db.Customers.FindAsync(dto.CustomerId);
+            try { await _accounting.PostCustomerPaymentAsync(invoice.CompanyId, payment.Id, dto.Amount, customer?.Name ?? "Customer", dto.PaymentMode); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<CustomerPaymentDto>.Ok(new CustomerPaymentDto
             {
                 Id = payment.Id, CustomerId = payment.CustomerId, CustomerName = customer?.Name ?? "",

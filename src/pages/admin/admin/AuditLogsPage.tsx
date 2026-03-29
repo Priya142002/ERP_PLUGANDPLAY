@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Activity, Download, Loader2 } from "lucide-react";
 import { adminApi } from "../../../services/api";
-import toast from "react-hot-toast";
+import { useNotifications } from "../../../context/AppContext";
 
 const getActionBadgeClass = (action: string) => {
   switch (action.toUpperCase()) {
@@ -23,6 +23,7 @@ const getActionBadgeClass = (action: string) => {
 };
 
 export const AuditLogsPage: React.FC = () => {
+  const { showNotification } = useNotifications();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,7 +44,7 @@ export const AuditLogsPage: React.FC = () => {
         setTotalPages(res.data.totalPages || 1);
       }
     } catch (error) {
-      toast.error("Failed to fetch audit logs");
+      showNotification({ type: 'error', title: 'Error', message: 'Failed to fetch audit logs', duration: 3000 });
     } finally {
       setLoading(false);
     }

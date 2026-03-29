@@ -20,11 +20,13 @@ namespace ERPPlugandPlay.Services
     {
         private readonly ERPDbContext _db;
         private readonly IAuthService _authService;
+        private readonly IChartOfAccountsInitializer _coaInitializer;
 
-        public SuperAdminCompanyService(ERPDbContext db, IAuthService authService)
+        public SuperAdminCompanyService(ERPDbContext db, IAuthService authService, IChartOfAccountsInitializer coaInitializer)
         {
             _db = db;
             _authService = authService;
+            _coaInitializer = coaInitializer;
         }
 
         public async Task<ApiResponse<CompanyFullDto>> CreateAsync(CreateCompanyFullDto dto)
@@ -71,6 +73,11 @@ namespace ERPPlugandPlay.Services
             }
 
             await _db.SaveChangesAsync();
+
+            // Auto-initialize default Chart of Accounts + Financial Year for new company
+            try { await _coaInitializer.InitializeForCompanyAsync(company.Id); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<CompanyFullDto>.Ok(await BuildDtoAsync(company.Id), "Company created successfully.");
         }
 

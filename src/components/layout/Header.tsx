@@ -5,6 +5,7 @@ import { useSuperAdminTheme } from '../../app/superadmin-theme';
 import { useAdminTheme } from '../../app/admin-theme';
 import { cn } from '../../utils/cn';
 import '../../styles/admin-mobile.css';
+import { FinancialYearSwitcher } from './FinancialYearSwitcher';
 
 interface HeaderProps {
   user: User;
@@ -185,6 +186,9 @@ export const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onLogout, onS
             <Icon name="calendar" size="xs" className="text-slate-400 mr-2" />
             <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">{today}</span>
           </div>
+
+          {/* Financial Year Switcher — admin only */}
+          {user.role === 'admin' && <FinancialYearSwitcher />}
 
           {/* Divider - desktop only */}
           <div className="h-6 w-px bg-slate-200 hidden lg:block mx-1" />

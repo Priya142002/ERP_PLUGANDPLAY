@@ -22,7 +22,12 @@ namespace ERPPlugandPlay.Services
     public class ProductionService : IProductionService
     {
         private readonly ERPDbContext _db;
-        public ProductionService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public ProductionService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         public async Task<ApiResponse<BomDto>> CreateBomAsync(CreateBomDto dto)
         {
@@ -80,12 +85,21 @@ namespace ERPPlugandPlay.Services
 
         public async Task<ApiResponse<bool>> UpdateOrderStatusAsync(int id, string status)
         {
-            var order = await _db.ProductionOrders.FindAsync(id);
+            var order = await _db.ProductionOrders.Include(o => o.Bom).ThenInclude(b => b.FinishedProduct).FirstOrDefaultAsync(o => o.Id == id);
             if (order == null) return ApiResponse<bool>.Fail("Order not found.");
             order.Status = status;
             if (status == "In Progress" && order.ActualStartDate == null) order.ActualStartDate = DateTime.UtcNow;
             if (status == "Completed") order.ActualEndDate = DateTime.UtcNow;
             await _db.SaveChangesAsync();
+
+            // Auto-post on completion: DR COGS / CR Inventory (raw material consumption)
+            if (status == "Completed" && order.Bom != null)
+            {
+                var productName = order.Bom.FinishedProduct?.Name ?? order.OrderNumber;
+                try { await _accounting.PostProductionCompletionAsync(order.CompanyId, order.Id, order.PlannedQty, productName); }
+                catch { /* Non-blocking */ }
+            }
+
             return ApiResponse<bool>.Ok(true);
         }
 

@@ -20,7 +20,12 @@ namespace ERPPlugandPlay.Services
     public class BillingService : IBillingService
     {
         private readonly ERPDbContext _db;
-        public BillingService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public BillingService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         public async Task<ApiResponse<BillingInvoiceDto>> CreateInvoiceAsync(CreateBillingInvoiceDto dto)
         {
@@ -49,6 +54,11 @@ namespace ERPPlugandPlay.Services
 
             _db.BillingInvoices.Add(invoice);
             await _db.SaveChangesAsync();
+
+            // Auto-post: DR Accounts Receivable / CR Service Revenue
+            try { await _accounting.PostBillingInvoiceAsync(dto.CompanyId, invoice.Id, invoice.TotalAmount, dto.ClientName); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<BillingInvoiceDto>.Ok(await GetInvoiceDtoAsync(invoice.Id), "Invoice created.");
         }
 

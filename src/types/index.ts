@@ -85,7 +85,12 @@ export interface User {
   fullName: string;
   email: string;
   role: 'super_admin' | 'admin';
-  companyId?: string; // Only for admin users
+  companyId?: string;
+  companyName?: string;
+  allowedModules?: string[];       // modules from login response
+  isTrialActive?: boolean;
+  hasActiveSubscription?: boolean;
+  daysRemaining?: number;
 }
 
 // =============================================================================

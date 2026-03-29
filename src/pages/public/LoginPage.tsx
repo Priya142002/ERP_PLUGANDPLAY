@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../../types';
 import { authApi } from '../../services/api';
+import { useModulesSafe } from '../../context/ModuleContext';
 
 declare global {
   interface Window { google: any; }
@@ -16,6 +17,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
   const navigate = useNavigate();
+  const { setAllowedModules } = useModulesSafe();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -94,6 +96,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
         hasActiveSubscription, daysRemaining,
       }));
 
+      // Immediately update sidebar module visibility
+      setAllowedModules(allowedModules ?? []);
+
       const appRole = role === 'SuperAdmin' ? 'super_admin' : 'admin';
       onLogin(appRole, rememberMe, userEmail);
       navigate(appRole === 'super_admin' ? '/superadmin/dashboard' : '/admin/dashboard');
@@ -139,6 +144,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ user, onLogin }) => {
         isTrialActive, trialEndDate,
         hasActiveSubscription, daysRemaining,
       }));
+
+      // Immediately update sidebar module visibility
+      setAllowedModules(allowedModules ?? []);
 
       const appRole = role === 'SuperAdmin' ? 'super_admin' : 'admin';
       onLogin(appRole, rememberMe, email.trim());

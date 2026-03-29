@@ -1,122 +1,91 @@
 using ERPPlugandPlay.Data;
+using ERPPlugandPlay.Helpers;
 using ERPPlugandPlay.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ERPPlugandPlay.Services
 {
     public interface IChartOfAccountsInitializer
     {
-        Task InitializeDefaultAccountsAsync(int companyId, int userId);
+        Task InitializeForCompanyAsync(int companyId);
     }
 
     public class ChartOfAccountsInitializer : IChartOfAccountsInitializer
     {
-        private readonly ERPDbContext _context;
+        private readonly ERPDbContext _db;
+        public ChartOfAccountsInitializer(ERPDbContext db) => _db = db;
 
-        public ChartOfAccountsInitializer(ERPDbContext context)
+        public async Task InitializeForCompanyAsync(int companyId)
         {
-            _context = context;
-        }
+            // Skip if already initialized
+            if (await _db.ChartOfAccounts.AnyAsync(a => a.CompanyId == companyId)) return;
 
-        public async Task InitializeDefaultAccountsAsync(int companyId, int userId)
-        {
-            var defaultAccounts = GetDefaultAccounts(companyId, userId);
+            var accounts = new List<ChartOfAccount>
+            {
+                // ── ASSETS ────────────────────────────────────────────
+                new() { CompanyId=companyId, AccountCode="1000", AccountName="Assets",              AccountType="Asset",     AccountGroup="Assets",              IsGroup=true,  Level=1, IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="1100", AccountName="Current Assets",      AccountType="Asset",     AccountGroup="Current Assets",      IsGroup=true,  Level=2, ParentAccountCode="1000", IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="1110", AccountName="Cash Account",        AccountType="Asset",     AccountGroup="Cash",                IsGroup=false, Level=3, ParentAccountCode="1100", IsSystemAccount=true, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="1120", AccountName="Bank Account",        AccountType="Asset",     AccountGroup="Bank",                IsGroup=false, Level=3, ParentAccountCode="1100", IsSystemAccount=true, IsBankAccount=true, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="1130", AccountName="Accounts Receivable", AccountType="Asset",     AccountGroup="Accounts Receivable", IsGroup=false, Level=3, ParentAccountCode="1100", IsSystemAccount=true, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="1140", AccountName="Inventory Account",   AccountType="Asset",     AccountGroup="Inventory",           IsGroup=false, Level=3, ParentAccountCode="1100", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="1150", AccountName="Prepaid Expenses",    AccountType="Asset",     AccountGroup="Current Assets",      IsGroup=false, Level=3, ParentAccountCode="1100", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="1200", AccountName="Fixed Assets",        AccountType="Asset",     AccountGroup="Fixed Assets",        IsGroup=true,  Level=2, ParentAccountCode="1000", IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="1210", AccountName="Property & Equipment",AccountType="Asset",     AccountGroup="Fixed Assets",        IsGroup=false, Level=3, ParentAccountCode="1200", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="1220", AccountName="Accumulated Depreciation",AccountType="Asset", AccountGroup="Fixed Assets",       IsGroup=false, Level=3, ParentAccountCode="1200", IsSystemAccount=false, OpeningBalanceType="Credit" },
 
-            _context.ChartOfAccounts.AddRange(defaultAccounts);
-            await _context.SaveChangesAsync();
-        }
+                // ── LIABILITIES ───────────────────────────────────────
+                new() { CompanyId=companyId, AccountCode="2000", AccountName="Liabilities",         AccountType="Liability", AccountGroup="Liabilities",         IsGroup=true,  Level=1, IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="2100", AccountName="Current Liabilities", AccountType="Liability", AccountGroup="Current Liabilities", IsGroup=true,  Level=2, ParentAccountCode="2000", IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="2110", AccountName="Accounts Payable",    AccountType="Liability", AccountGroup="Accounts Payable",    IsGroup=false, Level=3, ParentAccountCode="2100", IsSystemAccount=true, OpeningBalanceType="Credit" },
+                new() { CompanyId=companyId, AccountCode="2120", AccountName="Salary Payable",      AccountType="Liability", AccountGroup="Current Liabilities", IsGroup=false, Level=3, ParentAccountCode="2100", IsSystemAccount=false, OpeningBalanceType="Credit" },
+                new() { CompanyId=companyId, AccountCode="2130", AccountName="Tax Payable",         AccountType="Liability", AccountGroup="Current Liabilities", IsGroup=false, Level=3, ParentAccountCode="2100", IsSystemAccount=false, OpeningBalanceType="Credit" },
+                new() { CompanyId=companyId, AccountCode="2140", AccountName="GST Payable",         AccountType="Liability", AccountGroup="Current Liabilities", IsGroup=false, Level=3, ParentAccountCode="2100", IsSystemAccount=false, OpeningBalanceType="Credit" },
+                new() { CompanyId=companyId, AccountCode="2200", AccountName="Long-term Liabilities",AccountType="Liability",AccountGroup="Long-term Liabilities",IsGroup=true, Level=2, ParentAccountCode="2000", IsSystemAccount=false },
+                new() { CompanyId=companyId, AccountCode="2210", AccountName="Bank Loan",           AccountType="Liability", AccountGroup="Long-term Liabilities",IsGroup=false,Level=3, ParentAccountCode="2200", IsSystemAccount=false, OpeningBalanceType="Credit" },
 
-        private List<ChartOfAccount> GetDefaultAccounts(int companyId, int userId)
-        {
-            var accounts = new List<ChartOfAccount>();
-            var now = DateTime.UtcNow;
+                // ── EQUITY ────────────────────────────────────────────
+                new() { CompanyId=companyId, AccountCode="3000", AccountName="Equity",              AccountType="Equity",    AccountGroup="Equity",              IsGroup=true,  Level=1, IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="3100", AccountName="Owner's Capital",     AccountType="Equity",    AccountGroup="Equity",              IsGroup=false, Level=2, ParentAccountCode="3000", IsSystemAccount=false, OpeningBalanceType="Credit" },
+                new() { CompanyId=companyId, AccountCode="3200", AccountName="Retained Earnings",   AccountType="Equity",    AccountGroup="Equity",              IsGroup=false, Level=2, ParentAccountCode="3000", IsSystemAccount=true, OpeningBalanceType="Credit" },
 
-            // ══════════════════════════════════════════════════════
-            // ASSETS (1000-1999)
-            // ══════════════════════════════════════════════════════
+                // ── INCOME ────────────────────────────────────────────
+                new() { CompanyId=companyId, AccountCode="4000", AccountName="Income",              AccountType="Income",    AccountGroup="Income",              IsGroup=true,  Level=1, IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="4100", AccountName="Sales Account",       AccountType="Income",    AccountGroup="Sales",               IsGroup=false, Level=2, ParentAccountCode="4000", IsSystemAccount=true, OpeningBalanceType="Credit" },
+                new() { CompanyId=companyId, AccountCode="4200", AccountName="Service Revenue",     AccountType="Income",    AccountGroup="Sales",               IsGroup=false, Level=2, ParentAccountCode="4000", IsSystemAccount=false, OpeningBalanceType="Credit" },
+                new() { CompanyId=companyId, AccountCode="4300", AccountName="Other Income",        AccountType="Income",    AccountGroup="Other Income",        IsGroup=false, Level=2, ParentAccountCode="4000", IsSystemAccount=false, OpeningBalanceType="Credit" },
 
-            // Current Assets
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1000", AccountName = "Current Assets", AccountType = "Asset", AccountGroup = "Current Assets", IsGroup = true, Level = 1, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1001", AccountName = "Cash", AccountType = "Asset", AccountGroup = "Current Assets", ParentAccountCode = "1000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1100", AccountName = "Bank Accounts", AccountType = "Asset", AccountGroup = "Current Assets", ParentAccountCode = "1000", IsGroup = true, Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1200", AccountName = "Accounts Receivable", AccountType = "Asset", AccountGroup = "Current Assets", ParentAccountCode = "1000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1300", AccountName = "Inventory", AccountType = "Asset", AccountGroup = "Current Assets", ParentAccountCode = "1000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1400", AccountName = "Prepaid Expenses", AccountType = "Asset", AccountGroup = "Current Assets", ParentAccountCode = "1000", Level = 2, CreatedAt = now, CreatedBy = userId });
+                // ── EXPENSES ──────────────────────────────────────────
+                new() { CompanyId=companyId, AccountCode="5000", AccountName="Expenses",            AccountType="Expense",   AccountGroup="Expenses",            IsGroup=true,  Level=1, IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="5100", AccountName="Direct Expenses",     AccountType="Expense",   AccountGroup="Direct Expenses",     IsGroup=true,  Level=2, ParentAccountCode="5000", IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="5110", AccountName="Purchase Account",    AccountType="Expense",   AccountGroup="Purchase",            IsGroup=false, Level=3, ParentAccountCode="5100", IsSystemAccount=true, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="5120", AccountName="Cost of Goods Sold",  AccountType="Expense",   AccountGroup="Direct Expenses",     IsGroup=false, Level=3, ParentAccountCode="5100", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="5200", AccountName="Indirect Expenses",   AccountType="Expense",   AccountGroup="Indirect Expenses",   IsGroup=true,  Level=2, ParentAccountCode="5000", IsSystemAccount=true },
+                new() { CompanyId=companyId, AccountCode="5210", AccountName="Salary Expense",      AccountType="Expense",   AccountGroup="Indirect Expenses",   IsGroup=false, Level=3, ParentAccountCode="5200", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="5220", AccountName="Rent Expense",        AccountType="Expense",   AccountGroup="Indirect Expenses",   IsGroup=false, Level=3, ParentAccountCode="5200", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="5230", AccountName="Utilities Expense",   AccountType="Expense",   AccountGroup="Indirect Expenses",   IsGroup=false, Level=3, ParentAccountCode="5200", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="5240", AccountName="Freight Charges",     AccountType="Expense",   AccountGroup="Indirect Expenses",   IsGroup=false, Level=3, ParentAccountCode="5200", IsSystemAccount=false, OpeningBalanceType="Debit" },
+                new() { CompanyId=companyId, AccountCode="5250", AccountName="Depreciation Expense",AccountType="Expense",   AccountGroup="Indirect Expenses",   IsGroup=false, Level=3, ParentAccountCode="5200", IsSystemAccount=false, OpeningBalanceType="Debit" },
+            };
 
-            // Fixed Assets
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1500", AccountName = "Fixed Assets", AccountType = "Asset", AccountGroup = "Fixed Assets", IsGroup = true, Level = 1, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1501", AccountName = "Land & Building", AccountType = "Asset", AccountGroup = "Fixed Assets", ParentAccountCode = "1500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1502", AccountName = "Machinery", AccountType = "Asset", AccountGroup = "Fixed Assets", ParentAccountCode = "1500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1503", AccountName = "Furniture & Fixtures", AccountType = "Asset", AccountGroup = "Fixed Assets", ParentAccountCode = "1500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1504", AccountName = "Vehicles", AccountType = "Asset", AccountGroup = "Fixed Assets", ParentAccountCode = "1500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "1505", AccountName = "Computer & Equipment", AccountType = "Asset", AccountGroup = "Fixed Assets", ParentAccountCode = "1500", Level = 2, CreatedAt = now, CreatedBy = userId });
+            _db.ChartOfAccounts.AddRange(accounts);
 
-            // ══════════════════════════════════════════════════════
-            // LIABILITIES (2000-2999)
-            // ══════════════════════════════════════════════════════
+            // Create default financial year with FYCode
+            var currentYear = DateTime.UtcNow.Year;
+            var startDate = new DateTime(currentYear, 4, 1);
+            var endDate   = new DateTime(currentYear + 1, 3, 31);
+            _db.FinancialYears.Add(new FinancialYear
+            {
+                CompanyId = companyId,
+                FYCode    = FYCodeGenerator.Generate(companyId, startDate, endDate),
+                YearName  = $"FY {currentYear}-{(currentYear + 1) % 100:D2}",
+                StartDate = startDate,
+                EndDate   = endDate,
+                IsActive  = true,
+                CreatedAt = DateTime.UtcNow
+            });
 
-            // Current Liabilities
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2000", AccountName = "Current Liabilities", AccountType = "Liability", AccountGroup = "Current Liabilities", IsGroup = true, Level = 1, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2001", AccountName = "Accounts Payable", AccountType = "Liability", AccountGroup = "Current Liabilities", ParentAccountCode = "2000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2100", AccountName = "Short Term Loans", AccountType = "Liability", AccountGroup = "Current Liabilities", ParentAccountCode = "2000", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2200", AccountName = "Tax Payable", AccountType = "Liability", AccountGroup = "Current Liabilities", ParentAccountCode = "2000", IsGroup = true, Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2201", AccountName = "GST Payable", AccountType = "Liability", AccountGroup = "Current Liabilities", ParentAccountCode = "2200", Level = 3, TaxType = "GST", CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2202", AccountName = "TDS Payable", AccountType = "Liability", AccountGroup = "Current Liabilities", ParentAccountCode = "2200", Level = 3, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2300", AccountName = "Salary Payable", AccountType = "Liability", AccountGroup = "Current Liabilities", ParentAccountCode = "2000", Level = 2, CreatedAt = now, CreatedBy = userId });
-
-            // Long Term Liabilities
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2500", AccountName = "Long Term Liabilities", AccountType = "Liability", AccountGroup = "Long Term Liabilities", IsGroup = true, Level = 1, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "2501", AccountName = "Long Term Loans", AccountType = "Liability", AccountGroup = "Long Term Liabilities", ParentAccountCode = "2500", Level = 2, CreatedAt = now, CreatedBy = userId });
-
-            // ══════════════════════════════════════════════════════
-            // EQUITY (3000-3999)
-            // ══════════════════════════════════════════════════════
-
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "3000", AccountName = "Equity", AccountType = "Equity", AccountGroup = "Equity", IsGroup = true, Level = 1, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "3001", AccountName = "Capital", AccountType = "Equity", AccountGroup = "Equity", ParentAccountCode = "3000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "3002", AccountName = "Retained Earnings", AccountType = "Equity", AccountGroup = "Equity", ParentAccountCode = "3000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "3003", AccountName = "Drawings", AccountType = "Equity", AccountGroup = "Equity", ParentAccountCode = "3000", Level = 2, CreatedAt = now, CreatedBy = userId });
-
-            // ══════════════════════════════════════════════════════
-            // INCOME (4000-4999)
-            // ══════════════════════════════════════════════════════
-
-            // Direct Income
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "4000", AccountName = "Direct Income", AccountType = "Income", AccountGroup = "Direct Income", IsGroup = true, Level = 1, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "4001", AccountName = "Sales", AccountType = "Income", AccountGroup = "Direct Income", ParentAccountCode = "4000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "4002", AccountName = "Service Income", AccountType = "Income", AccountGroup = "Direct Income", ParentAccountCode = "4000", Level = 2, CreatedAt = now, CreatedBy = userId });
-
-            // Indirect Income
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "4500", AccountName = "Indirect Income", AccountType = "Income", AccountGroup = "Indirect Income", IsGroup = true, Level = 1, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "4501", AccountName = "Interest Income", AccountType = "Income", AccountGroup = "Indirect Income", ParentAccountCode = "4500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "4502", AccountName = "Other Income", AccountType = "Income", AccountGroup = "Indirect Income", ParentAccountCode = "4500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "4503", AccountName = "Discount Received", AccountType = "Income", AccountGroup = "Indirect Income", ParentAccountCode = "4500", Level = 2, CreatedAt = now, CreatedBy = userId });
-
-            // ══════════════════════════════════════════════════════
-            // EXPENSES (5000-5999)
-            // ══════════════════════════════════════════════════════
-
-            // Direct Expenses
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5000", AccountName = "Direct Expenses", AccountType = "Expense", AccountGroup = "Direct Expenses", IsGroup = true, Level = 1, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5001", AccountName = "Purchase", AccountType = "Expense", AccountGroup = "Direct Expenses", ParentAccountCode = "5000", Level = 2, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5002", AccountName = "Freight Inward", AccountType = "Expense", AccountGroup = "Direct Expenses", ParentAccountCode = "5000", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5003", AccountName = "Manufacturing Expenses", AccountType = "Expense", AccountGroup = "Direct Expenses", ParentAccountCode = "5000", Level = 2, CreatedAt = now, CreatedBy = userId });
-
-            // Indirect Expenses
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5500", AccountName = "Indirect Expenses", AccountType = "Expense", AccountGroup = "Indirect Expenses", IsGroup = true, Level = 1, IsSystemAccount = true, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5501", AccountName = "Salary & Wages", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5502", AccountName = "Rent", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5503", AccountName = "Electricity", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5504", AccountName = "Telephone & Internet", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5505", AccountName = "Office Expenses", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5506", AccountName = "Printing & Stationery", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5507", AccountName = "Travelling Expenses", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5508", AccountName = "Depreciation", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5509", AccountName = "Bank Charges", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5510", AccountName = "Interest Expense", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5511", AccountName = "Discount Given", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-            accounts.Add(new ChartOfAccount { CompanyId = companyId, AccountCode = "5512", AccountName = "Bad Debts", AccountType = "Expense", AccountGroup = "Indirect Expenses", ParentAccountCode = "5500", Level = 2, CreatedAt = now, CreatedBy = userId });
-
-            return accounts;
+            await _db.SaveChangesAsync();
         }
     }
 }

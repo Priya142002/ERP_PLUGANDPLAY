@@ -6,9 +6,10 @@ import Badge from "../../../components/ui/Badge";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import { adminApi } from "../../../services/api";
-import toast from "react-hot-toast";
+import { useNotifications } from "../../../context/AppContext";
 
 const UserPage: React.FC = () => {
+  const { showNotification } = useNotifications();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,7 +29,7 @@ const UserPage: React.FC = () => {
         setUsers(res.data);
       }
     } catch (error) {
-      toast.error("Failed to fetch users");
+      showNotification({ type: 'error', title: 'Error', message: 'Failed to fetch users', duration: 3000 });
     } finally {
       setLoading(false);
     }

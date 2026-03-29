@@ -103,6 +103,18 @@ export const superAdminApi = {
   cancelSubscription: (id: number) =>
     request<any>(`/api/superadmin/subscriptions/${id}/cancel`, { method: 'PUT' }),
 
+  // Billing history per company
+  getCompanyBilling: (companyId: number) =>
+    request<any>(`/api/superadmin/subscriptions/billing/${companyId}`),
+  recordPayment: (data: any) =>
+    request<any>('/api/superadmin/subscriptions/billing', { method: 'POST', body: JSON.stringify(data) }),
+  markPaymentPaid: (id: number, data: any) =>
+    request<any>(`/api/superadmin/subscriptions/billing/${id}/mark-paid`, { method: 'PUT', body: JSON.stringify(data) }),
+  sendPaymentReminder: (id: number) =>
+    request<any>(`/api/superadmin/subscriptions/billing/${id}/send-reminder`, { method: 'POST' }),
+  sendBulkReminders: () =>
+    request<any>('/api/superadmin/subscriptions/billing/send-bulk-reminders', { method: 'POST' }),
+
   // Module Access
   getModules: (companyId: number) =>
     request<any>(`/api/admin/modules/${companyId}/allowed`),
@@ -142,6 +154,12 @@ export const superAdminApi = {
     request<any>('/api/superadmin/system/settings', { method: 'POST', body: JSON.stringify(settings) }),
   getSystemHealth: () =>
     request<any>('/api/superadmin/system/health'),
+
+  // Dropdown options (persisted custom items)
+  getDropdownOptions: (key: 'company_types' | 'industries' | 'countries') =>
+    request<string[]>(`/api/superadmin/system/dropdown/${key}`),
+  saveDropdownOptions: (key: 'company_types' | 'industries' | 'countries', items: string[]) =>
+    request<any>(`/api/superadmin/system/dropdown/${key}`, { method: 'POST', body: JSON.stringify(items) }),
 
   // Users
   getUsers: (filter?: string) =>
@@ -232,6 +250,7 @@ export const inventoryApi = {
 
 /* ── Sales API ────────────────────────────────────────── */
 export const salesApi = {
+  // Customers
   getCustomers: (companyId: number, page = 1, pageSize = 100) =>
     request<any>(`/api/sales/customers/${companyId}?page=${page}&pageSize=${pageSize}`),
   createCustomer: (data: any) =>
@@ -240,6 +259,52 @@ export const salesApi = {
     request<any>(`/api/sales/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteCustomer: (id: string) =>
     request<any>(`/api/sales/customers/${id}`, { method: 'DELETE' }),
+
+  // Quotations
+  getQuotations: (companyId: number, page = 1, pageSize = 50) =>
+    request<any>(`/api/sales/quotations/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createQuotation: (data: any) =>
+    request<any>('/api/sales/quotations', { method: 'POST', body: JSON.stringify(data) }),
+  getQuotation: (id: number) =>
+    request<any>(`/api/sales/quotations/${id}`),
+  updateQuotationStatus: (id: number, status: string) =>
+    request<any>(`/api/sales/quotations/${id}/status?status=${status}`, { method: 'PUT' }),
+
+  // Sales Invoices
+  getInvoices: (companyId: number, page = 1, pageSize = 50) =>
+    request<any>(`/api/sales/invoices/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createInvoice: (data: any) =>
+    request<any>('/api/sales/invoices', { method: 'POST', body: JSON.stringify(data) }),
+  getInvoice: (id: number) =>
+    request<any>(`/api/sales/invoices/${id}`),
+  cancelInvoice: (id: number) =>
+    request<any>(`/api/sales/invoices/${id}/cancel`, { method: 'PUT' }),
+  createFromQuotation: (quotationId: number) =>
+    request<any>(`/api/sales/invoices/from-quotation/${quotationId}`, { method: 'POST' }),
+
+  // Sales Returns
+  getReturns: (companyId: number) =>
+    request<any>(`/api/sales/returns/${companyId}`),
+  createReturn: (data: any) =>
+    request<any>('/api/sales/returns', { method: 'POST', body: JSON.stringify(data) }),
+  approveReturn: (id: number, status: string) =>
+    request<any>(`/api/sales/returns/${id}/approve?status=${status}`, { method: 'PUT' }),
+
+  // Customer Payments
+  getPayments: (companyId: number) =>
+    request<any>(`/api/sales/payments/${companyId}`),
+  createPayment: (data: any) =>
+    request<any>('/api/sales/payments', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Credit / Debit Notes
+  getCreditNotes: (companyId: number) =>
+    request<any>(`/api/sales/credit-notes/${companyId}`),
+  createCreditNote: (data: any) =>
+    request<any>('/api/sales/credit-notes', { method: 'POST', body: JSON.stringify(data) }),
+  getDebitNotes: (companyId: number) =>
+    request<any>(`/api/sales/debit-notes/${companyId}`),
+  createDebitNote: (data: any) =>
+    request<any>('/api/sales/debit-notes', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 /* ── File API ─────────────────────────────────────────── */
@@ -260,9 +325,172 @@ export const fileApi = {
   }
 };
 
+/* ── Purchase API ─────────────────────────────────────── */
+export const purchaseApi = {
+  // Vendors
+  getVendors: (companyId: number, page = 1, pageSize = 100) =>
+    request<any>(`/api/purchase/vendors/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createVendor: (data: any) =>
+    request<any>('/api/purchase/vendors', { method: 'POST', body: JSON.stringify(data) }),
+  updateVendor: (id: number, data: any) =>
+    request<any>(`/api/purchase/vendors/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteVendor: (id: number) =>
+    request<any>(`/api/purchase/vendors/${id}`, { method: 'DELETE' }),
+
+  // Purchase Invoices
+  getInvoices: (companyId: number, page = 1, pageSize = 50) =>
+    request<any>(`/api/purchase/invoices/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createInvoice: (data: any) =>
+    request<any>('/api/purchase/invoices', { method: 'POST', body: JSON.stringify(data) }),
+  getInvoice: (id: number) =>
+    request<any>(`/api/purchase/invoices/${id}`),
+  cancelInvoice: (id: number) =>
+    request<any>(`/api/purchase/invoices/${id}/cancel`, { method: 'PUT' }),
+
+  // Purchase Returns
+  getReturns: (companyId: number) =>
+    request<any>(`/api/purchase/returns/${companyId}`),
+  createReturn: (data: any) =>
+    request<any>('/api/purchase/returns', { method: 'POST', body: JSON.stringify(data) }),
+  approveReturn: (id: number, status: string) =>
+    request<any>(`/api/purchase/returns/${id}/approve?status=${status}`, { method: 'PUT' }),
+
+  // Vendor Payments
+  getPayments: (companyId: number) =>
+    request<any>(`/api/purchase/payments/${companyId}`),
+  createPayment: (data: any) =>
+    request<any>('/api/purchase/payments', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Credit / Debit Notes
+  getCreditNotes: (companyId: number) =>
+    request<any>(`/api/purchase/credit-notes/${companyId}`),
+  createCreditNote: (data: any) =>
+    request<any>('/api/purchase/credit-notes', { method: 'POST', body: JSON.stringify(data) }),
+  getDebitNotes: (companyId: number) =>
+    request<any>(`/api/purchase/debit-notes/${companyId}`),
+  createDebitNote: (data: any) =>
+    request<any>('/api/purchase/debit-notes', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+/* ── HRM API ──────────────────────────────────────────── */
+export const hrmApi = {
+  // Employees
+  getEmployees: (companyId: number, page = 1, pageSize = 100) =>
+    request<any>(`/api/hrm/employees/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createEmployee: (data: any) =>
+    request<any>('/api/hrm/employees', { method: 'POST', body: JSON.stringify(data) }),
+  updateEmployee: (id: number, data: any) =>
+    request<any>(`/api/hrm/employees/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteEmployee: (id: number) =>
+    request<any>(`/api/hrm/employees/${id}`, { method: 'DELETE' }),
+
+  // Attendance
+  getAttendance: (companyId: number, month: number, year: number) =>
+    request<any>(`/api/hrm/attendance/${companyId}?month=${month}&year=${year}`),
+  markAttendance: (data: any) =>
+    request<any>('/api/hrm/attendance', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Leave
+  getLeaveRequests: (companyId: number) =>
+    request<any>(`/api/hrm/leave/${companyId}`),
+  createLeaveRequest: (data: any) =>
+    request<any>('/api/hrm/leave', { method: 'POST', body: JSON.stringify(data) }),
+  approveLeave: (id: number, status: string) =>
+    request<any>(`/api/hrm/leave/${id}/approve?status=${status}`, { method: 'PUT' }),
+
+  // Payroll
+  getPayroll: (companyId: number, month: number, year: number) =>
+    request<any>(`/api/hrm/payroll/${companyId}?month=${month}&year=${year}`),
+  processPayroll: (data: any) =>
+    request<any>('/api/hrm/payroll/process', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+/* ── CRM API ──────────────────────────────────────────── */
+export const crmApi = {
+  // Leads
+  getLeads: (companyId: number, page = 1, pageSize = 50) =>
+    request<any>(`/api/crm/leads/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createLead: (data: any) =>
+    request<any>('/api/crm/leads', { method: 'POST', body: JSON.stringify(data) }),
+  updateLead: (id: number, data: any) =>
+    request<any>(`/api/crm/leads/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteLead: (id: number) =>
+    request<any>(`/api/crm/leads/${id}`, { method: 'DELETE' }),
+
+  // Opportunities
+  getOpportunities: (companyId: number) =>
+    request<any>(`/api/crm/opportunities/${companyId}`),
+  createOpportunity: (data: any) =>
+    request<any>('/api/crm/opportunities', { method: 'POST', body: JSON.stringify(data) }),
+  updateOpportunity: (id: number, data: any) =>
+    request<any>(`/api/crm/opportunities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Activities
+  getActivities: (companyId: number) =>
+    request<any>(`/api/crm/activities/${companyId}`),
+  createActivity: (data: any) =>
+    request<any>('/api/crm/activities', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+/* ── Projects API ─────────────────────────────────────── */
+export const projectsApi = {
+  getProjects: (companyId: number) =>
+    request<any>(`/api/projects/${companyId}`),
+  createProject: (data: any) =>
+    request<any>('/api/projects', { method: 'POST', body: JSON.stringify(data) }),
+  updateProject: (id: number, data: any) =>
+    request<any>(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProject: (id: number) =>
+    request<any>(`/api/projects/${id}`, { method: 'DELETE' }),
+
+  getTasks: (projectId: number) =>
+    request<any>(`/api/projects/${projectId}/tasks`),
+  createTask: (data: any) =>
+    request<any>('/api/projects/tasks', { method: 'POST', body: JSON.stringify(data) }),
+  updateTaskStatus: (id: number, status: string) =>
+    request<any>(`/api/projects/tasks/${id}/status?status=${status}`, { method: 'PUT' }),
+};
+
+/* ── Helpdesk API ─────────────────────────────────────── */
+export const helpdeskApi = {
+  getTickets: (companyId: number, page = 1, pageSize = 50) =>
+    request<any>(`/api/helpdesk/tickets/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createTicket: (data: any) =>
+    request<any>('/api/helpdesk/tickets', { method: 'POST', body: JSON.stringify(data) }),
+  updateTicket: (id: number, data: any) =>
+    request<any>(`/api/helpdesk/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  addComment: (ticketId: number, data: any) =>
+    request<any>(`/api/helpdesk/tickets/${ticketId}/comments`, { method: 'POST', body: JSON.stringify(data) }),
+};
+
+/* ── Assets API ───────────────────────────────────────── */
+export const assetsApi = {
+  getAssets: (companyId: number, page = 1, pageSize = 50) =>
+    request<any>(`/api/assets/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createAsset: (data: any) =>
+    request<any>('/api/assets', { method: 'POST', body: JSON.stringify(data) }),
+  updateAsset: (id: number, data: any) =>
+    request<any>(`/api/assets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteAsset: (id: number) =>
+    request<any>(`/api/assets/${id}`, { method: 'DELETE' }),
+  disposeAsset: (id: number, data: any) =>
+    request<any>(`/api/assets/${id}/dispose`, { method: 'PUT', body: JSON.stringify(data) }),
+};
+
+/* ── POS API ──────────────────────────────────────────── */
+export const posApi = {
+  getDashboard: (companyId: number) =>
+    request<any>(`/api/pos/dashboard/${companyId}`),
+  getOrders: (companyId: number, page = 1, pageSize = 50) =>
+    request<any>(`/api/pos/orders/${companyId}?page=${page}&pageSize=${pageSize}`),
+  createOrder: (data: any) =>
+    request<any>('/api/pos/orders', { method: 'POST', body: JSON.stringify(data) }),
+  getProducts: (companyId: number) =>
+    request<any>(`/api/pos/products/${companyId}`),
+};
+
 /* ── Logistics API ─────────────────────────────────────── */
-export const logisticsApi = {
-  getCarriers: (companyId: number) =>
+export const logisticsApi = {  getCarriers: (companyId: number) =>
     request<any>(`/api/logistics/carriers/${companyId}`),
   createCarrier: (data: any) =>
     request<any>('/api/logistics/carriers', { method: 'POST', body: JSON.stringify(data) }),
@@ -309,9 +537,29 @@ export const adminApi = {
 
 /* ── Accounts API ─────────────────────────────────────── */
 export const accountsApi = {
+  // Financial Years
+  getFinancialYears: (companyId: number) =>
+    request<any>(`/api/accounts/financial-years/${companyId}`),
+  createFinancialYear: (data: any) =>
+    request<any>('/api/accounts/financial-years', { method: 'POST', body: JSON.stringify(data) }),
+  closeFinancialYear: (id: number) =>
+    request<any>(`/api/accounts/financial-years/${id}/close`, { method: 'PUT' }),
+  yearEndClose: (id: number, data: {
+    newYearName?: string;
+    carryForwardVendors: boolean;
+    carryForwardCustomers: boolean;
+    carryForwardProducts: boolean;
+    carryForwardAccounts: boolean;
+  }) =>
+    request<any>(`/api/accounts/financial-years/${id}/year-end-close`, { method: 'POST', body: JSON.stringify(data) }),
+  setActiveFinancialYear: (id: number) =>
+    request<any>(`/api/accounts/financial-years/${id}/set-active`, { method: 'PUT' }),
+
   // Chart of Accounts
   getChart: (companyId: number) =>
     request<any[]>(`/api/accounts/chart/${companyId}`),
+  getAccountDetail: (id: number) =>
+    request<any>(`/api/accounts/chart/detail/${id}`),
   createAccount: (data: any) =>
     request<any>('/api/accounts/chart', { method: 'POST', body: JSON.stringify(data) }),
   updateAccount: (id: number, data: any) =>
@@ -320,12 +568,16 @@ export const accountsApi = {
     request<any>(`/api/accounts/chart/${id}`, { method: 'DELETE' }),
 
   // Journal Vouchers
-  getJournalVouchers: (companyId: number) =>
-    request<any[]>(`/api/accounts/journal-vouchers/${companyId}`),
+  getJournalVouchers: (companyId: number, status?: string) =>
+    request<any[]>(`/api/accounts/journal-vouchers/${companyId}${status ? `?status=${status}` : ''}`),
   createJournalVoucher: (data: any) =>
     request<any>('/api/accounts/journal-vouchers', { method: 'POST', body: JSON.stringify(data) }),
   getJournalVoucher: (id: number) =>
     request<any>(`/api/accounts/journal-vouchers/detail/${id}`),
+  postJournalVoucher: (id: number) =>
+    request<any>(`/api/accounts/journal-vouchers/${id}/post`, { method: 'PUT' }),
+  cancelJournalVoucher: (id: number, reason: string) =>
+    request<any>(`/api/accounts/journal-vouchers/${id}/cancel`, { method: 'PUT', body: JSON.stringify(reason) }),
 
   // Payment Vouchers
   getPaymentVouchers: (companyId: number) =>
@@ -338,4 +590,34 @@ export const accountsApi = {
     request<any[]>(`/api/accounts/receipt-vouchers/${companyId}`),
   createReceiptVoucher: (data: any) =>
     request<any>('/api/accounts/receipt-vouchers', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Bank Accounts
+  getBankAccounts: (companyId: number) =>
+    request<any>(`/api/accounts/bank-accounts/${companyId}`),
+  createBankAccount: (data: any) =>
+    request<any>('/api/accounts/bank-accounts', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Payment Modes
+  getPaymentModes: (companyId: number) =>
+    request<any>(`/api/accounts/payment-modes/${companyId}`),
+  createPaymentMode: (data: any) =>
+    request<any>('/api/accounts/payment-modes', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Cost Centers
+  getCostCenters: (companyId: number) =>
+    request<any>(`/api/accounts/cost-centers/${companyId}`),
+  createCostCenter: (data: any) =>
+    request<any>('/api/accounts/cost-centers', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Reports
+  getAccountBalance: (accountId: number, asOnDate?: string) =>
+    request<any>(`/api/accounts/balance/${accountId}${asOnDate ? `?asOnDate=${asOnDate}` : ''}`),
+  getAccountLedger: (accountId: number, fromDate: string, toDate: string) =>
+    request<any>(`/api/accounts/ledger/${accountId}?fromDate=${fromDate}&toDate=${toDate}`),
+  getTrialBalance: (companyId: number, financialYearId: number, asOnDate: string) =>
+    request<any>(`/api/accounts/trial-balance/${companyId}/${financialYearId}?asOnDate=${asOnDate}`),
+  getProfitLoss: (companyId: number, fromDate: string, toDate: string) =>
+    request<any>(`/api/accounts/profit-loss/${companyId}?fromDate=${fromDate}&toDate=${toDate}`),
+  getBalanceSheet: (companyId: number, asOnDate: string) =>
+    request<any>(`/api/accounts/balance-sheet/${companyId}?asOnDate=${asOnDate}`),
 };

@@ -285,6 +285,26 @@ namespace ERPPlugandPlay.Services
                     ? (company.Modules.Where(m => m.IsEnabled).Select(m => m.ModuleId).ToList() is { Count: > 0 } ml
                         ? ml : await AllModulesAsync())
                     : company.Modules.Where(m => m.IsEnabled && m.IsTrialAccess).Select(m => m.ModuleId).ToList();
+
+                // For sub-users (non-admin role), further restrict to their assigned permissions
+                if (user.Role.RoleName != "Admin" && user.Role.RoleName != "SuperAdmin")
+                {
+                    var userPermissions = await _db.RolePermissions
+                        .Include(rp => rp.Permission)
+                        .Where(rp => rp.RoleId == user.RoleId)
+                        .Select(rp => rp.Permission.Name)
+                        .ToListAsync();
+
+                    // Extract module IDs from permission names (e.g. "Inventory_View" → "inventory")
+                    var permittedModules = userPermissions
+                        .Select(p => p.Split('_')[0].ToLower())
+                        .Distinct()
+                        .ToList();
+
+                    // Intersect: only show modules that are both company-enabled AND user-permitted
+                    if (permittedModules.Any())
+                        allowedModules = allowedModules.Intersect(permittedModules).ToList();
+                }
             }
             else
             {

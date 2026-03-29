@@ -15,7 +15,12 @@ namespace ERPPlugandPlay.Services
     public class PayrollService : IPayrollService
     {
         private readonly ERPDbContext _db;
-        public PayrollService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public PayrollService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         public async Task<ApiResponse<SalaryDto>> GenerateSalaryAsync(GenerateSalaryDto dto)
         {
@@ -35,6 +40,11 @@ namespace ERPPlugandPlay.Services
             };
             _db.Salaries.Add(salary);
             await _db.SaveChangesAsync();
+
+            // Auto-post: DR Salary Expense / CR Salary Payable
+            try { await _accounting.PostSalaryAsync(emp.CompanyId, emp.Id, net, emp.Name); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<SalaryDto>.Ok(Map(salary, emp), "Salary generated.");
         }
 

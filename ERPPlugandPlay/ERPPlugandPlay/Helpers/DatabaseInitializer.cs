@@ -244,6 +244,121 @@ namespace ERPPlugandPlay.Helpers
                     db.SaveChanges();
                 }
 
+                // 10b. Patch FinancialYears and ChartOfAccounts tables
+                ExecutePatch(db, logger, "FinancialYears table", @"
+                    IF OBJECT_ID('FinancialYears', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE FinancialYears (
+                            Id          INT IDENTITY(1,1) PRIMARY KEY,
+                            CompanyId   INT NOT NULL,
+                            FYCode      NVARCHAR(30) NOT NULL DEFAULT '',
+                            YearName    NVARCHAR(MAX) NOT NULL,
+                            StartDate   DATETIME2 NOT NULL,
+                            EndDate     DATETIME2 NOT NULL,
+                            IsActive    BIT NOT NULL DEFAULT 1,
+                            IsClosed    BIT NOT NULL DEFAULT 0,
+                            ClosedAt    DATETIME2 NULL,
+                            ClosedBy    INT NULL,
+                            CreatedAt   DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+                            CreatedBy   INT NULL,
+                            UpdatedAt   DATETIME2 NULL,
+                            UpdatedBy   INT NULL,
+                            CONSTRAINT FK_FinancialYears_Companies FOREIGN KEY (CompanyId) REFERENCES Companies(Id) ON DELETE CASCADE
+                        );
+                    END
+
+                    -- Add FYCode column if table already exists but column is missing
+                    IF COL_LENGTH('FinancialYears', 'FYCode') IS NULL
+                    BEGIN
+                        ALTER TABLE FinancialYears ADD FYCode NVARCHAR(30) NOT NULL DEFAULT '';
+                    END
+
+                    -- Backfill FYCode for existing rows that have empty code
+                    UPDATE FinancialYears
+                    SET FYCode = 'FY' + CAST(YEAR(StartDate) AS NVARCHAR)
+                               + '-' + RIGHT('0' + CAST(YEAR(EndDate) % 100 AS NVARCHAR), 2)
+                               + '-C' + RIGHT('0000' + CAST(CompanyId AS NVARCHAR), 4)
+                    WHERE FYCode = '' OR FYCode IS NULL;
+                ");
+
+                ExecutePatch(db, logger, "ChartOfAccounts table", @"
+                    IF OBJECT_ID('ChartOfAccounts', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE ChartOfAccounts (
+                            Id INT IDENTITY(1,1) PRIMARY KEY,
+                            CompanyId INT NOT NULL,
+                            AccountCode NVARCHAR(50) NOT NULL,
+                            AccountName NVARCHAR(MAX) NOT NULL,
+                            AccountType NVARCHAR(50) NOT NULL,
+                            AccountGroup NVARCHAR(MAX) NOT NULL,
+                            ParentAccountCode NVARCHAR(50) NULL,
+                            IsGroup BIT NOT NULL DEFAULT 0,
+                            Level INT NOT NULL DEFAULT 1,
+                            OpeningBalance DECIMAL(18,2) NOT NULL DEFAULT 0,
+                            OpeningBalanceType NVARCHAR(10) NOT NULL DEFAULT 'Debit',
+                            Currency NVARCHAR(10) NOT NULL DEFAULT 'INR',
+                            TaxType NVARCHAR(50) NULL,
+                            IsBankAccount BIT NOT NULL DEFAULT 0,
+                            IsSystemAccount BIT NOT NULL DEFAULT 0,
+                            IsActive BIT NOT NULL DEFAULT 1,
+                            CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+                            CreatedBy INT NULL,
+                            UpdatedAt DATETIME2 NULL,
+                            UpdatedBy INT NULL,
+                            CONSTRAINT FK_ChartOfAccounts_Companies FOREIGN KEY (CompanyId) REFERENCES Companies(Id) ON DELETE CASCADE
+                        );
+                    END
+                ");
+
+                ExecutePatch(db, logger, "JournalVouchers table", @"
+                    IF OBJECT_ID('JournalVouchers', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE JournalVouchers (
+                            Id INT IDENTITY(1,1) PRIMARY KEY,
+                            CompanyId INT NOT NULL,
+                            FinancialYearId INT NOT NULL,
+                            BranchId INT NULL,
+                            VoucherNumber NVARCHAR(MAX) NOT NULL,
+                            VoucherType NVARCHAR(50) NOT NULL DEFAULT 'Journal',
+                            VoucherDate DATETIME2 NOT NULL,
+                            ReferenceNumber NVARCHAR(MAX) NULL,
+                            ReferenceType NVARCHAR(MAX) NULL,
+                            ReferenceId INT NULL,
+                            Description NVARCHAR(MAX) NOT NULL,
+                            TotalDebit DECIMAL(18,2) NOT NULL DEFAULT 0,
+                            TotalCredit DECIMAL(18,2) NOT NULL DEFAULT 0,
+                            Status NVARCHAR(20) NOT NULL DEFAULT 'Draft',
+                            PostedAt DATETIME2 NULL,
+                            PostedBy INT NULL,
+                            CancelledAt DATETIME2 NULL,
+                            CancelledBy INT NULL,
+                            CancellationReason NVARCHAR(MAX) NULL,
+                            CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+                            CreatedBy INT NULL,
+                            UpdatedAt DATETIME2 NULL,
+                            UpdatedBy INT NULL,
+                            CONSTRAINT FK_JournalVouchers_Companies FOREIGN KEY (CompanyId) REFERENCES Companies(Id),
+                            CONSTRAINT FK_JournalVouchers_FinancialYears FOREIGN KEY (FinancialYearId) REFERENCES FinancialYears(Id)
+                        );
+                    END
+
+                    IF OBJECT_ID('JournalVoucherEntries', 'U') IS NULL
+                    BEGIN
+                        CREATE TABLE JournalVoucherEntries (
+                            Id INT IDENTITY(1,1) PRIMARY KEY,
+                            JournalVoucherId INT NOT NULL,
+                            AccountId INT NOT NULL,
+                            Type NVARCHAR(10) NOT NULL,
+                            Amount DECIMAL(18,2) NOT NULL,
+                            Narration NVARCHAR(MAX) NULL,
+                            CostCenterId INT NULL,
+                            ProjectId INT NULL,
+                            CONSTRAINT FK_JVEntries_JournalVouchers FOREIGN KEY (JournalVoucherId) REFERENCES JournalVouchers(Id) ON DELETE CASCADE,
+                            CONSTRAINT FK_JVEntries_ChartOfAccounts FOREIGN KEY (AccountId) REFERENCES ChartOfAccounts(Id)
+                        );
+                    END
+                ");
+
                 // 11. Seed GlobalModules if empty
                 if (!db.GlobalModules.Any())
                 {

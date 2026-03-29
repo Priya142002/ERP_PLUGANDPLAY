@@ -1,25 +1,27 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  Plus, Building2, Search, Edit, Trash2, Power,
-  Users, Download, Filter, X, Save, Upload, Image, Layers, ToggleLeft, ToggleRight, List
+  Plus, Building2, Search, Edit, Trash2,
+  Users, Download, Filter, X, Save, Upload, Image, Layers, ToggleLeft, ToggleRight, List, RefreshCw, CheckCircle, Lock
 } from "lucide-react";
 import { superAdminApi } from "../../services/api";
 import "../../styles/superadmin-mobile.css";
 
-const ALL_MODULES = [
+// Modules are loaded from DB — this is just the fallback
+const FALLBACK_MODULES = [
   { id: "inventory", name: "Inventory Management" },
-  { id: "purchase", name: "Purchase Management" },
-  { id: "sales", name: "Sales Management" },
-  { id: "accounts", name: "Accounts & Finance" },
-  { id: "crm", name: "CRM" },
-  { id: "hrm", name: "HRM" },
-  { id: "projects", name: "Projects" },
-  { id: "helpdesk", name: "Helpdesk" },
-  { id: "assets", name: "Assets" },
-  { id: "logistics", name: "Logistics" },
-  { id: "production", name: "Production" },
-  { id: "billing", name: "Billing" },
+  { id: "purchase",  name: "Purchase Management"  },
+  { id: "sales",     name: "Sales Management"     },
+  { id: "accounts",  name: "Accounts & Finance"   },
+  { id: "crm",       name: "CRM"                  },
+  { id: "hrm",       name: "HRM"                  },
+  { id: "projects",  name: "Projects"             },
+  { id: "helpdesk",  name: "Helpdesk"             },
+  { id: "assets",    name: "Assets"               },
+  { id: "logistics", name: "Logistics"            },
+  { id: "production",name: "Production"           },
+  { id: "billing",   name: "Billing"              },
+  { id: "pos",       name: "POS"                  },
 ];
 
 const pageMotion = {
@@ -27,6 +29,161 @@ const pageMotion = {
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.3 }
 };
+
+// ── EditableDropdown ──────────────────────────────────────────────────────────
+// Dropdown with + to add custom items and pencil to edit them inline.
+// Custom items are persisted to the DB via SystemSettings (key: dropdown.{dbKey})
+interface DropdownOption { value: string; label: string; custom?: boolean; }
+
+function EditableDropdown({
+  label, required, value, onChange, options, placeholder = 'Select...', dbKey
+}: {
+  label: string; required?: boolean; value: string;
+  onChange: (v: string) => void;
+  options: DropdownOption[];
+  placeholder?: string;
+  dbKey: 'company_types' | 'industries' | 'countries';
+}) {
+  const [allOptions, setAllOptions] = useState<DropdownOption[]>(options);
+  const [mode, setMode] = useState<'select' | 'add' | 'edit'>('select');
+  const [inputVal, setInputVal] = useState('');
+  const [editingValue, setEditingValue] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Load custom items from DB on mount
+  useEffect(() => {
+    superAdminApi.getDropdownOptions(dbKey).then(res => {
+      if (res.success && res.data && res.data.length > 0) {
+        const customOpts: DropdownOption[] = res.data.map((item: string) => ({
+          value: item.toLowerCase().replace(/\s+/g, '_'),
+          label: item,
+          custom: true,
+        }));
+        setAllOptions(() => {
+          const base = options.filter(o => !customOpts.find(c => c.value === o.value));
+          return [...base, ...customOpts];
+        });
+      }
+    }).catch(() => {/* ignore — use base options */});
+  }, [dbKey]);
+
+  const persistCustomItems = async (opts: DropdownOption[]) => {
+    const customLabels = opts.filter(o => o.custom).map(o => o.label);
+    try { await superAdminApi.saveDropdownOptions(dbKey, customLabels); }
+    catch { /* non-blocking */ }
+  };
+
+  const handleAdd = async () => {
+    const trimmed = inputVal.trim();
+    if (!trimmed) return;
+    setSaving(true);
+    const val = trimmed.toLowerCase().replace(/\s+/g, '_');
+    const newOpt: DropdownOption = { value: val, label: trimmed, custom: true };
+    const updated = [...allOptions, newOpt];
+    setAllOptions(updated);
+    onChange(val);
+    setInputVal('');
+    setMode('select');
+    await persistCustomItems(updated);
+    setSaving(false);
+  };
+
+  const handleEditSave = async () => {
+    const trimmed = inputVal.trim();
+    if (!trimmed) { setMode('select'); return; }
+    setSaving(true);
+    const newVal = trimmed.toLowerCase().replace(/\s+/g, '_');
+    const updated = allOptions.map(o =>
+      o.value === editingValue ? { ...o, label: trimmed, value: newVal } : o
+    );
+    setAllOptions(updated);
+    if (value === editingValue) onChange(newVal);
+    setInputVal('');
+    setMode('select');
+    await persistCustomItems(updated);
+    setSaving(false);
+  };
+
+  const startEdit = (opt: DropdownOption) => {
+    setEditingValue(opt.value);
+    setInputVal(opt.label);
+    setMode('edit');
+  };
+
+  const selectedLabel = allOptions.find(o => o.value === value)?.label || '';
+
+  if (mode === 'add' || mode === 'edit') {
+    return (
+      <div>
+        <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <div className="flex gap-2">
+          <input
+            autoFocus
+            type="text"
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.preventDefault(); mode === 'add' ? handleAdd() : handleEditSave(); }
+              if (e.key === 'Escape') setMode('select');
+            }}
+            className="flex-1 h-10 rounded-lg border px-3 text-sm"
+            style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-primary)", color: "var(--sa-text-primary)" }}
+            placeholder={mode === 'add' ? `New ${label.toLowerCase()}...` : `Edit "${selectedLabel}"...`}
+          />
+          <button type="button" onClick={mode === 'add' ? handleAdd : handleEditSave} disabled={saving}
+            className="px-4 h-10 rounded-lg text-sm font-semibold flex items-center gap-1.5 disabled:opacity-60"
+            style={{ backgroundColor: "var(--sa-primary)", color: "#fff" }}>
+            {saving && <RefreshCw size={12} className="animate-spin" />}
+            {mode === 'add' ? 'Add' : 'Save'}
+          </button>
+          <button type="button" onClick={() => { setMode('select'); setInputVal(''); }}
+            className="p-2 h-10 rounded-lg hover:bg-[var(--sa-hover)]">
+            <X className="h-4 w-4" style={{ color: "var(--sa-text-secondary)" }} />
+          </button>
+        </div>
+        {mode === 'add' && <p className="text-[10px] mt-1" style={{ color: "var(--sa-text-secondary)" }}>Will be saved to database</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="flex gap-2">
+        <select
+          required={required}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="flex-1 h-10 rounded-lg border px-3 text-sm"
+          style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
+        >
+          {!value && <option value="">{placeholder}</option>}
+          {allOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}{opt.custom ? ' ✎' : ''}</option>
+          ))}
+        </select>
+        {/* Edit — only for custom items */}
+        {value && allOptions.find(o => o.value === value)?.custom && (
+          <button type="button" onClick={() => startEdit(allOptions.find(o => o.value === value)!)}
+            className="flex items-center justify-center h-10 w-10 rounded-lg border hover:bg-[var(--sa-hover)] transition"
+            style={{ borderColor: "var(--sa-border)" }} title={`Edit "${selectedLabel}"`}>
+            <Edit className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
+          </button>
+        )}
+        {/* Add new */}
+        <button type="button" onClick={() => { setInputVal(''); setMode('add'); }}
+          className="flex items-center justify-center h-10 w-10 rounded-lg border hover:bg-[var(--sa-hover)] transition"
+          style={{ borderColor: "var(--sa-border)" }} title={`Add new ${label.toLowerCase()}`}>
+          <Plus className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const INDUSTRIES = [
   "Manufacturing", "Construction", "Retail", "Healthcare",
@@ -70,6 +227,7 @@ interface CompanyFormData {
   adminName: string;
   adminEmail: string;
   adminPhone: string;
+  adminPassword: string;
   // Trial module access
   allowedModules: string[];
 }
@@ -91,12 +249,6 @@ function CompanyFormModal({
   onSave: (data: CompanyFormData) => void;
 }) {
   const [isSubmitHovered, setIsSubmitHovered] = useState(false);
-  const [showAddCompanyType, setShowAddCompanyType] = useState(false);
-  const [showAddIndustry, setShowAddIndustry] = useState(false);
-  const [newCompanyType, setNewCompanyType] = useState('');
-  const [newIndustry, setNewIndustry] = useState('');
-  const [customCompanyTypes, setCustomCompanyTypes] = useState<Array<{value: string, label: string}>>([]);
-  const [customIndustries, setCustomIndustries] = useState<string[]>([]);
   const [formData, setFormData] = useState<CompanyFormData>(() => {
     if (company) {
       return {
@@ -116,6 +268,7 @@ function CompanyFormModal({
         adminName: company.adminName || '',
         adminEmail: company.adminEmail || '',
         adminPhone: company.adminPhone || '',
+        adminPassword: '',  // blank = keep existing on edit
         allowedModules: company.allowedModules || ['inventory', 'sales', 'purchase', 'accounts'],
       };
     }
@@ -136,6 +289,7 @@ function CompanyFormModal({
       adminName: '',
       adminEmail: '',
       adminPhone: '',
+      adminPassword: 'Admin@123',
       allowedModules: ['inventory', 'sales', 'purchase', 'accounts'],
     };
   });
@@ -168,26 +322,6 @@ function CompanyFormModal({
     setFormData({ ...formData, logo: '' });
   };
 
-  const handleAddCompanyType = () => {
-    if (newCompanyType.trim()) {
-      const value = newCompanyType.toLowerCase().replace(/\s+/g, '_');
-      const newType = { value, label: newCompanyType.trim() };
-      setCustomCompanyTypes([...customCompanyTypes, newType]);
-      setFormData({ ...formData, companyType: value as any });
-      setNewCompanyType('');
-      setShowAddCompanyType(false);
-    }
-  };
-
-  const handleAddIndustry = () => {
-    if (newIndustry.trim()) {
-      setCustomIndustries([...customIndustries, newIndustry.trim()]);
-      setFormData({ ...formData, industry: newIndustry.trim() });
-      setNewIndustry('');
-      setShowAddIndustry(false);
-    }
-  };
-
   const handleWhatsappCheckbox = (checked: boolean) => {
     setFormData({
       ...formData,
@@ -203,9 +337,6 @@ function CompanyFormModal({
       whatsapp: formData.whatsappSameAsPhone ? phone : formData.whatsapp
     });
   };
-
-  const allCompanyTypes = [...COMPANY_TYPES, ...customCompanyTypes];
-  const allIndustries = [...INDUSTRIES, ...customIndustries];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,128 +399,24 @@ function CompanyFormModal({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
-                  Company Type <span className="text-red-500">*</span>
-                </label>
-                {showAddCompanyType ? (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newCompanyType}
-                      onChange={(e) => setNewCompanyType(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCompanyType())}
-                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
-                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-primary)", color: "var(--sa-text-primary)" }}
-                      placeholder="New company type *..."
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCompanyType}
-                      className="px-4 h-10 rounded-lg text-sm font-semibold"
-                      style={{ backgroundColor: "var(--sa-primary)", color: "#FFFFFF" }}
-                    >
-                      Add
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAddCompanyType(false);
-                        setNewCompanyType('');
-                      }}
-                      className="p-2 h-10 rounded-lg hover:bg-[var(--sa-hover)]"
-                    >
-                      <X className="h-4 w-4" style={{ color: "var(--sa-text-secondary)" }} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <select
-                      required
-                      value={formData.companyType}
-                      onChange={(e) => setFormData({ ...formData, companyType: e.target.value as any })}
-                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
-                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-                    >
-                      {allCompanyTypes.map(type => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddCompanyType(true)}
-                      className="flex items-center justify-center h-10 w-10 rounded-lg border hover:bg-[var(--sa-hover)] transition"
-                      style={{ borderColor: "var(--sa-border)" }}
-                      title="Add new company type"
-                    >
-                      <Plus className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
-                  Industry <span className="text-red-500">*</span>
-                </label>
-                {showAddIndustry ? (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newIndustry}
-                      onChange={(e) => setNewIndustry(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddIndustry())}
-                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
-                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-primary)", color: "var(--sa-text-primary)" }}
-                      placeholder="New industry *..."
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddIndustry}
-                      className="px-4 h-10 rounded-lg text-sm font-semibold"
-                      style={{ backgroundColor: "var(--sa-primary)", color: "#FFFFFF" }}
-                    >
-                      Add
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAddIndustry(false);
-                        setNewIndustry('');
-                      }}
-                      className="p-2 h-10 rounded-lg hover:bg-[var(--sa-hover)]"
-                    >
-                      <X className="h-4 w-4" style={{ color: "var(--sa-text-secondary)" }} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <select
-                      required
-                      value={formData.industry}
-                      onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                      className="flex-1 h-10 rounded-lg border px-3 text-sm"
-                      style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-                    >
-                      <option value="">Select Industry</option>
-                      {allIndustries.map(ind => (
-                        <option key={ind} value={ind}>{ind}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddIndustry(true)}
-                      className="flex items-center justify-center h-10 w-10 rounded-lg border hover:bg-[var(--sa-hover)] transition"
-                      style={{ borderColor: "var(--sa-border)" }}
-                      title="Add new industry"
-                    >
-                      <Plus className="h-4 w-4" style={{ color: "var(--sa-primary)" }} />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <EditableDropdown
+                label="Company Type"
+                required
+                value={formData.companyType}
+                onChange={v => setFormData({ ...formData, companyType: v as any })}
+                options={COMPANY_TYPES}
+                placeholder="Select type"
+                dbKey="company_types"
+              />
+              <EditableDropdown
+                label="Industry"
+                required
+                value={formData.industry}
+                onChange={v => setFormData({ ...formData, industry: v })}
+                options={INDUSTRIES.map(i => ({ value: i, label: i }))}
+                placeholder="Select industry"
+                dbKey="industries"
+              />
             </div>
           </div>
 
@@ -525,19 +552,36 @@ function CompanyFormModal({
               Primary administrator who will manage this company
             </p>
 
-            <div>
-              <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
-                Admin Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.adminName}
-                onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
-                className="w-full h-10 rounded-lg border px-3 text-sm"
-                style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-                placeholder="Admin full name"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
+                  Admin Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.adminName}
+                  onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
+                  className="w-full h-10 rounded-lg border px-3 text-sm"
+                  style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
+                  placeholder="Admin full name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
+                  Admin Phone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={formData.adminPhone}
+                  onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })}
+                  className="w-full h-10 rounded-lg border px-3 text-sm"
+                  style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
+                  placeholder="+1 234 567 8900"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -558,16 +602,16 @@ function CompanyFormModal({
 
               <div>
                 <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
-                  Admin Phone <span className="text-red-500">*</span>
+                  Admin Password <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="tel"
-                  required
-                  value={formData.adminPhone}
-                  onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })}
-                  className="w-full h-10 rounded-lg border px-3 text-sm"
+                  type="text"
+                  required={!company}
+                  value={formData.adminPassword}
+                  onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
+                  className="w-full h-10 rounded-lg border px-3 text-sm font-mono"
                   style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-                  placeholder="+1 234 567 8900"
+                  placeholder={company ? "Leave blank to keep existing" : "Enter login password"}
                 />
               </div>
             </div>
@@ -625,23 +669,15 @@ function CompanyFormModal({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
-                  Country <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.address.country}
-                  onChange={(e) => setFormData({ ...formData, address: { ...formData.address, country: e.target.value } })}
-                  className="w-full h-10 rounded-lg border px-3 text-sm"
-                  style={{ backgroundColor: "var(--sa-card)", borderColor: "var(--sa-border)", color: "var(--sa-text-primary)" }}
-                >
-                  <option value="">Select Country</option>
-                  {COUNTRIES.map(country => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
-                </select>
-              </div>
+              <EditableDropdown
+                label="Country"
+                required
+                value={formData.address.country}
+                onChange={v => setFormData({ ...formData, address: { ...formData.address, country: v } })}
+                options={COUNTRIES.map(c => ({ value: c, label: c }))}
+                placeholder="Select Country"
+                dbKey="countries"
+              />
 
               <div>
                 <label className="block text-xs mb-2" style={{ color: "var(--sa-text-primary)" }}>
@@ -701,7 +737,7 @@ function CompanyFormModal({
               Select which modules this company can access during their free trial period.
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {ALL_MODULES.map(mod => (
+              {FALLBACK_MODULES.map(mod => (
                 <label key={mod.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--sa-hover)] transition">
                   <input
                     type="checkbox"
@@ -720,7 +756,7 @@ function CompanyFormModal({
               ))}
             </div>
             <div className="flex gap-2 pt-1">
-              <button type="button" onClick={() => setFormData({ ...formData, allowedModules: ALL_MODULES.map(m => m.id) })}
+              <button type="button" onClick={() => setFormData({ ...formData, allowedModules: FALLBACK_MODULES.map(m => m.id) })}
                 className="text-xs px-3 py-1 rounded-lg border" style={{ borderColor: "var(--sa-border)", color: "var(--sa-primary)" }}>
                 Select All
               </button>
@@ -790,28 +826,82 @@ function TrialAccessModal({
   onSave: (modules: string[]) => void;
 }) {
   const [isSaveHovered, setIsSaveHovered] = useState(false);
-  const [selected, setSelected] = useState<string[]>(
-    company.allowedModules && company.allowedModules.length > 0
-      ? company.allowedModules
-      : ['inventory', 'sales', 'purchase', 'accounts']
-  );
+  const [globalModules, setGlobalModules] = useState<{ id: string; name: string }[]>(FALLBACK_MODULES);
+  const [companyModules, setCompanyModules] = useState<any[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Determine if company has active subscription
+  const hasSubscription = company.hasActiveSubscription || company.subscriptionStatus === 'Active';
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        // 1. Load all global modules from DB
+        const globalRes = await superAdminApi.getGlobalModules();
+        if (globalRes.success && globalRes.data) {
+          const mods = (globalRes.data as any[]).map((m: any) => ({ id: m.moduleId, name: m.name }));
+          if (mods.length > 0) setGlobalModules(mods);
+        }
+
+        // 2. Load current company module assignments from DB
+        const companyRes = await superAdminApi.getCompanyModules(company.id);
+        if (companyRes.success && companyRes.data) {
+          setCompanyModules(companyRes.data as any[]);
+          // Pre-select currently enabled modules
+          const enabled = (companyRes.data as any[])
+            .filter((m: any) => m.isEnabled && (hasSubscription ? true : m.isTrialAccess))
+            .map((m: any) => m.moduleId);
+          setSelected(enabled.length > 0 ? enabled : ['inventory', 'sales', 'purchase', 'accounts']);
+        } else {
+          // Fallback to company.allowedModules
+          setSelected(company.allowedModules?.length > 0
+            ? company.allowedModules
+            : ['inventory', 'sales', 'purchase', 'accounts']);
+        }
+      } catch {
+        setSelected(company.allowedModules?.length > 0
+          ? company.allowedModules
+          : ['inventory', 'sales', 'purchase', 'accounts']);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [company.id]);
 
   const toggle = (id: string) =>
     setSelected(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try { await onSave(selected); }
+    finally { setSaving(false); }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md rounded-xl border shadow-2xl"
+        className="w-full max-w-md rounded-xl border shadow-2xl flex flex-col max-h-[90vh]"
         style={{ backgroundColor: "#ffffff", borderColor: "var(--sa-border)" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "var(--sa-border)" }}>
+        <div className="flex items-center justify-between p-5 border-b flex-shrink-0" style={{ borderColor: "var(--sa-border)" }}>
           <div>
-            <h2 className="text-base font-bold text-slate-900">Trial Module Access</h2>
+            <h2 className="text-base font-bold text-slate-900">
+              {hasSubscription ? 'Subscription Module Access' : 'Trial Module Access'}
+            </h2>
             <p className="text-xs text-slate-500 mt-0.5">{company.name}</p>
+            <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              hasSubscription ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+            }`}>
+              {hasSubscription ? <CheckCircle size={10} /> : <Lock size={10} />}
+              {hasSubscription ? 'Subscribed — Full Access Control' : 'Trial — Limited Access'}
+            </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100">
             <X className="h-5 w-5 text-slate-500" />
@@ -819,37 +909,64 @@ function TrialAccessModal({
         </div>
 
         {/* Module list */}
-        <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto">
-          <p className="text-xs text-slate-500 mb-3">
-            Choose which modules this company can access during their free trial.
-          </p>
-          {ALL_MODULES.map(mod => (
-            <label
-              key={mod.id}
-              className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition"
-              style={{
-                borderColor: selected.includes(mod.id) ? "#6366f1" : "#e2e8f0",
-                backgroundColor: selected.includes(mod.id) ? "rgba(99,102,241,0.06)" : "#f8fafc",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(mod.id)}
-                onChange={() => toggle(mod.id)}
-                className="h-4 w-4 rounded"
-                style={{ accentColor: "#6366f1" }}
-              />
-              <span className="text-sm font-medium text-slate-800">{mod.name}</span>
-            </label>
-          ))}
+        <div className="p-5 space-y-2 overflow-y-auto flex-1">
+          {loading ? (
+            <div className="flex items-center justify-center py-8 text-slate-400">
+              <RefreshCw size={18} className="animate-spin mr-2" /> Loading modules from database...
+            </div>
+          ) : (
+            <>
+              <p className="text-xs text-slate-500 mb-3">
+                {hasSubscription
+                  ? 'Select which modules this subscribed company can access. All selected modules will be enabled.'
+                  : 'Select which modules this company can access during their free trial period.'}
+              </p>
+              {globalModules.map(mod => {
+                const dbEntry = companyModules.find((m: any) => m.moduleId === mod.id);
+                const isChecked = selected.includes(mod.id);
+                return (
+                  <label
+                    key={mod.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition"
+                    style={{
+                      borderColor: isChecked ? "#6366f1" : "#e2e8f0",
+                      backgroundColor: isChecked ? "rgba(99,102,241,0.06)" : "#f8fafc",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggle(mod.id)}
+                      className="h-4 w-4 rounded flex-shrink-0"
+                      style={{ accentColor: "#6366f1" }}
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-slate-800">{mod.name}</span>
+                      {dbEntry && (
+                        <div className="flex gap-1 mt-0.5">
+                          {dbEntry.isTrialAccess && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">TRIAL</span>
+                          )}
+                          {dbEntry.isEnabled && !dbEntry.isTrialAccess && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">SUBSCRIBED</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {isChecked && <CheckCircle size={14} className="text-indigo-500 flex-shrink-0" />}
+                  </label>
+                );
+              })}
+            </>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t flex items-center justify-between gap-3" style={{ borderColor: "var(--sa-border)" }}>
+        <div className="p-5 border-t flex items-center justify-between gap-3 flex-shrink-0" style={{ borderColor: "var(--sa-border)" }}>
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => setSelected(ALL_MODULES.map(m => m.id))}
+              onClick={() => setSelected(globalModules.map(m => m.id))}
               className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-indigo-600 hover:bg-slate-50"
             >
               All
@@ -863,23 +980,24 @@ function TrialAccessModal({
             </button>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-700 hover:bg-slate-50"
-            >
+            <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-700 hover:bg-slate-50">
               Cancel
             </button>
             <button
-              onClick={() => onSave(selected)}
+              onClick={handleSave}
+              disabled={saving || loading}
               onMouseEnter={() => setIsSaveHovered(true)}
               onMouseLeave={() => setIsSaveHovered(false)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border border-transparent hover:border-slate-200"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border border-transparent hover:border-slate-200 disabled:opacity-60"
               style={{
                 backgroundColor: isSaveHovered ? "#FFFFFF" : "var(--sa-primary)",
                 color: isSaveHovered ? "#000000" : "#FFFFFF"
               }}
             >
-              <Save className="h-4 w-4" style={{ color: isSaveHovered ? "#000000" : "#FFFFFF" }} />
+              {saving
+                ? <RefreshCw size={14} className="animate-spin" style={{ color: isSaveHovered ? "#000000" : "#FFFFFF" }} />
+                : <Save className="h-4 w-4" style={{ color: isSaveHovered ? "#000000" : "#FFFFFF" }} />
+              }
               <span style={{ color: isSaveHovered ? "#000000" : "#FFFFFF" }}>
                 Save ({selected.length})
               </span>
@@ -949,7 +1067,7 @@ export function CompanyManagementPage() {
         gstNumber: data.gstNumber, taxNumber: data.taxNumber,
         status: data.status, logo: data.logo,
         adminName: data.adminName, adminEmail: data.adminEmail,
-        adminPhone: data.adminPhone, adminPassword: 'Admin@123',
+        adminPhone: data.adminPhone, adminPassword: data.adminPassword || 'Admin@123',
         allowedModules: data.allowedModules,
       };
       if (editingCompany) {
@@ -966,7 +1084,23 @@ export function CompanyManagementPage() {
   const handleSaveTrialAccess = async (modules: string[]) => {
     if (!trialAccessCompany) return;
     try {
-      await superAdminApi.setTrialModules(trialAccessCompany.id, modules);
+      const hasSubscription = trialAccessCompany.hasActiveSubscription || trialAccessCompany.subscriptionStatus === 'Active';
+      if (hasSubscription) {
+        // For subscribed companies: update all enabled modules (not just trial)
+        await superAdminApi.toggleCompanyModule(trialAccessCompany.id, '', true); // handled below
+        // Set all selected as enabled, unselected as disabled
+        const allModuleIds = FALLBACK_MODULES.map(m => m.id);
+        for (const moduleId of allModuleIds) {
+          await superAdminApi.toggleCompanyModule(
+            trialAccessCompany.id,
+            moduleId,
+            modules.includes(moduleId)
+          );
+        }
+      } else {
+        // For trial companies: update trial module access
+        await superAdminApi.setTrialModules(trialAccessCompany.id, modules);
+      }
       await loadCompanies();
     } catch (e) { console.error(e); }
     setTrialAccessCompany(null);

@@ -8,7 +8,7 @@ namespace ERPPlugandPlay.DTOs
         [Required] public int CompanyId { get; set; }
         [Required] public string AccountCode { get; set; } = string.Empty;
         [Required] public string AccountName { get; set; } = string.Empty;
-        [Required] public string AccountType { get; set; } = string.Empty; // Asset, Liability, Equity, Income, Expense
+        [Required] public string AccountType { get; set; } = string.Empty;
         [Required] public string AccountGroup { get; set; } = string.Empty;
         public string? ParentAccountCode { get; set; }
         public bool IsGroup { get; set; } = false;
@@ -55,6 +55,29 @@ namespace ERPPlugandPlay.DTOs
         public decimal CurrentBalance { get; set; }
     }
 
+    // ── Financial Year ────────────────────────────────────────
+    public class CreateFinancialYearDto
+    {
+        [Required] public int CompanyId { get; set; }
+        [Required] public string YearName { get; set; } = string.Empty;
+        [Required] public DateTime StartDate { get; set; }
+        [Required] public DateTime EndDate { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    public class FinancialYearDto
+    {
+        public int Id { get; set; }
+        public int CompanyId { get; set; }
+        public string FYCode { get; set; } = string.Empty;
+        public string YearName { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsClosed { get; set; }
+        public DateTime? ClosedAt { get; set; }
+    }
+
     // ── Journal Voucher ───────────────────────────────────────
     public class CreateJournalVoucherDto
     {
@@ -81,7 +104,7 @@ namespace ERPPlugandPlay.DTOs
     public class JournalEntryDto
     {
         [Required] public int AccountId { get; set; }
-        [Required] public string Type { get; set; } = string.Empty; // Debit, Credit
+        [Required] public string Type { get; set; } = string.Empty;
         [Required] public decimal Amount { get; set; }
         public string? Narration { get; set; }
         public int? CostCenterId { get; set; }
@@ -184,29 +207,6 @@ namespace ERPPlugandPlay.DTOs
         public string Description { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-    }
-}
-
-    // ── Financial Year ────────────────────────────────────────
-    public class CreateFinancialYearDto
-    {
-        [Required] public int CompanyId { get; set; }
-        [Required] public string YearName { get; set; } = string.Empty;
-        [Required] public DateTime StartDate { get; set; }
-        [Required] public DateTime EndDate { get; set; }
-        public bool IsActive { get; set; } = true;
-    }
-
-    public class FinancialYearDto
-    {
-        public int Id { get; set; }
-        public int CompanyId { get; set; }
-        public string YearName { get; set; } = string.Empty;
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsClosed { get; set; }
-        public DateTime? ClosedAt { get; set; }
     }
 
     // ── Bank Account ──────────────────────────────────────────
@@ -321,6 +321,55 @@ namespace ERPPlugandPlay.DTOs
         public decimal Credit { get; set; }
     }
 
+    // ── Profit & Loss ─────────────────────────────────────────
+    public class ProfitLossDto
+    {
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
+        public List<ProfitLossLineDto> IncomeLines { get; set; } = new();
+        public List<ProfitLossLineDto> ExpenseLines { get; set; } = new();
+        public decimal TotalIncome { get; set; }
+        public decimal TotalExpense { get; set; }
+        public decimal NetProfit { get; set; }
+    }
+
+    public class ProfitLossLineDto
+    {
+        public string AccountCode { get; set; } = string.Empty;
+        public string AccountName { get; set; } = string.Empty;
+        public string AccountGroup { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+    }
+
+    // ── Balance Sheet ─────────────────────────────────────────
+    public class BalanceSheetDto
+    {
+        public DateTime AsOnDate { get; set; }
+        public List<BalanceSheetLineDto> Assets { get; set; } = new();
+        public List<BalanceSheetLineDto> Liabilities { get; set; } = new();
+        public List<BalanceSheetLineDto> Equity { get; set; } = new();
+        public decimal TotalAssets { get; set; }
+        public decimal TotalLiabilitiesAndEquity { get; set; }
+    }
+
+    public class BalanceSheetLineDto
+    {
+        public string AccountCode { get; set; } = string.Empty;
+        public string AccountName { get; set; } = string.Empty;
+        public string AccountGroup { get; set; } = string.Empty;
+        public decimal Balance { get; set; }
+    }
+
+    // ── Year-End Close ────────────────────────────────────────
+    public class YearEndCloseDto
+    {
+        public string? NewYearName { get; set; }
+        public bool CarryForwardVendors   { get; set; } = true;
+        public bool CarryForwardCustomers { get; set; } = true;
+        public bool CarryForwardProducts  { get; set; } = true;
+        public bool CarryForwardAccounts  { get; set; } = true;
+    }
+
     // ── Opening Balance ───────────────────────────────────────
     public class CreateOpeningBalanceDto
     {
@@ -340,3 +389,4 @@ namespace ERPPlugandPlay.DTOs
         public decimal OpeningBalance { get; set; }
         public string BalanceType { get; set; } = string.Empty;
     }
+}

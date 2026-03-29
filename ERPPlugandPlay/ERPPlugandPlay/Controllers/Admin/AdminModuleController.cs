@@ -45,7 +45,7 @@ namespace ERPPlugandPlay.Controllers.Admin
 
         /// <summary>
         /// PUT /api/admin/modules/{companyId}/trial-modules
-        /// Admin sets which modules are accessible during trial.
+        /// SuperAdmin sets which modules are accessible during trial.
         /// Body: { "moduleIds": ["inventory","sales","hrm"] }
         /// </summary>
         [HttpPut("{companyId}/trial-modules")]
@@ -59,30 +59,53 @@ namespace ERPPlugandPlay.Controllers.Admin
                 .Where(m => m.CompanyId == companyId)
                 .ToListAsync();
 
+            // Determine if company has active subscription
+            var hasActiveSub = await _db.CompanySubscriptions.AnyAsync(s =>
+                s.CompanyId == companyId && s.Status == "Active" &&
+                (!s.EndDate.HasValue || s.EndDate.Value >= DateTime.UtcNow));
+
+            // Get all valid global module IDs
+            var validModuleIds = await _db.GlobalModules
+                .Where(m => m.IsActive)
+                .Select(m => m.ModuleId)
+                .ToListAsync();
+
+            // Update existing entries
             foreach (var mod in existing)
             {
-                mod.IsTrialAccess = dto.ModuleIds.Contains(mod.ModuleId);
-                mod.UpdatedAt = DateTime.UtcNow;
+                var isSelected = dto.ModuleIds.Contains(mod.ModuleId);
+                mod.IsEnabled     = isSelected;
+                mod.IsTrialAccess = !hasActiveSub && isSelected; // trial flag only for non-subscribed
+                mod.UpdatedAt     = DateTime.UtcNow;
             }
 
-            // Add any new module entries that don't exist yet
+            // Add new entries for modules not yet in DB
             foreach (var moduleId in dto.ModuleIds)
             {
-                if (!existing.Any(m => m.ModuleId == moduleId))
+                if (!validModuleIds.Contains(moduleId)) continue;
+                if (existing.Any(m => m.ModuleId == moduleId)) continue;
+
+                _db.CompanyModules.Add(new CompanyModule
                 {
-                    _db.CompanyModules.Add(new CompanyModule
-                    {
-                        CompanyId     = companyId,
-                        ModuleId      = moduleId,
-                        IsEnabled     = true,
-                        IsTrialAccess = true,
-                        UpdatedAt     = DateTime.UtcNow
-                    });
-                }
+                    CompanyId     = companyId,
+                    ModuleId      = moduleId,
+                    IsEnabled     = true,
+                    IsTrialAccess = !hasActiveSub,
+                    UpdatedAt     = DateTime.UtcNow
+                });
+            }
+
+            // Disable modules NOT in the selected list
+            foreach (var mod in existing.Where(m => !dto.ModuleIds.Contains(m.ModuleId)))
+            {
+                mod.IsEnabled     = false;
+                mod.IsTrialAccess = false;
+                mod.UpdatedAt     = DateTime.UtcNow;
             }
 
             await _db.SaveChangesAsync();
-            return Ok(ApiResponse<bool>.Ok(true, $"Trial modules updated. {dto.ModuleIds.Count} module(s) enabled for trial."));
+            return Ok(ApiResponse<bool>.Ok(true,
+                $"{dto.ModuleIds.Count} module(s) enabled for {(hasActiveSub ? "subscription" : "trial")}."));
         }
 
         /// <summary>

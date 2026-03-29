@@ -278,3 +278,27 @@ namespace ERPPlugandPlay.DTOs
         public bool IsTrialAccess { get; set; }
     }
 }
+
+    // ── Subscription Billing / Payments ──────────────────────
+    public class RecordPaymentDto
+    {
+        [Required] public int CompanyId { get; set; }
+        public string? PlanName { get; set; }
+        public string? PlanType { get; set; }
+        [Required] public decimal Amount { get; set; }
+        public decimal TaxAmount { get; set; } = 0;
+        [Required] public DateTime BillingPeriodStart { get; set; }
+        [Required] public DateTime BillingPeriodEnd { get; set; }
+        [Required] public DateTime DueDate { get; set; }
+        public string Status { get; set; } = "Pending"; // Pending | Paid | Overdue
+        public string? PaymentMode { get; set; }
+        public string? TransactionRef { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class MarkPaidDto
+    {
+        public string? PaymentMode { get; set; }
+        public string? TransactionRef { get; set; }
+        public string? Notes { get; set; }
+    }

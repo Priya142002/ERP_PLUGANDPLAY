@@ -25,7 +25,12 @@ namespace ERPPlugandPlay.Services
     public class LogisticsService : ILogisticsService
     {
         private readonly ERPDbContext _db;
-        public LogisticsService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public LogisticsService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         public async Task<ApiResponse<CarrierDto>> CreateCarrierAsync(CreateCarrierDto dto)
         {
@@ -66,6 +71,12 @@ namespace ERPPlugandPlay.Services
             };
             _db.ShipmentOrders.Add(shipment);
             await _db.SaveChangesAsync();
+
+            // Auto-post freight charge: DR Freight Expense / CR Cash (if cost > 0)
+            if (dto.ShippingCost > 0)
+                try { await _accounting.PostFreightChargeAsync(dto.CompanyId, dto.ShippingCost, shipment.OrderNumber); }
+                catch { /* Non-blocking */ }
+
             var carrier = dto.CarrierId.HasValue ? await _db.Carriers.FindAsync(dto.CarrierId.Value) : null;
             return ApiResponse<ShipmentDto>.Ok(MapShipment(shipment, carrier?.Name), "Shipment created.");
         }

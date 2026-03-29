@@ -38,7 +38,12 @@ namespace ERPPlugandPlay.Services
     public class PurchaseService : IPurchaseService
     {
         private readonly ERPDbContext _db;
-        public PurchaseService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public PurchaseService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         // ── Vendor ───────────────────────────────────────────
         public async Task<ApiResponse<VendorDto>> CreateVendorAsync(CreateVendorDto dto)
@@ -136,6 +141,12 @@ namespace ERPPlugandPlay.Services
 
             _db.PurchaseInvoices.Add(invoice);
             await _db.SaveChangesAsync();
+
+            // Auto-post accounting entry: DR Purchase / CR Accounts Payable
+            var vendor = await _db.Vendors.FindAsync(dto.VendorId);
+            try { await _accounting.PostPurchaseInvoiceAsync(dto.CompanyId, invoice.Id, invoice.TotalAmount, vendor?.Name ?? "Vendor"); }
+            catch { /* Non-blocking — accounting failure should not break invoice creation */ }
+
             return ApiResponse<PurchaseInvoiceDto>.Ok(await GetInvoiceDtoAsync(invoice.Id), "Purchase invoice created.");
         }
 
@@ -174,7 +185,7 @@ namespace ERPPlugandPlay.Services
         // ── Purchase Return ───────────────────────────────────
         public async Task<ApiResponse<PurchaseReturnDto>> CreateReturnAsync(CreatePurchaseReturnDto dto)
         {
-            var invoice = await _db.PurchaseInvoices.FindAsync(dto.PurchaseInvoiceId);
+            var invoice = await _db.PurchaseInvoices.Include(i => i.Vendor).FirstOrDefaultAsync(i => i.Id == dto.PurchaseInvoiceId);
             if (invoice == null) return ApiResponse<PurchaseReturnDto>.Fail("Invoice not found.");
 
             var returnNumber = $"PR-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
@@ -197,6 +208,11 @@ namespace ERPPlugandPlay.Services
 
             _db.PurchaseReturns.Add(ret);
             await _db.SaveChangesAsync();
+
+            // Auto-post reversal: DR Accounts Payable / CR Purchase Account
+            try { await _accounting.PostPurchaseReturnAsync(invoice.CompanyId, ret.Id, ret.ReturnAmount, invoice.Vendor?.Name ?? "Vendor"); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<PurchaseReturnDto>.Ok(await GetReturnDtoAsync(ret.Id), "Purchase return created.");
         }
 
@@ -259,7 +275,11 @@ namespace ERPPlugandPlay.Services
 
             await _db.SaveChangesAsync();
 
+            // Auto-post: DR Accounts Payable / CR Cash or Bank
             var vendor = await _db.Vendors.FindAsync(dto.VendorId);
+            try { await _accounting.PostVendorPaymentAsync(invoice.CompanyId, payment.Id, dto.Amount, vendor?.Name ?? "Vendor", dto.PaymentMode); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<VendorPaymentDto>.Ok(new VendorPaymentDto
             {
                 Id = payment.Id, VendorId = payment.VendorId, VendorName = vendor?.Name ?? "",

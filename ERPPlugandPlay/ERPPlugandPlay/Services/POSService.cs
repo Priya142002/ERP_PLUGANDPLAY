@@ -19,7 +19,12 @@ namespace ERPPlugandPlay.Services
     public class POSService : IPOSService
     {
         private readonly ERPDbContext _db;
-        public POSService(ERPDbContext db) => _db = db;
+        private readonly IAutoAccountingService _accounting;
+        public POSService(ERPDbContext db, IAutoAccountingService accounting)
+        {
+            _db = db;
+            _accounting = accounting;
+        }
 
         public async Task<ApiResponse<SessionDto>> OpenSessionAsync(OpenSessionDto dto)
         {
@@ -93,6 +98,11 @@ namespace ERPPlugandPlay.Services
 
             _db.PosOrders.Add(order);
             await _db.SaveChangesAsync();
+
+            // Auto-post: DR Cash/Bank/Card / CR Sales Account
+            try { await _accounting.PostPOSSaleAsync(dto.CompanyId, order.Id, order.TotalAmount, dto.PaymentMode ?? "Cash"); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<PosOrderDto>.Ok(await GetOrderDtoAsync(order.Id), "Order created.");
         }
 
@@ -123,6 +133,11 @@ namespace ERPPlugandPlay.Services
                 if (product != null) product.StockQty += item.Quantity;
             }
             await _db.SaveChangesAsync();
+
+            // Auto-post reversal: DR Sales / CR Cash/Bank
+            try { await _accounting.PostPOSRefundAsync(order.CompanyId, order.Id, order.TotalAmount, order.PaymentMode ?? "Cash"); }
+            catch { /* Non-blocking */ }
+
             return ApiResponse<bool>.Ok(true, "Order refunded.");
         }
 
